@@ -42,6 +42,6 @@
 | **Merge** | 브랜치 merge |
 | **!BREAKING CHANGE** | 커다란 API 변경의 경우 |
 | **!HOTFIX** | 급하게 치명적인 버그를 고쳐야 하는 경우 |
-> [#Issue Number] Type: commit title
+> Type: commit title
 >
 > ex. `Feat: 로그인 기능 추가`

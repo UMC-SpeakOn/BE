@@ -45,18 +45,26 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
      * @Valid 검증 실패 시 발생하는 ConstraintViolationException 처리
      * 제약 조건 위반 예외를 공통 응답 포맷으로 변환
      *
+     * 주의: constraintViolation.getMessage()는 검증 메시지(예: "이메일 형식이 올바르지 않습니다")를
+     * 반환하며, ErrorStatus 상수명과 일치하지 않으므로 항상 _BAD_REQUEST로 처리합니다.
+     * 검증 메시지는 응답의 result에 포함됩니다.
+     *
      * @param e 제약 조건 위반 예외
      * @param request 웹 요청
-     * @return ApiResponse 형식의 에러 응답
+     * @return ApiResponse 형식의 에러 응답 (검증 메시지 포함)
      */
     @ExceptionHandler
     public ResponseEntity<Object> validation(ConstraintViolationException e, WebRequest request) {
-        String errorMessage = e.getConstraintViolations().stream()
-                .map(constraintViolation -> constraintViolation.getMessage())
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("ConstraintViolationException 추출 도중 에러 발생"));
+        // 검증 에러 메시지 수집
+        Map<String, String> errors = new LinkedHashMap<>();
+        e.getConstraintViolations().forEach(violation -> {
+            String propertyPath = violation.getPropertyPath().toString();
+            String message = violation.getMessage();
+            errors.merge(propertyPath, message, (existing, newMsg) -> existing + ", " + newMsg);
+        });
 
-        return handleExceptionInternalConstraint(e, ErrorStatus.valueOf(errorMessage), HttpHeaders.EMPTY, request);
+        // ConstraintViolationException은 검증 실패이므로 _BAD_REQUEST로 처리
+        return handleExceptionInternalConstraint(e, ErrorStatus._BAD_REQUEST, HttpHeaders.EMPTY, request, errors);
     }
 
     /**
@@ -83,7 +91,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                     errors.merge(fieldName, errorMessage, (existingErrorMessage, newErrorMessage) -> existingErrorMessage + ", " + newErrorMessage);
                 });
 
-        return handleExceptionInternalArgs(e, HttpHeaders.EMPTY, ErrorStatus.valueOf("_BAD_REQUEST"), request, errors);
+        return handleExceptionInternalArgs(e, HttpHeaders.EMPTY, ErrorStatus._BAD_REQUEST, request, errors);
     }
 
     /**
@@ -181,6 +189,29 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     private ResponseEntity<Object> handleExceptionInternalArgs(Exception e, HttpHeaders headers, ErrorStatus errorCommonStatus,
                                                                WebRequest request, Map<String, String> errorArgs) {
         ApiResponse<Object> body = ApiResponse.onFailure(errorCommonStatus, errorArgs);
+        return super.handleExceptionInternal(
+                e,
+                body,
+                headers,
+                errorCommonStatus.getHttpStatus(),
+                request
+        );
+    }
+
+    /**
+     * 예외 내부 처리 - 제약 조건 위반
+     * ConstraintViolationException을 공통 응답 포맷으로 변환 (메시지 포함)
+     *
+     * @param e 발생한 예외
+     * @param errorCommonStatus 에러 상태 코드
+     * @param headers HTTP 헤더
+     * @param request 웹 요청
+     * @param errors 필드별 검증 에러 메시지 Map
+     * @return ApiResponse 형식의 에러 응답
+     */
+    private ResponseEntity<Object> handleExceptionInternalConstraint(Exception e, ErrorStatus errorCommonStatus,
+                                                                     HttpHeaders headers, WebRequest request, Map<String, String> errors) {
+        ApiResponse<Object> body = ApiResponse.onFailure(errorCommonStatus, errors);
         return super.handleExceptionInternal(
                 e,
                 body,

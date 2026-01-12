@@ -1,6 +1,6 @@
 package com.example.speakOn.domain.avatar.entity;
 
-import com.example.speakOn.domain.avatar.enums.Situation;
+import com.example.speakOn.domain.avatar.enums.SituationType;
 import com.example.speakOn.global.apiPayload.code.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,7 +27,7 @@ public class Style extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "situation", nullable = false, length = 50)
-    private Situation situation;
+    private SituationType situationType;
 
     @Column(name = "open_greeting", nullable = false, columnDefinition = "TEXT")
     private String openGreeting;

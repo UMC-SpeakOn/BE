@@ -1,6 +1,6 @@
 package com.example.speakOn.domain.avatar.entity;
 
-import com.example.speakOn.domain.avatar.enums.Cadence;
+import com.example.speakOn.domain.avatar.enums.CadenceType;
 import com.example.speakOn.domain.user.enums.Gender;
 import com.example.speakOn.global.apiPayload.code.BaseEntity;
 import jakarta.persistence.*;
@@ -39,7 +39,7 @@ public class Avatar extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "cadence", nullable = false, length = 20)
-    private Cadence cadence;
+    private CadenceType cadenceType;
 
     @Column(name = "tts_voice_id", nullable = false, length = 100)
     private String ttsVoiceId;

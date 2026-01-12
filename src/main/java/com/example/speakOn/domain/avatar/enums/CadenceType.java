@@ -1,5 +1,5 @@
 package com.example.speakOn.domain.avatar.enums;
 
-public enum Cadence {
+public enum CadenceType {
     SHORT, MEDIUM, LONG
 }

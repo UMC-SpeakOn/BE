@@ -34,6 +34,6 @@ public class User extends BaseEntity {
 
     @Column(name = "is_onboarded", nullable = false)
     @Builder.Default
-    private Boolean isOnboarded = false;
+    private boolean isOnboarded = false;
 
 }

@@ -1,7 +1,7 @@
 package com.example.speakOn.domain.avatar.entity;
 
 import com.example.speakOn.domain.avatar.enums.CadenceType;
-import com.example.speakOn.domain.user.enums.Gender;
+import com.example.speakOn.domain.avatar.enums.Gender;
 import com.example.speakOn.global.apiPayload.code.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

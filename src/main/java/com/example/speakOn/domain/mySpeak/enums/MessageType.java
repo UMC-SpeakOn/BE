@@ -3,10 +3,7 @@ package com.example.speakOn.domain.mySpeak.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-/**
- * AI 발화의 성격을 구분합니다.
- * 와이어프레임 로직상 'MAIN' 질문만 종료 카운트에 포함됩니다.
- */
+// 'MAIN' 질문만 종료 카운트에 포함
 @Getter
 @AllArgsConstructor
 public enum MessageType {

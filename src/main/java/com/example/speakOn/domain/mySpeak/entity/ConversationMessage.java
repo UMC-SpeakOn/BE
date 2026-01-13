@@ -25,15 +25,10 @@ public class ConversationMessage extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    /**
-     * 유료 비즈니스 모델: '다시 듣기' 기능을 위한 S3 오디오 파일 URL
-     */
     @Column(name = "audio_url", columnDefinition = "TEXT")
     private String audioUrl;
 
-    /**
-     * AI 발화의 경우 MAIN/FOLLOW/CLOSING 중 하나를 가집니다.
-     */
+    // AI 발화의 경우 MAIN/FOLLOW/CLOSING 중 하나를 가짐
     @Enumerated(EnumType.STRING)
     @Column(name = "message_type")
     private MessageType messageType;

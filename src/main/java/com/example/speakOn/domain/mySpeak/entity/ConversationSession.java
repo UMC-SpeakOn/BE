@@ -24,35 +24,22 @@ public class ConversationSession extends BaseEntity {
     @Column(nullable = false)
     private SessionStatus status;
 
-    /**
-     * 와이어프레임의 '세션 목표' (5개: 빠르게 / 10개: 충분히)
-     */
     @Column(name = "target_question_count", nullable = false)
     private Integer targetQuestionCount;
 
-    /**
-     * 현재까지 진행된 '메인 질문'의 개수 (꼬리 질문은 카운트 제외)
-     */
+    // 현재까지 진행된 메인 질문 개수 (꼬리 질문은 카운트 제외)
     @Column(name = "current_question_count", nullable = false)
     @Builder.Default
     private Integer currentQuestionCount = 0;
 
-    /**
-     * 결과 화면 항목 1: 총 문장 수 (와이어프레임 기준 '000 문장' 표시용)
-     */
     @Column(name = "sentence_count")
     @Builder.Default
     private Integer sentenceCount = 0;
 
-    /**
-     * 결과 화면 항목 2: 총 소요 시간 (초 단위 저장)
-     */
+    // 총 소요 시간 (초 단위 저장)
     @Column(name = "total_time")
     private Integer totalTime;
 
-    /**
-     * 결과 화면 항목 3: 자가 평가 난이도 (와이어프레임의 별점 5점 만점, Integer 확정)
-     */
     @Column(name = "user_difficulty")
     private Integer userDifficulty;
 
@@ -62,18 +49,12 @@ public class ConversationSession extends BaseEntity {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
-    // --- 비즈니스 로직 (도메인 메서드) ---
-
-    /**
-     * AI가 메인 질문을 던질 때마다 카운트를 증가시킵니다.
-     */
+     // 메인 질문을 던질 때마다 카운트를 증가
     public void incrementQuestionCount() {
         this.currentQuestionCount++;
     }
 
-    /**
-     * 대화 종료 시 결과 데이터를 업데이트합니다.
-     */
+    // 대화 종료 시 결과 데이터 업데이트
     public void completeSession(Integer totalTime, Integer sentenceCount, Integer difficulty) {
         this.status = SessionStatus.COMPLETED;
         this.totalTime = totalTime;

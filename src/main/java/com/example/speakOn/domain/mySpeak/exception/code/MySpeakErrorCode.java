@@ -23,7 +23,10 @@ public enum MySpeakErrorCode implements BaseCode {
     MYROLE_CONVERSION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5002", "사용자 역할 데이터 변환 실패"),
 
     // 대기화면 로드 (500)
-    WAIT_SCREEN_LOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5003", "대기화면 로드 실패");
+    WAIT_SCREEN_LOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5003", "대기화면 로드 실패"),
+
+    // 세션 생성 중 오류(500)
+    SESSION_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5004", "대화 세션 생성 중 오류가 발생했습니다");
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -1,15 +1,21 @@
 package com.example.speakOn.domain.mySpeak.service;
 
 import com.example.speakOn.domain.myRole.entity.MyRole;
+import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
 import com.example.speakOn.domain.mySpeak.dto.form.MyRoleFormDto;
+import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
+import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
+import com.example.speakOn.domain.mySpeak.enums.SessionStatus;
 import com.example.speakOn.domain.mySpeak.exception.MySpeakException;
 import com.example.speakOn.domain.mySpeak.exception.code.MySpeakErrorCode;
+import com.example.speakOn.domain.mySpeak.repository.ConversationSessionRepository;
 import com.example.speakOn.domain.mySpeak.repository.MySpeakRepository;
 import com.example.speakOn.global.apiPayload.exception.handler.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,9 +23,12 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MySpeakService {
 
     private final MySpeakRepository mySpeakRepository;
+    private final ConversationSessionRepository conversationSessionRepository;
+    private final MyRoleRepository myRoleRepository;
 
     /**
      * 대기화면 데이터 조회
@@ -31,17 +40,17 @@ public class MySpeakService {
      */
     public WaitScreenResponse getWaitScreenForm(Long userId) {
         try {
-            // 1. 사용자 ID 검증
+            // 사용자 ID 검증
             validateUserId(userId);
 
-            // 2. 사용자의 MyRole 조회
+            // 사용자의 MyRole 조회
             List<MyRole> myRoles = mySpeakRepository.findAllWithUserAvartar(userId);
             validateMyRoles(myRoles);
 
-            // 3. MyRole → MyRoleFormDto 변환
+            // MyRole → MyRoleFormDto 변환
             MyRoleFormDto myRoleForm = convertToMyRoleForm(myRoles);
 
-            // 4. 통합 응답 반환
+            // 통합 응답 반환
             WaitScreenResponse response = new WaitScreenResponse(myRoleForm);
 
             return response;
@@ -52,6 +61,50 @@ public class MySpeakService {
         } catch (Exception e) {
             log.error("대기화면 조회 중 예상치 못한 오류 발생", e);
             throw new MySpeakException(MySpeakErrorCode.WAIT_SCREEN_LOAD_FAILED);
+        }
+    }
+
+    /**
+     * 대화 세션 생성
+     * 대기화면에서 '대화 시작하기' 클릭 시 새 세션 생성
+     *
+     * @param request 세션 생성 요청 (myRoleId, targetQuestionCount, startedAt)
+     * @return 생성된 sessionId
+     * @throws ErrorHandler MyRole 없음(MS4002), 생성 실패(MS5004)
+     */
+    @Transactional
+    public Long createSession(CreateSessionRequest request) {
+        try {
+            // MyRole 조회
+            MyRole myRole = myRoleRepository.findById(request.getMyRoleId());
+            if (myRole == null) {
+                log.warn("MyRole not found - myRoleId: {}", request.getMyRoleId());
+                throw new MySpeakException(MySpeakErrorCode.NO_MYROLES_AVAILABLE);
+            }
+
+            // 세션 생성
+            ConversationSession session = ConversationSession.builder()
+                    .myRole(myRole)
+                    .status(SessionStatus.ONGOING)
+                    .targetQuestionCount(request.getTargetQuestionCount())
+                    .currentQuestionCount(0)
+                    .sentenceCount(0)
+                    .startedAt(request.getStartedAt())
+                    .build();
+
+            // 저장
+            ConversationSession saved = conversationSessionRepository.save(session);
+
+            log.info("대화 세션 생성 완료 - sessionId: {}, myRole: {}", saved.getId(), myRole.getJob());
+
+            return saved.getId();
+
+        }catch (MySpeakException e) {
+            log.error("MySpeakException 발생 - myRoleId: {}", request.getMyRoleId(), e);
+            throw e;
+        }catch (Exception e) {
+            log.error("대화 세션 생성 실패 - myRoleId: {}", request.getMyRoleId(), e);
+            throw new MySpeakException(MySpeakErrorCode.SESSION_CREATION_FAILED);
         }
     }
 

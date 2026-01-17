@@ -26,7 +26,17 @@ public enum MySpeakErrorCode implements BaseCode {
     WAIT_SCREEN_LOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5003", "대기화면 로드 실패"),
 
     // 세션 생성 중 오류(500)
-    SESSION_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5004", "대화 세션 생성 중 오류가 발생했습니다");
+    SESSION_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5004", "대화 세션 생성 중 오류가 발생했습니다"),
+
+    // ===== STT 관련 (400, 500) =====
+    INVALID_AUDIO_FORMAT(HttpStatus.BAD_REQUEST, "MS4004", "지원하지 않는 오디오 파일 형식입니다."),
+    STT_RECOGNITION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5005", "음성 인식 처리 중 오류가 발생했습니다"),
+
+    // ===== TTS 관련 (400, 500) =====
+    TTS_SYNTHESIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5007", "음성 합성 처리 중 오류가 발생했습니다"),
+
+    // ===== 세션관련 (400, 404) =====
+    SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "MS4005", "대화 세션을 찾을 수 없습니다");
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -4,11 +4,19 @@ import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
 import com.example.speakOn.domain.mySpeak.dto.form.MyRoleFormDto;
 import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
+import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
+import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
+import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
+import com.example.speakOn.domain.mySpeak.enums.MessageType;
+import com.example.speakOn.domain.mySpeak.enums.SenderRole;
 import com.example.speakOn.domain.mySpeak.enums.SessionStatus;
 import com.example.speakOn.domain.mySpeak.exception.MySpeakException;
 import com.example.speakOn.domain.mySpeak.exception.code.MySpeakErrorCode;
+import com.example.speakOn.domain.mySpeak.repository.ConversationMessageRepository;
 import com.example.speakOn.domain.mySpeak.repository.ConversationSessionRepository;
 import com.example.speakOn.domain.mySpeak.repository.MySpeakRepository;
 import com.example.speakOn.global.apiPayload.exception.handler.ErrorHandler;
@@ -16,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,9 +35,13 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MySpeakService {
 
+    private final SpeechRecognitionService speechRecognitionService;
+    private final TextSynthesisService textSynthesisService;
     private final MySpeakRepository mySpeakRepository;
     private final ConversationSessionRepository conversationSessionRepository;
     private final MyRoleRepository myRoleRepository;
+    private final ConversationMessageRepository conversationMessageRepository;
+
 
     /**
      * 대기화면 데이터 조회
@@ -93,7 +106,8 @@ public class MySpeakService {
                     .build();
 
             // 저장
-            ConversationSession saved = conversationSessionRepository.save(session);
+            conversationSessionRepository.save(session);
+            ConversationSession saved = conversationSessionRepository.findById(session.getId());
 
             log.info("대화 세션 생성 완료 - sessionId: {}, myRole: {}", saved.getId(), myRole.getJob());
 
@@ -107,6 +121,101 @@ public class MySpeakService {
             throw new MySpeakException(MySpeakErrorCode.SESSION_CREATION_FAILED);
         }
     }
+
+    /**
+     * 음성 파일을 텍스트로 변환(STT)하고 USER 메시지로 저장한다.
+     *
+     * @param audioFile 업로드된 음성 파일
+     * @param request 세션 정보 및 언어 코드
+     * @return 변환된 텍스트
+     * @throws MySpeakException 세션 없음, 오디오 오류, STT 실패 시
+     */
+    @Transactional
+    public SttResponseDto recognizeSpeech(MultipartFile audioFile, SttRequestDto request) {
+        log.info("MySpeak: STT 요청 처리 - sessionId={}", request.getSessionId());
+
+        validateAudioFile(audioFile);
+
+        // STT 변환
+        String transcript = speechRecognitionService.recognizeFromFile(audioFile, request.getLanguageCode());
+
+        // 세션 조회
+        ConversationSession session = conversationSessionRepository.findById(request.getSessionId());
+        if (session == null) {
+            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
+        }
+
+        // 사용자 메시지 저장
+        ConversationMessage userMessage = ConversationMessage.builder()
+                .session(session)
+                .senderRole(SenderRole.USER)
+                .content(transcript)
+                .messageType(request.getMessageType())
+                .build();
+
+        conversationMessageRepository.save(userMessage);
+
+        return new SttResponseDto(transcript);
+    }
+
+    /**
+     * 텍스트를 음성으로 변환(TTS)하고 AI 메시지로 저장한다.
+     *
+     * @param request TTS 요청 정보
+     * @return 생성된 음성 데이터(byte[])
+     * @throws MySpeakException 세션 없음, TTS 실패 시
+     */
+    @Transactional
+    public byte[] generateSpeech(TtsRequestDto request) {
+        log.info("MySpeak: TTS 요청 처리 - sessionId={}", request.getSessionId());
+
+        // 세션 조회
+        ConversationSession session = conversationSessionRepository.findById(request.getSessionId());
+        if (session == null) {
+            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
+        }
+
+        // TTS 변환
+        byte[] audioBytes = textSynthesisService.synthesize(
+                request.getText(),
+                request.getVoiceName(),
+                request.getSpeakingRate()
+        );
+
+        //AI 메시지 저장
+        ConversationMessage aiMessage = ConversationMessage.builder()
+                .session(session)
+                .senderRole(SenderRole.AI)
+                .content(request.getText())
+                .messageType(request.getMessageType())
+                .build();
+
+        conversationMessageRepository.save(aiMessage);
+
+        return audioBytes;
+    }
+
+    /**
+     * 업로드된 음성 파일 형식을 검증한다.
+     *
+     * @param file 업로드된 파일
+     * @throws MySpeakException 비어있거나 지원하지 않는 포맷일 경우
+     */
+    private void validateAudioFile(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType == null ||
+                !(contentType.equals("audio/mpeg") ||
+                        contentType.equals("audio/mp3") ||
+                        contentType.equals("audio/wav") ||
+                        contentType.equals("audio/webm") ||
+                        contentType.equals("audio/ogg") ||
+                        contentType.equals("audio/flac"))) {
+            throw new MySpeakException(MySpeakErrorCode.INVALID_AUDIO_FORMAT);
+        }
+    }
+
+
+
 
     /**
      * MyRole 엔티티를 MyRoleFormDto로 변환

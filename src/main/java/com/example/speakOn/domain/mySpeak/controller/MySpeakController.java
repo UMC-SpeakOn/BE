@@ -2,14 +2,22 @@ package com.example.speakOn.domain.mySpeak.controller;
 
 import com.example.speakOn.domain.mySpeak.docs.MySpeakControllerDocs;
 import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
+import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
+import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
 import com.example.speakOn.domain.mySpeak.service.MySpeakService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Base64;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,5 +41,27 @@ public class MySpeakController implements MySpeakControllerDocs {
         Long sessionId = mySpeakService.createSession(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.onSuccess(sessionId));
+    }
+
+    // STT api
+    @PostMapping(value = "/stt", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<SttResponseDto> stt(
+            @RequestPart("file") MultipartFile file,
+            @RequestPart("meta") SttRequestDto request
+    ) {
+        SttResponseDto result = mySpeakService.recognizeSpeech(file, request);
+        return ApiResponse.onSuccess(result);
+    }
+
+
+    // TTS api
+    @PostMapping("/tts")
+    public ApiResponse<TtsResponseDto> tts(@RequestBody TtsRequestDto request) {
+
+        byte[] audioBytes = mySpeakService.generateSpeech(request);
+
+        String base64 = Base64.getEncoder().encodeToString(audioBytes);
+
+        return ApiResponse.onSuccess(new TtsResponseDto(base64));
     }
 }

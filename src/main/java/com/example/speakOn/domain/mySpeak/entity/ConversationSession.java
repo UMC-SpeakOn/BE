@@ -15,10 +15,6 @@ import java.time.LocalDateTime;
 @Table(name = "conversation_session")
 public class ConversationSession extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "my_role_id", nullable = false)
     private MyRole myRole;

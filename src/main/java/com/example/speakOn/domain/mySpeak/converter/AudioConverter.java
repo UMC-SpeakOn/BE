@@ -27,6 +27,10 @@ public class AudioConverter {
                     outputFile.getAbsolutePath()
             );
 
+            //데드락 방지
+            pb.redirectErrorStream(true);
+            pb.inheritIO();
+
             Process process = pb.start();
             int exitCode = process.waitFor();
 

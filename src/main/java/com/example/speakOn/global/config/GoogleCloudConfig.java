@@ -45,21 +45,20 @@ public class GoogleCloudConfig {
 
     /**
      * Google 서비스 계정 인증 정보(Credentials) Bean
-     *
+     * <p>
      * - 실제 json 키 파일을 읽어서 Credentials 객체로 변환
      * - STT, TTS 클라이언트가 공통으로 사용
      */
     @Bean
     public Credentials googleCredentials() throws IOException {
         log.info("Google Credentials 로딩 시작");
-        log.info("Credentials JSON 경로: {}", credentialsPath);
+        log.debug("Credentials JSON 경로: {}", credentialsPath);
 
-        Credentials credentials = GoogleCredentials.fromStream(
-                new FileInputStream(credentialsPath)
-        );
-
-        log.info("Google Credentials 로딩 완료");
-        return credentials;
+        try (FileInputStream fis = new FileInputStream(credentialsPath)) {
+            Credentials credentials = GoogleCredentials.fromStream(fis);
+            log.info("Google Credentials 로딩 완료");
+            return credentials;
+        }
     }
 
     /**

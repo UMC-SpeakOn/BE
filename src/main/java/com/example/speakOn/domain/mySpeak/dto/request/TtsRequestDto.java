@@ -4,9 +4,12 @@ import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class TtsRequestDto {
     @NotBlank
     private String text; //AI가 생성한 질문

@@ -48,9 +48,11 @@ public class SpeechRecognitionService {
                 return "";
             }
 
-            return response.getResultsList().get(0)
-                    .getAlternatives(0)
-                    .getTranscript();
+            var result = response.getResultsList().get(0);
+            if (result.getAlternativesCount() == 0) {
+                return "";
+            }
+            return result.getAlternatives(0).getTranscript();
 
         } catch (Exception e) {
             log.error("STT 실패", e);

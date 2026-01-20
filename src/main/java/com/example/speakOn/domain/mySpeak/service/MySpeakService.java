@@ -2,16 +2,15 @@ package com.example.speakOn.domain.mySpeak.service;
 
 import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
-import com.example.speakOn.domain.mySpeak.dto.form.MyRoleFormDto;
+import com.example.speakOn.domain.mySpeak.converter.MySpeakConverter;
+import com.example.speakOn.domain.mySpeak.dto.form.WaitScreenForm;
 import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
 import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
 import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
-import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
-import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.domain.mySpeak.enums.SenderRole;
 import com.example.speakOn.domain.mySpeak.enums.SessionStatus;
 import com.example.speakOn.domain.mySpeak.exception.MySpeakException;
@@ -41,6 +40,7 @@ public class MySpeakService {
     private final ConversationSessionRepository conversationSessionRepository;
     private final MyRoleRepository myRoleRepository;
     private final ConversationMessageRepository conversationMessageRepository;
+    private final MySpeakConverter mySpeakConverter;
 
 
     /**
@@ -57,11 +57,11 @@ public class MySpeakService {
             validateUserId(userId);
 
             // 사용자의 MyRole 조회
-            List<MyRole> myRoles = mySpeakRepository.findAllWithUserAvartar(userId);
+            List<MyRole> myRoles = mySpeakRepository.findAllWithUserAvatar(userId);
             validateMyRoles(myRoles);
 
             // MyRole → MyRoleFormDto 변환
-            MyRoleFormDto myRoleForm = convertToMyRoleForm(myRoles);
+            WaitScreenForm myRoleForm = mySpeakConverter.convertToWaitScreenForm(myRoles);
 
             // 통합 응답 반환
             WaitScreenResponse response = new WaitScreenResponse(myRoleForm);
@@ -202,43 +202,19 @@ public class MySpeakService {
      * @throws MySpeakException 비어있거나 지원하지 않는 포맷일 경우
      */
     private void validateAudioFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new MySpeakException(MySpeakErrorCode.INVALID_AUDIO_FORMAT);
+        }
         String contentType = file.getContentType();
         if (contentType == null ||
                 !(contentType.equals("audio/mpeg") ||
                         contentType.equals("audio/mp3") ||
                         contentType.equals("audio/wav") ||
+                        contentType.equals("audio/x-wav") ||
                         contentType.equals("audio/webm") ||
                         contentType.equals("audio/ogg") ||
                         contentType.equals("audio/flac"))) {
             throw new MySpeakException(MySpeakErrorCode.INVALID_AUDIO_FORMAT);
-        }
-    }
-
-
-
-
-    /**
-     * MyRole 엔티티를 MyRoleFormDto로 변환
-     *
-     * @param myRoles MyRole 엔티티 리스트
-     * @return MyRoleFormDto (응답 포맷)
-     * @throws MySpeakException 변환 실패 시
-     */
-    private MyRoleFormDto convertToMyRoleForm(List<MyRole> myRoles) {
-        log.debug("MyRole 변환 시작 - 개수: {}", myRoles.size());
-
-        try {
-            List<MyRoleFormDto.MyRoleDto> roleDtos = myRoles.stream()
-                    .map(r -> new MyRoleFormDto.MyRoleDto(r))
-                    .collect(Collectors.toList());
-
-            MyRoleFormDto result = new MyRoleFormDto(roleDtos);
-
-            return result;
-
-        } catch (Exception e) {
-            log.error("MyRole 변환 중 오류", e);
-            throw new MySpeakException(MySpeakErrorCode.MYROLE_CONVERSION_FAILED);
         }
     }
 

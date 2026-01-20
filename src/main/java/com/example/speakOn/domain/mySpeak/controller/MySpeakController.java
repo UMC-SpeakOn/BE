@@ -47,7 +47,7 @@ public class MySpeakController implements MySpeakControllerDocs {
     @PostMapping(value = "/stt", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<SttResponseDto> stt(
             @RequestPart("file") MultipartFile file,
-            @RequestPart("meta") SttRequestDto request
+            @Valid @RequestPart("meta") SttRequestDto request
     ) {
         SttResponseDto result = mySpeakService.recognizeSpeech(file, request);
         return ApiResponse.onSuccess(result);
@@ -56,7 +56,7 @@ public class MySpeakController implements MySpeakControllerDocs {
 
     // TTS api
     @PostMapping("/tts")
-    public ApiResponse<TtsResponseDto> tts(@RequestBody TtsRequestDto request) {
+    public ApiResponse<TtsResponseDto> tts(@Valid @RequestBody TtsRequestDto request) {
 
         byte[] audioBytes = mySpeakService.generateSpeech(request);
 

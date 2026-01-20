@@ -5,6 +5,7 @@ import com.example.speakOn.global.ai.service.AiService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -26,7 +27,7 @@ public class AiController {
 
     @PostMapping("/chat")
     @Operation(summary = "AI 대화 테스트", description = "시스템 역할과 사용자 메시지를 보내 AI 응답을 받습니다.")
-    public ApiResponse<String> testAiChat(@RequestBody AiRequestDto request) {
+    public ApiResponse<String> testAiChat(@RequestBody @Valid AiRequestDto request) {
 
         // 1. 메시지 생성
         SystemMessage systemMsg = new SystemMessage(request.getSystemMessage());

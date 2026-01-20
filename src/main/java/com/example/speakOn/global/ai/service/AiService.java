@@ -1,6 +1,7 @@
 package com.example.speakOn.global.ai.service;
 
 import com.example.speakOn.global.ai.converter.AiErrorConverter;
+import com.example.speakOn.global.ai.exception.AiErrorCode;
 import com.example.speakOn.global.ai.exception.AiResponseValidator;
 import com.example.speakOn.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,8 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -20,12 +23,13 @@ public class AiService {
     private final AiErrorConverter aiErrorConverter;
 
     public String callAi(Prompt prompt) {
-        // 1. 모델 호출 및 네트워크/외부 에러 변환 실행
         ChatResponse response = executeSafe(() -> chatModel.call(prompt));
-
-        // 2. 응답 데이터 논리 검증
         AiResponseValidator.validate(response);
-        return response.getResult().getOutput().getText();
+
+        // Optional을 사용하여 안전하게 텍스트 추출
+        return Optional.ofNullable(response.getResult().getOutput().getText())
+                .filter(text -> !text.isBlank()) // 비어있지 않은지 한 번 더 확인
+                .orElseThrow(() -> new GeneralException(AiErrorCode.AI_PARSE_ERROR));
     }
 
     private <T> T executeSafe(Supplier<T> action) {

@@ -162,7 +162,24 @@ public class SwaggerConfig {
     }
 
     private Object generateDtoFromSchemaExample(Class<?> dtoClass) throws Exception {
-        Object instance = dtoClass.getDeclaredConstructor().newInstance();
+        Object instance;
+        try {
+            // 1. 기본 생성자 시도 (권장)
+            instance = dtoClass.getDeclaredConstructor().newInstance();
+        } catch (NoSuchMethodException e) {
+            // 2. 기본 생성자가 없으면 Unsafe 사용 (Fallback)
+            log.debug("기본 생성자 없음. Unsafe를 사용하여 인스턴스 생성 - class: {}", dtoClass.getSimpleName());
+            try {
+                @SuppressWarnings("unchecked")
+                Object unsafeObj = sun.misc.Unsafe.class.getDeclaredField("theUnsafe").get(null);
+                sun.misc.Unsafe unsafe = (sun.misc.Unsafe) unsafeObj;
+                instance = unsafe.allocateInstance(dtoClass);
+            } catch (Exception unsafe_e) {
+                log.warn("기본 생성자 및 Unsafe 사용 불가 - class: {}. @NoArgsConstructor 추가 권장",
+                        dtoClass.getSimpleName(), unsafe_e);
+                return null;
+            }
+        }
 
         for (Field field : dtoClass.getDeclaredFields()) {
             field.setAccessible(true);
@@ -175,48 +192,51 @@ public class SwaggerConfig {
 
             Class<?> fieldType = field.getType();
 
-            if (fieldType == String.class) {
-                field.set(instance, exampleValue);
+            try {
+                if (fieldType == String.class) {
+                    field.set(instance, exampleValue);
 
-            } else if (fieldType == Integer.class || fieldType == int.class) {
-                field.set(instance, Integer.parseInt(exampleValue));
+                } else if (fieldType == Integer.class || fieldType == int.class) {
+                    field.set(instance, Integer.parseInt(exampleValue));
 
-            } else if (fieldType == Long.class || fieldType == long.class) {
-                field.set(instance, Long.parseLong(exampleValue));
+                } else if (fieldType == Long.class || fieldType == long.class) {
+                    field.set(instance, Long.parseLong(exampleValue));
 
-            } else if (fieldType == LocalDateTime.class) {
-                try {
-                    // Swagger에 입력된 example 문자열을 LocalDateTime으로 변환
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-                    LocalDateTime parsed = LocalDateTime.parse(exampleValue.trim(), formatter);
-                    field.set(instance, parsed);
-                    log.info(parsed.toString());
-                } catch (DateTimeParseException e) {
-//                    log.warn("LocalDateTime 파싱 실패: {}, 기본값 null 처리", exampleValue);
-                    field.set(instance, null);
+                } else if (fieldType == LocalDateTime.class) {
+                    try {
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+                        LocalDateTime parsed = LocalDateTime.parse(exampleValue.trim(), formatter);
+                        field.set(instance, parsed);
+                    } catch (DateTimeParseException e) {
+                        log.debug("LocalDateTime 파싱 실패: {}. null로 처리", exampleValue);
+                        field.set(instance, null);
+                    }
+                } else if (fieldType.isEnum()) {
+                    // Enum 타입 처리
+                    try {
+                        @SuppressWarnings({"unchecked", "rawtypes"})
+                        Enum<?> enumValue = Enum.valueOf((Class) fieldType, exampleValue);
+                        field.set(instance, enumValue);
+                    } catch (IllegalArgumentException enumEx) {
+                        log.debug("Enum 값 {} 찾을 수 없음 - {}. null로 처리", exampleValue, fieldType.getSimpleName());
+                        field.set(instance, null);
+                    }
+                } else if (List.class.isAssignableFrom(fieldType)) {
+                    // 리스트 타입 처리
+                    Type genericType = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+                    if (genericType instanceof Class<?> genericClass) {
+                        Object childDto = generateDtoFromSchemaExample(genericClass);
+                        field.set(instance, childDto != null ? List.of(childDto) : List.of());
+                    }
+
+                } else {
+                    // nested DTO 객체 처리
+                    Object nestedObject = generateDtoFromSchemaExample(fieldType);
+                    field.set(instance, nestedObject);
                 }
-            } else if (fieldType.isEnum()) {
-                // Enum 타입 처리
-                try {
-                    @SuppressWarnings({"unchecked", "rawtypes"})
-                    Enum<?> enumValue = Enum.valueOf((Class) fieldType, exampleValue);
-                    field.set(instance, enumValue);
-                } catch (Exception e) {
-                    log.warn("Enum 파싱 실패: {} = {}", fieldType.getSimpleName(), exampleValue);
-                    field.set(instance, null);
-                }
-            } else if (List.class.isAssignableFrom(fieldType)) {
-                // 리스트 타입 처리
-                Type genericType = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-                if (genericType instanceof Class<?> genericClass) {
-                    Object childDto = generateDtoFromSchemaExample(genericClass);
-                    field.set(instance, List.of(childDto));
-                }
-
-            } else {
-                // nested DTO 객체 처리
-                Object nestedObject = generateDtoFromSchemaExample(fieldType);
-                field.set(instance, nestedObject);
+            } catch (Exception fieldEx) {
+                log.debug("필드 {} 설정 실패 - class: {}", field.getName(), dtoClass.getSimpleName());
+                // 필드 설정 실패 시 다음 필드로 계속
             }
         }
 

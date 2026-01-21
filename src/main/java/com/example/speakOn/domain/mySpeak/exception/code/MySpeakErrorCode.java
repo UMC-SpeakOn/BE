@@ -36,7 +36,11 @@ public enum MySpeakErrorCode implements BaseCode {
     TTS_SYNTHESIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5007", "음성 합성 처리 중 오류가 발생했습니다"),
 
     // ===== 세션관련 (400, 404) =====
-    SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "MS4005", "대화 세션을 찾을 수 없습니다");
+    SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "MS4005", "대화 세션을 찾을 수 없습니다"),
+
+    // S3 업로드 관련
+    S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5006", "S3 파일 업로드 중 오류가 발생했습니다."),
+    S3_BUCKET_ACCESS_DENIED(HttpStatus.INTERNAL_SERVER_ERROR, "MS5008", "S3 버킷 접근 권한 오류입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

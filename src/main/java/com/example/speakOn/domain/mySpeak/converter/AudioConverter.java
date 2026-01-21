@@ -9,6 +9,8 @@ import java.io.File;
 @Component
 @Slf4j
 public class AudioConverter {
+    // FFmpeg 절대경로
+    private static final String FFMPEG_PATH = "C:\\study\\speakon\\BE\\ffmpeg-bin\\ffmpeg-master-latest-win64-gpl\\bin\\ffmpeg.exe";
 
     //음성 파일 -> wav 파일로 변환
     public File convertToWav(MultipartFile multipartFile) {
@@ -19,7 +21,7 @@ public class AudioConverter {
             multipartFile.transferTo(inputFile);
 
             ProcessBuilder pb = new ProcessBuilder(
-                    "ffmpeg",
+                    FFMPEG_PATH,
                     "-y",
                     "-i", inputFile.getAbsolutePath(),
                     "-ac", "1",

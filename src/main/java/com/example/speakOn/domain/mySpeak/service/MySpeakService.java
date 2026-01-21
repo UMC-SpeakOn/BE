@@ -41,6 +41,7 @@ public class MySpeakService {
     private final MyRoleRepository myRoleRepository;
     private final ConversationMessageRepository conversationMessageRepository;
     private final MySpeakConverter mySpeakConverter;
+    private final S3UploaderService s3UploaderService;
 
 
     /**
@@ -136,6 +137,9 @@ public class MySpeakService {
 
         validateAudioFile(audioFile);
 
+        //S3 업로드
+        String audioUrl = s3UploaderService.uploadAudio(audioFile);
+
         // STT 변환
         String transcript = speechRecognitionService.recognizeFromFile(audioFile, request.getLanguageCode());
 
@@ -150,6 +154,7 @@ public class MySpeakService {
                 .session(session)
                 .senderRole(SenderRole.USER)
                 .content(transcript)
+                .audioUrl(audioUrl)
                 .messageType(request.getMessageType())
                 .build();
 
@@ -190,6 +195,9 @@ public class MySpeakService {
                 .messageType(request.getMessageType())
                 .build();
 
+        //질문 카운트 증가
+        session.incrementQuestionCount();
+
         conversationMessageRepository.save(aiMessage);
 
         return audioBytes;
@@ -205,15 +213,9 @@ public class MySpeakService {
         if (file == null || file.isEmpty()) {
             throw new MySpeakException(MySpeakErrorCode.INVALID_AUDIO_FORMAT);
         }
-        String contentType = file.getContentType();
-        if (contentType == null ||
-                !(contentType.equals("audio/mpeg") ||
-                        contentType.equals("audio/mp3") ||
-                        contentType.equals("audio/wav") ||
-                        contentType.equals("audio/x-wav") ||
-                        contentType.equals("audio/webm") ||
-                        contentType.equals("audio/ogg") ||
-                        contentType.equals("audio/flac"))) {
+
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.matches("(?i).*\\.(m4a|wav|mp3|mp4|webm|ogg|flac|aac)$")) {
             throw new MySpeakException(MySpeakErrorCode.INVALID_AUDIO_FORMAT);
         }
     }

@@ -3,13 +3,11 @@ package com.example.speakOn.domain.mySpeak.dto.request;
 import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NonNull;
+import lombok.*;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class SttRequestDto {
 
     private String languageCode = "en-US";

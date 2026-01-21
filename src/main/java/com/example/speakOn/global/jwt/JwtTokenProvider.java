@@ -28,19 +28,14 @@ public class JwtTokenProvider {
     private final long refreshTokenValidityInMilliseconds;
 
     // application.yml 에서 설정값을 가져와 초기화
-    public JwtTokenProvider(
-            @Value("${jwt.secret-key}") String secretKey,
-            @Value("${jwt.issuer}") String issuer,
-            @Value("${jwt.access-expiration}") long accessTokenValidityInMilliseconds,
-            @Value("${jwt.refresh-expiration}") long refreshTokenValidityInMilliseconds
-    ) {
+    public JwtTokenProvider(JwtProperties jwtProperties) {
         // 시크릿 키를 바이트 배열로 변환하여 Key 객체 생성
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecretKey());
 
         this.key = Keys.hmacShaKeyFor(keyBytes);
-        this.issuer = issuer;
-        this.accessTokenValidityInMilliseconds = accessTokenValidityInMilliseconds;
-        this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds;
+        this.issuer = jwtProperties.getIssuer();
+        this.accessTokenValidityInMilliseconds = jwtProperties.getAccessExpiration();
+        this.refreshTokenValidityInMilliseconds = jwtProperties.getRefreshExpiration();
     }
 
     // Access Token 생성

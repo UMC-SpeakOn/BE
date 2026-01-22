@@ -1,11 +1,13 @@
 package com.example.speakOn.domain.myReport.service;
 
-import com.example.speakOn.domain.myReport.entity.ConversationCorrection;
 import com.example.speakOn.domain.myReport.code.MyReportErrorCode;
 import com.example.speakOn.domain.myReport.dto.response.MyReportResponseDTO;
 import com.example.speakOn.domain.myReport.entity.MyReport;
+import com.example.speakOn.domain.myReport.entity.ConversationCorrection;
 import com.example.speakOn.domain.myReport.repository.MyReportRepository;
 import com.example.speakOn.domain.myRole.entity.MyRole;
+import com.example.speakOn.domain.avatar.entity.Avatar;
+import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.repository.ConversationMessageRepository;
 import com.example.speakOn.domain.myRole.enums.JobType;
@@ -31,14 +33,15 @@ public class MyReportService {
 
     /**
      * 리포트 목록 조회
-     * 날짜, 직무, 상황별로 정렬 및 필터링하여 조회
      */
     public MyReportResponseDTO.ReportSummaryListDTO getReportList(User user, JobType job, SituationType situation) {
         List<MyReport> reports = myReportRepository.findAllByUserAndFilters(user, job, situation);
 
         List<MyReportResponseDTO.ReportSummaryDTO> summaryDTOs = reports.stream()
                 .map(report -> {
-                    MyRole myRole = (report.getSession() != null) ? report.getSession().getMyRole() : null;
+                    ConversationSession session = report.getSession();
+                    MyRole myRole = (session != null) ? session.getMyRole() : null;
+
                     String jobName = (myRole != null && myRole.getJob() != null) ? myRole.getJob().name() : "UNKNOWN";
                     String situationName = (myRole != null && myRole.getSituation() != null) ? myRole.getSituation().name() : "UNKNOWN";
 
@@ -59,32 +62,38 @@ public class MyReportService {
 
     /**
      * 리포트 상세 조회
-     * 특정 리포트의 요약 정보, AI 인사이트, 대화 로그 모두 조회
      */
     public MyReportResponseDTO.ReportDetailDTO getReportDetail(Long reportId, User user) {
-        // 리포트 존재 여부 확인
+        // 리포트 존재 여부 판단
         MyReport report = myReportRepository.findById(reportId)
                 .orElseThrow(() -> new ErrorHandler(MyReportErrorCode.REPORT_NOT_FOUND));
 
         // 권한 확인
+        ConversationSession session = report.getSession();
+        MyRole myRole = (session != null) ? session.getMyRole() : null;
+        User reportOwner = (myRole != null) ? myRole.getUser() : null;
+
         if (user == null || user.getId() == null ||
-                !report.getSession().getMyRole().getUser().getId().equals(user.getId())) {
+                reportOwner == null || reportOwner.getId() == null ||
+                !reportOwner.getId().equals(user.getId())) {
             log.warn("권한 없는 리포트 접근 시도 - reportId: {}, userId: {}", reportId, user != null ? user.getId() : "null");
             throw new ErrorHandler(MyReportErrorCode.REPORT_ACCESS_DENIED);
         }
 
+        Avatar avatar = (myRole != null) ? myRole.getAvatar() : null;
+
         // 해당 세션의 전체 대화 로그 조회
-        List<ConversationMessage> messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(report.getSession());
+        List<ConversationMessage> messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
 
         return MyReportResponseDTO.ReportDetailDTO.builder()
                 .sessionSummary(MyReportResponseDTO.SessionSummaryDTO.builder()
-                        .avatarName(report.getSession().getMyRole().getAvatar().getName())
-                        .avatarImgUrl(report.getSession().getMyRole().getAvatar().getImgUrl())
-                        .job(report.getSession().getMyRole().getJob().name())
-                        .situation(report.getSession().getMyRole().getSituation().name())
-                        .totalTime(report.getSession().getTotalTime())
-                        .sentenceCount(report.getSession().getSentenceCount())
-                        .userDifficulty(report.getSession().getUserDifficulty())
+                        .avatarName(avatar != null ? avatar.getName() : null)
+                        .avatarImgUrl(avatar != null ? avatar.getImgUrl() : null)
+                        .job((myRole != null && myRole.getJob() != null) ? myRole.getJob().name() : "UNKNOWN")
+                        .situation((myRole != null && myRole.getSituation() != null) ? myRole.getSituation().name() : "UNKNOWN")
+                        .totalTime(session != null ? session.getTotalTime() : null)
+                        .sentenceCount(session != null ? session.getSentenceCount() : null)
+                        .userDifficulty(session != null ? session.getUserDifficulty() : null)
                         .createdAt(report.getCreatedAt())
                         .build())
                 .aiInsight(MyReportResponseDTO.AiInsightCardDTO.builder()
@@ -95,7 +104,7 @@ public class MyReportService {
                                 .build())
                         .aiReason(report.getAiReason())
                         .corrections(
-                                // NPE 방지
+                                // 리스트 NPE 방지
                                 (report.getCorrections() != null ? report.getCorrections() : List.<ConversationCorrection>of())
                                         .stream()
                                         .map(c -> MyReportResponseDTO.CorrectionDTO.builder()

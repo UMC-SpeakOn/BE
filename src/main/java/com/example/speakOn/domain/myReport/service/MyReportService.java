@@ -64,11 +64,9 @@ public class MyReportService {
      * 리포트 상세 조회
      */
     public MyReportResponseDTO.ReportDetailDTO getReportDetail(Long reportId, User user) {
-        // 리포트 존재 여부 판단
         MyReport report = myReportRepository.findById(reportId)
                 .orElseThrow(() -> new ErrorHandler(MyReportErrorCode.REPORT_NOT_FOUND));
 
-        // 권한 확인
         ConversationSession session = report.getSession();
         MyRole myRole = (session != null) ? session.getMyRole() : null;
         User reportOwner = (myRole != null) ? myRole.getUser() : null;
@@ -82,7 +80,6 @@ public class MyReportService {
 
         Avatar avatar = (myRole != null) ? myRole.getAvatar() : null;
 
-        // 해당 세션의 전체 대화 로그 조회
         List<ConversationMessage> messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
 
         return MyReportResponseDTO.ReportDetailDTO.builder()
@@ -104,7 +101,6 @@ public class MyReportService {
                                 .build())
                         .aiReason(report.getAiReason())
                         .corrections(
-                                // 리스트 NPE 방지
                                 (report.getCorrections() != null ? report.getCorrections() : List.<ConversationCorrection>of())
                                         .stream()
                                         .map(c -> MyReportResponseDTO.CorrectionDTO.builder()
@@ -124,6 +120,46 @@ public class MyReportService {
                                 .createdAt(m.getCreatedAt())
                                 .build())
                         .collect(Collectors.toList()))
+                .build();
+    }
+
+    /**
+     * [NEW] 대화 로그 상세 조회 API 메서드 추가
+     */
+    public MyReportResponseDTO.MessageLogListDTO getConversationLogs(Long reportId, User user) {
+
+        MyReport report = myReportRepository.findById(reportId)
+                .orElseThrow(() -> new ErrorHandler(MyReportErrorCode.REPORT_NOT_FOUND));
+
+        ConversationSession session = report.getSession();
+        MyRole myRole = (session != null) ? session.getMyRole() : null;
+        User reportOwner = (myRole != null) ? myRole.getUser() : null;
+
+        if (user == null || user.getId() == null ||
+                reportOwner == null || reportOwner.getId() == null ||
+                !reportOwner.getId().equals(user.getId())) {
+            log.warn("대화 로그 접근 권한 없음 - reportId: {}, userId: {}", reportId, (user != null ? user.getId() : "unknown"));
+            throw new ErrorHandler(MyReportErrorCode.REPORT_ACCESS_DENIED);
+        }
+
+        List<ConversationMessage> messages = (session != null)
+                ? messageRepository.findAllBySessionOrderByCreatedAtAsc(session)
+                : List.of();
+
+        List<MyReportResponseDTO.MessageLogDTO> logDTOs = messages.stream()
+                .map(message -> MyReportResponseDTO.MessageLogDTO.builder()
+                        .messageId(message.getId())
+                        .senderRole(message.getSenderRole())
+                        .content(message.getContent())
+                        .audioUrl(message.getAudioUrl())
+                        .createdAt(message.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        return MyReportResponseDTO.MessageLogListDTO.builder()
+                .reportId(report.getId())
+                .totalMessageCount(logDTOs.size())
+                .messages(logDTOs)
                 .build();
     }
 }

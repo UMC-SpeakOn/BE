@@ -8,6 +8,7 @@ import com.example.speakOn.domain.myRole.enums.JobType;
 import com.example.speakOn.domain.user.entity.User;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
+//import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.lang.reflect.Field;
 
@@ -49,5 +50,14 @@ public class MyReportController implements MyReportControllerDocs {
     @GetMapping("/{reportId}")
     public ApiResponse<MyReportResponseDTO.ReportDetailDTO> getReportDetail(@PathVariable(name = "reportId") Long reportId) {
         return ApiResponse.onSuccess(myReportService.getReportDetail(reportId, getTempUser()));
+    }
+
+    @Override
+    @GetMapping("/{reportId}/logs")
+    public ApiResponse<MyReportResponseDTO.MessageLogListDTO> getConversationLogs(
+            @PathVariable(name = "reportId") Long reportId,
+            User user) {
+
+        return ApiResponse.onSuccess(myReportService.getConversationLogs(reportId, getTempUser()));
     }
 }

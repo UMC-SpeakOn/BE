@@ -3,6 +3,7 @@ package com.example.speakOn.domain.myReport.docs;
 import com.example.speakOn.domain.myReport.dto.response.MyReportResponseDTO;
 import com.example.speakOn.domain.myRole.enums.JobType;
 import com.example.speakOn.domain.avatar.enums.SituationType;
+import com.example.speakOn.domain.user.entity.User;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,4 +37,19 @@ public interface MyReportControllerDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4031", description = "본인의 리포트만 조회할 수 있습니다.")
     })
     ApiResponse<MyReportResponseDTO.ReportDetailDTO> getReportDetail(@PathVariable(name = "reportId") Long reportId);
+    @Operation(summary = "리포트 대화 로그 상세 조회 API",
+            description = "특정 리포트의 전체 대화 내용을 시간순으로 조회합니다.\n\n" +
+                    "사용자의 발화(USER)와 AI의 답변(AI), 다시 듣기를 위한 오디오 URL을 포함합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "성공입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4001", description = "존재하지 않는 리포트입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4002", description = "해당 리포트에 접근할 권한이 없습니다.")
+    })
+    ApiResponse<MyReportResponseDTO.MessageLogListDTO> getConversationLogs(
+            @Parameter(description = "조회할 리포트의 ID", example = "101")
+            @PathVariable(name = "reportId") Long reportId,
+
+            @Parameter(hidden = true)
+            User user
+    );
 }

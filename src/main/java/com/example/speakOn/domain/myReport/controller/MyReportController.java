@@ -18,11 +18,12 @@ public class MyReportController implements MyReportControllerDocs {
 
     private final MyReportService myReportService;
 
+    // FIXME: [임시 코드] Security 도입 전 테스트를 위한 임시 유저 생성 메서드입니다. Auth 구현 후 삭제 예정.
     private User getTempUser() {
         User user = User.builder()
-                .socialId("temp_123")
-                .name("임시유저")
-                .email("test@test.com")
+                .socialId("0004")
+                .name("김서희")
+                .email("SH1@test.com")
                 .build();
 
         try {

@@ -1,9 +1,11 @@
 package com.example.speakOn.domain.myReport.service;
 
+import com.example.speakOn.domain.myReport.entity.ConversationCorrection;
 import com.example.speakOn.domain.myReport.code.MyReportErrorCode;
 import com.example.speakOn.domain.myReport.dto.response.MyReportResponseDTO;
 import com.example.speakOn.domain.myReport.entity.MyReport;
 import com.example.speakOn.domain.myReport.repository.MyReportRepository;
+import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.repository.ConversationMessageRepository;
 import com.example.speakOn.domain.myRole.enums.JobType;
@@ -35,13 +37,19 @@ public class MyReportService {
         List<MyReport> reports = myReportRepository.findAllByUserAndFilters(user, job, situation);
 
         List<MyReportResponseDTO.ReportSummaryDTO> summaryDTOs = reports.stream()
-                .map(report -> MyReportResponseDTO.ReportSummaryDTO.builder()
-                        .reportId(report.getId())
-                        .job(report.getSession().getMyRole().getJob().name())
-                        .situation(report.getSession().getMyRole().getSituation().name())
-                        .userReflection(report.getUserReflection()) // 소감을 리스트 전면에 배치
-                        .createdAt(report.getCreatedAt())
-                        .build())
+                .map(report -> {
+                    MyRole myRole = (report.getSession() != null) ? report.getSession().getMyRole() : null;
+                    String jobName = (myRole != null && myRole.getJob() != null) ? myRole.getJob().name() : "UNKNOWN";
+                    String situationName = (myRole != null && myRole.getSituation() != null) ? myRole.getSituation().name() : "UNKNOWN";
+
+                    return MyReportResponseDTO.ReportSummaryDTO.builder()
+                            .reportId(report.getId())
+                            .job(jobName)
+                            .situation(situationName)
+                            .userReflection(report.getUserReflection())
+                            .createdAt(report.getCreatedAt())
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         return MyReportResponseDTO.ReportSummaryListDTO.builder()
@@ -86,13 +94,17 @@ public class MyReportService {
                                 .expectedTone(report.getConversationTone() != null ? report.getConversationTone().getExpectedTone() : null)
                                 .build())
                         .aiReason(report.getAiReason())
-                        .corrections(report.getCorrections().stream()
-                                .map(c -> MyReportResponseDTO.CorrectionDTO.builder()
-                                        .original(c.getOriginalContent())
-                                        .corrected(c.getCorrectedContent())
-                                        .reason(c.getCorrectionReason())
-                                        .build())
-                                .collect(Collectors.toList()))
+                        .corrections(
+                                // NPE 방지
+                                (report.getCorrections() != null ? report.getCorrections() : List.<ConversationCorrection>of())
+                                        .stream()
+                                        .map(c -> MyReportResponseDTO.CorrectionDTO.builder()
+                                                .original(c.getOriginalContent())
+                                                .corrected(c.getCorrectedContent())
+                                                .reason(c.getCorrectionReason())
+                                                .build())
+                                        .collect(Collectors.toList())
+                        )
                         .build())
                 .userReflection(report.getUserReflection())
                 .conversationLog(messages.stream()

@@ -1,37 +1,63 @@
 package com.example.speakOn.domain.myReport.controller;
 
+import com.example.speakOn.domain.myReport.docs.MyReportControllerDocs;
 import com.example.speakOn.domain.myReport.dto.response.MyReportResponseDTO;
-import com.example.speakOn.domain.myRole.enums.JobType;
+import com.example.speakOn.domain.myReport.service.MyReportService;
 import com.example.speakOn.domain.avatar.enums.SituationType;
+import com.example.speakOn.domain.myRole.enums.JobType;
+import com.example.speakOn.domain.user.entity.User;
 import com.example.speakOn.global.apiPayload.ApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+//import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import java.lang.reflect.Field;
 
-@Tag(name = "My Report API", description = "학습 결과 리포트 관련 API입니다.")
 @RestController
 @RequestMapping("/api/reports")
 @RequiredArgsConstructor
-public class MyReportController {
+public class MyReportController implements MyReportControllerDocs {
 
+    private final MyReportService myReportService;
+
+    // FIXME: [임시 코드] Security 도입 전 테스트를 위한 임시 유저 생성 메서드입니다. Auth 구현 후 삭제 예정.
+    private User getTempUser() {
+        User user = User.builder()
+                .socialId("0004")
+                .name("김서희")
+                .email("SH1@test.com")
+                .build();
+
+        try {
+            Field field = user.getClass().getSuperclass().getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(user, 1L);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
+    @Override
     @GetMapping("")
-    @Operation(summary = "리포트 목록 조회 API", description = "사용자의 전체 리포트 목록을 조회합니다. 직무별, 상황별 필터링이 가능합니다.")
-    @Parameters({
-            @Parameter(name = "job", description = "직무 필터 (MARKETING, DEVELOPMENT, DESIGN, PLANNING, SALES, BUSINESS)"),
-            @Parameter(name = "situation", description = "상황 필터 (INTERVIEW, MEETING, ONE_ON_ONE_MEETING, COFFEE_CHAT)")
-    })
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "성공입니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4003", description = "잘못된 직무 또는 상황 필터 조건입니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "AUTH4001", description = "인증되지 않은 사용자입니다.")
-    })
     public ApiResponse<MyReportResponseDTO.ReportSummaryListDTO> getReportList(
             @RequestParam(name = "job", required = false) JobType job,
             @RequestParam(name = "situation", required = false) SituationType situation) {
-        return ApiResponse.onSuccess(null);
+
+        return ApiResponse.onSuccess(myReportService.getReportList(getTempUser(), job, situation));
+    }
+
+    @Override
+    @GetMapping("/{reportId}")
+    public ApiResponse<MyReportResponseDTO.ReportDetailDTO> getReportDetail(@PathVariable(name = "reportId") Long reportId) {
+        return ApiResponse.onSuccess(myReportService.getReportDetail(reportId, getTempUser()));
+    }
+
+    @Override
+    @GetMapping("/{reportId}/logs")
+    public ApiResponse<MyReportResponseDTO.MessageLogListDTO> getConversationLogs(
+            @PathVariable(name = "reportId") Long reportId,
+            User user) {
+
+        return ApiResponse.onSuccess(myReportService.getConversationLogs(reportId, getTempUser()));
     }
 }

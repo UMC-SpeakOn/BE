@@ -3,6 +3,8 @@ package com.example.speakOn.global.ai.service;
 import com.example.speakOn.global.ai.converter.AiErrorConverter;
 import com.example.speakOn.global.ai.exception.AiErrorCode;
 import com.example.speakOn.global.ai.exception.AiResponseValidator;
+import com.example.speakOn.global.ai.exception.AiValidationResult;
+import com.example.speakOn.global.ai.fallback.AiFallbackHandler;
 import com.example.speakOn.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,14 +23,25 @@ public class AiService {
 
     private final ChatModel chatModel;
     private final AiErrorConverter aiErrorConverter;
+    private final AiFallbackHandler aiFallbackHandler;
 
     public String callAi(Prompt prompt) {
-        ChatResponse response = executeSafe(() -> chatModel.call(prompt));
-        AiResponseValidator.validate(response);
 
-        // Optional을 사용하여 안전하게 텍스트 추출
+        ChatResponse response = executeSafe(() -> chatModel.call(prompt));
+
+        AiValidationResult validation = AiResponseValidator.validate(response);
+
+        if (!validation.valid()) {
+            log.warn("AI validation failed: {}", validation.errorCode());
+            return aiFallbackHandler.handle(prompt, response, validation);
+        }
+
+        return extractText(response);
+    }
+
+    private String extractText(ChatResponse response) {
         return Optional.ofNullable(response.getResult().getOutput().getText())
-                .filter(text -> !text.isBlank()) // 비어있지 않은지 한 번 더 확인
+                .filter(text -> !text.isBlank())
                 .orElseThrow(() -> new GeneralException(AiErrorCode.AI_PARSE_ERROR));
     }
 

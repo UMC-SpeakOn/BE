@@ -1,11 +1,11 @@
 package com.example.speakOn.global.jwt;
 
+import com.example.speakOn.global.properties.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,26 +39,33 @@ public class JwtTokenProvider {
     }
 
     // Access Token 생성
-    public String generateAccessToken(Long userId) {
-        return generateToken(userId, accessTokenValidityInMilliseconds);
+    public String generateAccessToken(Long userId, String role) {
+        return generateToken(userId, accessTokenValidityInMilliseconds, "access", role);
     }
 
     // Refresh Token 생성
     public String generateRefreshToken(Long userId) {
-        return generateToken(userId, refreshTokenValidityInMilliseconds);
+        return generateToken(userId, refreshTokenValidityInMilliseconds, "refresh", null);
     }
 
     // 공통 토큰 생성 메서드
-    private String generateToken(Long userId, long expirationTime) {
+    private String generateToken(Long userId, long expirationTime, String tokenType, String role) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + expirationTime);
 
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .setIssuer(issuer) // 이슈어
                 .setIssuedAt(now) // 발급 시간
                 .setExpiration(validity) // 만료 시간
                 .setSubject(String.valueOf(userId)) // subject에 userId 설정
-                .signWith(key) // 서명에 사용할 키 설정
+                .claim("category", tokenType); // 토큰 유형 설정
+
+        // Role 정보가 있을 때만 Claims에 추가
+        if (role != null) {
+            builder.claim("role", role);
+        }
+
+        return builder.signWith(key) // 서명에 사용할 키 설정
                 .compact();
     }
 
@@ -68,18 +75,30 @@ public class JwtTokenProvider {
         // 1. 토큰에서 Claims 추출
         Claims claims = parseClaims(token);
 
-        // 2. 권한 설정
-        // 여기서는 간단히 "USER" 권한만 부여n - singletonList 사용
-        // 근데 리스트로 주는 이유는 Authentication 인터페이스가 Collection을 요구하기 때문
+        // ★ 보안 검사: Access Token이 아니면 인증 거부
+        String category = (String) claims.get("category");
+        if (category == null || !category.equals("access")) {
+            throw new RuntimeException("토큰이 유효하지 않습니다. (Access Token이 아닙니다)");
+        }
+
+        // 2. 권한 정보 추출 (토큰에 담긴 role을 꺼냄)
+        String role = (String) claims.get("role");
+
+        // 혹시 role이 없다면 기본값 "USER" 설정 (Null 방지)
+        if (role == null) {
+            role = "USER";
+        }
+
+        // 3. GrantedAuthority 리스트 생성
+        // DB에 "USER"로 저장되어 있어도, 시큐리티는 "ROLE_USER" 형태를 좋아함
         List<GrantedAuthority> authorities = Collections.singletonList(
-                new SimpleGrantedAuthority("ROLE_USER")
+                new SimpleGrantedAuthority("ROLE_" + role)
         );
 
-        // 3. UserDetails 객체 생성
+        // 4. UserDetails 객체 생성
         UserDetails principal = new User(claims.getSubject(), "", authorities);
 
-        // 4. Authentication 객체 반환
-        // 이미 검증된 토큰이므로 비밀번호는 빈 문자열로 설정
+        // 5. Authentication 객체 반환
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 

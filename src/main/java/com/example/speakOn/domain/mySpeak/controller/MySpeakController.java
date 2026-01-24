@@ -1,9 +1,11 @@
 package com.example.speakOn.domain.mySpeak.controller;
 
 import com.example.speakOn.domain.mySpeak.docs.MySpeakControllerDocs;
+import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
 import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
 import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
@@ -64,5 +66,16 @@ public class MySpeakController implements MySpeakControllerDocs {
         String base64 = Base64.getEncoder().encodeToString(audioBytes);
 
         return ApiResponse.onSuccess(new TtsResponseDto(base64));
+    }
+
+    // 세션 종료 api
+    @PostMapping("/{sessionId}/complete")
+    public ApiResponse<CompleteSessionResponse> completeSession(
+            @PathVariable Long sessionId,
+            @Valid @RequestBody CompleteSessionRequest request) {
+
+        CompleteSessionResponse response = mySpeakService.completeSession(sessionId, request);
+
+        return ApiResponse.onSuccess(response);
     }
 }

@@ -4,9 +4,11 @@ import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
 import com.example.speakOn.domain.mySpeak.converter.MySpeakConverter;
 import com.example.speakOn.domain.mySpeak.dto.form.WaitScreenForm;
+import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
 import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
 import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
@@ -26,6 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -207,6 +212,81 @@ public class MySpeakService {
         conversationMessageRepository.save(aiMessage);
 
         return audioBytes;
+    }
+
+    /**
+     * 세션 종료 처리: 마무리 TTS 생성 후 세션 완전 종료
+     *
+     * @param sessionId 종료할 세션 ID
+     * @param request 종료 시점과 총 대화시간 정보
+     * @return 마무리 TTS base64와 통계 정보 포함 응답
+     * @throws MySpeakException 세션이 존재하지 않을 경우
+     */
+    @Transactional
+    public CompleteSessionResponse completeSession(Long sessionId, CompleteSessionRequest request) {
+
+        // 세션 조회
+        ConversationSession session = conversationSessionRepository.findById(sessionId);
+        if (session == null) {
+            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
+        }
+
+        // 문장수 계산
+        Integer sentenceCount = calculateSentenceCount(sessionId);
+
+        // 세션 종료 업데이트 (TTS 전)
+        session.completeSession(request.getTotalTime(), sentenceCount, request.getEndedAt());
+
+        // 마무리 멘트 TTS 생성 + DB 저장
+        String closingText = "Thanks for sharing your perspective. I appreciate your time.";
+        byte[] closingAudioBytes = generateSpeech(
+                new TtsRequestDto(
+                        closingText,
+                        "en-US-Neural2-F",
+                        1.0,
+                        MessageType.CLOSING,
+                        sessionId
+                )
+        );
+
+        // base64로 변환해서 응답
+        String closingTtsBase64 = Base64.getEncoder().encodeToString(closingAudioBytes);
+
+        log.info("세션 {} 종료 완료: 문장수={}, 시간={}s", sessionId, sentenceCount, request.getTotalTime());
+
+        return new CompleteSessionResponse(sessionId, request.getTotalTime(), sentenceCount, closingTtsBase64);
+    }
+
+    /**
+     * 세션 내 사용자 발화 문장 수를 정확히 계산
+     *
+     * @param sessionId 대상 세션 ID
+     * @return 사용자(User SenderRole)의 총 문장 수
+     */
+    private Integer calculateSentenceCount(Long sessionId) {
+        // User 메시지만 가져오기
+        List<ConversationMessage> userMessages = conversationMessageRepository
+                .findBySessionIdAndSenderRole(sessionId, SenderRole.USER);
+
+        return userMessages.stream()
+                .mapToInt(msg -> countUserSentences(msg.getContent()))
+                .sum();
+    }
+
+    /**
+     * 단일 사용자 발화 내용에서 영어 문장 수 카운팅
+     *
+     * @param content 사용자 발화 텍스트
+     * @return !?. 기준으로 분리된 유효 문장 수 (3글자 이상)
+     */
+    private int countUserSentences(String content) {
+        if (content == null || content.trim().isEmpty()) return 0;
+
+        // 영어 문장 기준: !?. + 공백 후 문장 분리
+        String[] sentences = content.split("[.!?]+\\s*");
+        return (int) Arrays.stream(sentences)
+                .filter(s -> s.trim().length() > 2)  // 너무 짧은 건 제외
+                .count();
     }
 
     /**

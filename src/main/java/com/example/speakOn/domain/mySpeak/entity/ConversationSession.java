@@ -55,11 +55,10 @@ public class ConversationSession extends BaseEntity {
     }
 
     // 대화 종료 시 결과 데이터 업데이트
-    public void completeSession(Integer totalTime, Integer sentenceCount, Integer difficulty) {
+    public void completeSession(Integer totalTime, Integer sentenceCount, LocalDateTime endedAt) {
         this.status = SessionStatus.COMPLETED;
         this.totalTime = totalTime;
         this.sentenceCount = sentenceCount;
-        this.userDifficulty = difficulty;
-        this.endedAt = LocalDateTime.now();
+        this.endedAt = endedAt;
     }
 }

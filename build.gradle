@@ -25,34 +25,34 @@ repositories {
 }
 
 dependencies {
-	// Spring Data JPA
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // Spring Data JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
-	// Spring Security
+    // Spring Security
 //	implementation 'org.springframework.boot:spring-boot-starter-security'
 //	testImplementation 'org.springframework.security:spring-security-test'
 
-	// Jwt
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
-	implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
-	implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
-	implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    // Jwt
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
 
-	// Spring Web
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Spring Web
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	// Lombok
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok' // Lombok 어노테이션 컴파일 시 처리
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok' // Lombok 어노테이션 컴파일 시 처리
 
-	// PostgreSQL
-	runtimeOnly 'org.postgresql:postgresql'
+    // PostgreSQL
+    runtimeOnly 'org.postgresql:postgresql'
 
-	// SpringDoc (OpenAPI/Swagger for Spring Boot 3.x)
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+    // SpringDoc (OpenAPI/Swagger for Spring Boot 3.x)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
-	// Test
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     //Google TTS, STT
@@ -61,6 +61,9 @@ dependencies {
 
     //AWS S3
     implementation 'software.amazon.awssdk:s3:2.25.0'
+
+    //검증
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 tasks.named('test') {

@@ -163,11 +163,11 @@ public interface MySpeakControllerDocs {
             
             ### 📌 발생 가능한 에러
             
-            - ❌ **400**\s
+            - ❌ **400**
              - **@NotNull 위반**: `endedAt` 또는 `totalTime` 누락
             - ❌ **404**
              - **MS4005**: 존재하지 않는 세션 ID
-            - ❌ **500** \s
+            - ❌ **500** 
              - **MS5007**: 마무리 TTS 생성 실패 (음성 합성 오류)
             """
     ) ApiResponse<CompleteSessionResponse> completeSession(@PathVariable Long sessionId, @RequestBody CompleteSessionRequest request);

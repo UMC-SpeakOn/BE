@@ -5,7 +5,9 @@ import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
 import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+
 import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
+
 import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
@@ -78,4 +80,5 @@ public class MySpeakController implements MySpeakControllerDocs {
 
         return ApiResponse.onSuccess(response);
     }
+
 }

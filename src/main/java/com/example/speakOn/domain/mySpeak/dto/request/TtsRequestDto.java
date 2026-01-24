@@ -20,6 +20,4 @@ public class TtsRequestDto {
 
     @NotNull
     private Long sessionId;
-
-
 }

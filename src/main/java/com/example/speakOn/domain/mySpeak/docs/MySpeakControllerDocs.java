@@ -4,7 +4,9 @@ import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
 import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+
 import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
+
 import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
@@ -14,7 +16,9 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.PathVariable;
+
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -139,7 +143,6 @@ public interface MySpeakControllerDocs {
     )
     ApiResponse<TtsResponseDto> tts(@RequestBody TtsRequestDto request);
 
-
     @Operation(
             summary = "세션 종료 처리",
             description = """
@@ -171,6 +174,4 @@ public interface MySpeakControllerDocs {
              - **MS5007**: 마무리 TTS 생성 실패 (음성 합성 오류)
             """
     ) ApiResponse<CompleteSessionResponse> completeSession(@PathVariable Long sessionId, @RequestBody CompleteSessionRequest request);
-
-
 }

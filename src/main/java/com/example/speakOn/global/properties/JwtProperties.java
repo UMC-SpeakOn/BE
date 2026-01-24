@@ -1,4 +1,4 @@
-package com.example.speakOn.global.jwt;
+package com.example.speakOn.global.properties;
 
 import lombok.Getter;
 import lombok.Setter;

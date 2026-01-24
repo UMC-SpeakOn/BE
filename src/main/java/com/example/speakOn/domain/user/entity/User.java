@@ -29,11 +29,17 @@ public class User extends BaseEntity {
     @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 10)
     private String name;
+
+    @Column(name = "nickname", length = 20)
+    private String nickname;
+
+    @Column(name = "profile_img_url")
+    private String profileImgUrl;
 
     @Column(name = "is_onboarded", nullable = false)
     @Builder.Default
-    private boolean isOnboarded = false;
+    private Boolean isOnboarded = false;
 
 }

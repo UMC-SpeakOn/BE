@@ -1,6 +1,7 @@
 package com.example.speakOn.domain.mySpeak.repository;
 
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
+
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -19,3 +20,4 @@ public class ConversationMessageRepository {
         return em.find(ConversationMessage.class, messageId);
     }
 }
+

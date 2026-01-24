@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -28,21 +30,22 @@ public class S3Config {
     @Bean
     public S3Client s3Client() {
         // 우선순위: 환경변수 > yml > 기본값
+        Region awsRegion = Region.of(region);
         String keyId = getNonBlank(accessKeyId, System.getenv("AWS_ACCESS_KEY"));
         String secretKey = getNonBlank(secretAccessKey, System.getenv("AWS_SECRET_KEY"));
 
-        if (keyId == null || secretKey == null) {
-            throw new IllegalStateException("AWS S3 credentials required. Set AWS_ACCESS_KEY/AWS_SECRET_KEY or cloud.aws.credentials.*");
+        AwsCredentialsProvider provider;
+        if (keyId != null && secretKey != null) {
+            provider = StaticCredentialsProvider.create(AwsBasicCredentials.create(keyId, secretKey));
+        } else {
+            provider = DefaultCredentialsProvider.create();
         }
-
-        Region awsRegion = Region.of(region);
-        AwsBasicCredentials credentials = AwsBasicCredentials.create(keyId, secretKey);
 
         log.info("✅ S3Client initialized - Region: {}, Bucket: {}", awsRegion, bucketName);
 
         return S3Client.builder()
                 .region(awsRegion)
-                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .credentialsProvider(provider)
                 .build();
     }
 

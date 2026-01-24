@@ -35,7 +35,7 @@ public class SttTestController {
         SttRequestDto request = new SttRequestDto(languageCode, messageType, sessionId);
         SttResponseDto result = mySpeakService.recognizeSpeech(file, request);
 
-        log.info("✅ STT 테스트 완료 - 텍스트: {}", result.getTranscript());
+        log.info("✅ STT 테스트 완료");
         return ApiResponse.onSuccess(result);
     }
 }

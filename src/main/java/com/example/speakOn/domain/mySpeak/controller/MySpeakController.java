@@ -48,6 +48,7 @@ public class MySpeakController implements MySpeakControllerDocs {
     public ApiResponse<SttResponseDto> stt(
             @RequestPart("file") MultipartFile file,
             @Valid @RequestPart("meta") SttRequestDto request
+            // Jwt 토큰 구현시에 userId 받아오게 수정
     ) {
         SttResponseDto result = mySpeakService.recognizeSpeech(file, request);
         return ApiResponse.onSuccess(result);

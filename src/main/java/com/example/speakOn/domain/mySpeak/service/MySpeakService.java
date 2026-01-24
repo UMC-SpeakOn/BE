@@ -137,17 +137,17 @@ public class MySpeakService {
 
         validateAudioFile(audioFile);
 
-        //S3 업로드
-        String audioUrl = s3UploaderService.uploadAudio(audioFile);
-
-        // STT 변환
-        String transcript = speechRecognitionService.recognizeFromFile(audioFile, request.getLanguageCode());
-
         // 세션 조회
         ConversationSession session = conversationSessionRepository.findById(request.getSessionId());
         if (session == null) {
             throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
         }
+
+        //S3 업로드
+        String audioUrl = s3UploaderService.uploadAudio(audioFile, request);
+
+        // STT 변환
+        String transcript = speechRecognitionService.recognizeFromFile(audioFile, request.getLanguageCode());
 
         // 사용자 메시지 저장
         ConversationMessage userMessage = ConversationMessage.builder()

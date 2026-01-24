@@ -1,5 +1,6 @@
 package com.example.speakOn.domain.mySpeak.service;
 
+import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
 import com.example.speakOn.domain.mySpeak.exception.MySpeakException;
 import com.example.speakOn.domain.mySpeak.exception.code.MySpeakErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +23,10 @@ public class S3UploaderService {
     private final S3Client s3Client;
     private final String s3BucketName;
 
-    public String uploadAudio(MultipartFile file) {
+    public String uploadAudio(MultipartFile file, SttRequestDto requestDto) {
         try {
             String ext = getExtension(file.getOriginalFilename());
-            String key = "audio/" + UUID.randomUUID() + "." + ext;
+            String key = "audio/" + requestDto.getSessionId() + UUID.randomUUID() + ext;
 
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(s3BucketName)
@@ -35,7 +36,9 @@ public class S3UploaderService {
 
             s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
 
-            String url = "https://" + s3BucketName + ".s3.ap-northeast-2.amazonaws.com/" + key;
+            String url = s3Client.utilities()
+                    .getUrl(builder -> builder.bucket(s3BucketName).key(key))
+                    .toExternalForm();
 
             log.info("S3 upload success: {}", url);
 

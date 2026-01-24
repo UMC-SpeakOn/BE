@@ -6,7 +6,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class CreateSessionRequest {
 
     @NotNull(message = "myRoleId는 필수입니다")

@@ -25,7 +25,7 @@ public class MySpeakRepository {
      * @return MyRole 리스트
      * @throws Exception 조회 실패 시
      */
-    public List<MyRole> findAllWithUserAvartar(Long userId){
+    public List<MyRole> findAllWithUserAvatar(Long userId){
         try {
             List<MyRole> roles = em.createQuery("select r from MyRole r " +
                             "join fetch r.user u " +

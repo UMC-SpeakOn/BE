@@ -1,6 +1,6 @@
 package com.example.speakOn.global.ai.fallback.policy;
 
-import com.example.speakOn.global.ai.dto.ChatRequest;
+import com.example.speakOn.global.ai.domain.ChatRequest;
 
 public record ChatContext(
         ChatRequest request,

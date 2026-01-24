@@ -1,11 +1,17 @@
 package com.example.speakOn.global.ai.service;
 
 import com.example.speakOn.global.ai.converter.AiErrorConverter;
+import com.example.speakOn.global.ai.domain.ChatRequest;
 import com.example.speakOn.global.ai.exception.AiErrorCode;
 import com.example.speakOn.global.ai.exception.AiResponseValidator;
 import com.example.speakOn.global.ai.exception.AiValidationResult;
 import com.example.speakOn.global.ai.fallback.AiFallbackHandler;
+import com.example.speakOn.global.ai.fallback.policy.ChatContext;
+import com.example.speakOn.global.ai.review.ReviewEngine;
+import com.example.speakOn.global.ai.review.ScenarioType;
+import com.example.speakOn.global.ai.review.model.ReviewState;
 import com.example.speakOn.global.apiPayload.exception.GeneralException;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatModel;
@@ -24,8 +30,9 @@ public class AiService {
     private final ChatModel chatModel;
     private final AiErrorConverter aiErrorConverter;
     private final AiFallbackHandler aiFallbackHandler;
+    private final ReviewEngine reviewEngine;
 
-    public String callAi(Prompt prompt) {
+    public String callAi(ChatRequest chatReq, Prompt prompt, ScenarioType scenarioType) {
 
         ChatResponse response = executeSafe(() -> chatModel.call(prompt));
 
@@ -36,7 +43,16 @@ public class AiService {
             return aiFallbackHandler.handle(prompt, response, validation);
         }
 
-        return extractText(response);
+        String original = extractText(response);
+
+        ChatContext context = ChatContext.of(chatReq, original);
+        ReviewState state = reviewEngine.review(context, scenarioType);
+
+        if (state.isOk()) {
+            return original;
+        }
+
+        return aiFallbackHandler.handle(context, state);
     }
 
     private String extractText(ChatResponse response) {
@@ -55,4 +71,6 @@ public class AiService {
             throw new GeneralException(aiErrorConverter.convert(e));
         }
     }
+
+
 }

@@ -1,4 +1,4 @@
-package com.example.speakOn.global.ai.dto;
+package com.example.speakOn.global.ai.domain;
 
 public record ChatRequest(
 

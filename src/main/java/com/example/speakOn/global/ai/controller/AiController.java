@@ -1,5 +1,6 @@
 package com.example.speakOn.global.ai.controller;
 
+import com.example.speakOn.global.ai.domain.ChatRequest;
 import com.example.speakOn.global.ai.dto.AiRequestDto;
 import com.example.speakOn.global.ai.service.AiService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
@@ -33,10 +34,21 @@ public class AiController {
         SystemMessage systemMsg = new SystemMessage(request.getSystemMessage());
         UserMessage userMsg = new UserMessage(request.getUserMessage());
 
+        // 1.2 도메인 ChatRequest 생성 (리뷰/폴백에서 사용)
+        ChatRequest chatReq = ChatRequest.voice(
+                request.getSessionId(),
+                request.getTurn(),
+                request.getUserText()
+        );
+
         // 2. 프롬프트 조립 및 호출
         Prompt prompt = new Prompt(List.of(systemMsg, userMsg));
-        String response = aiService.callAi(prompt);
+        String response = aiService.callAi(chatReq, prompt, request.getScenarioType());
+
+
 
         return ApiResponse.onSuccess(response);
     }
+
+
 }

@@ -2,10 +2,43 @@ package com.example.speakOn.domain.mySpeak.repository;
 
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.speakOn.domain.mySpeak.enums.SenderRole;
+import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
 
-public interface ConversationMessageRepository extends JpaRepository<ConversationMessage, Long> {
-    // 세션별 대화 내용을 시간순으로 조회
-    List<ConversationMessage> findAllBySessionOrderByCreatedAtAsc(ConversationSession session);
+@Repository
+@RequiredArgsConstructor
+public class ConversationMessageRepository {
+
+    private final EntityManager em;
+
+    public void save(ConversationMessage message) {
+        em.persist(message);
+    }
+
+    public ConversationMessage findById(Long messageId) {
+        return em.find(ConversationMessage.class, messageId);
+    }
+
+    public List<ConversationMessage> findBySessionIdAndSenderRole(Long sessionId, SenderRole senderRole) {
+        return em.createQuery("select m from ConversationMessage m " +
+                        "join fetch m.session " +
+                        "where m.session.id = :sessionId and m.senderRole = :senderRole " +
+                        "ORDER BY m.createdAt ASC", ConversationMessage.class)
+                .setParameter("sessionId", sessionId)
+                .setParameter("senderRole", senderRole)
+                .getResultList();
+    }
+
+
+    public List<ConversationMessage> findAllBySessionOrderByCreatedAtAsc(ConversationSession session) {
+        return em.createQuery("select m from ConversationMessage m " +
+                        "where m.session = :session " +
+                        "ORDER BY m.createdAt ASC", ConversationMessage.class)
+                .setParameter("session", session)
+                .getResultList();
+    }
 }

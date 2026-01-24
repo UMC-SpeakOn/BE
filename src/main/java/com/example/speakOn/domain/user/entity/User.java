@@ -44,7 +44,7 @@ public class User extends BaseEntity {
 
     @Column(name = "is_onboarded", nullable = false)
     @Builder.Default
-    private boolean isOnboarded = false;
+    private Boolean isOnboarded = false;
 
     // TODO: 프로필 정보 업데이트
     public void update(String nickname) {

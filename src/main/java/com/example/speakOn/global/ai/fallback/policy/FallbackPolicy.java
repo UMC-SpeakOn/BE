@@ -1,0 +1,12 @@
+package com.example.speakOn.global.ai.fallback.policy;
+
+import com.example.speakOn.global.ai.fallback.model.ReviewState;
+import org.springframework.ai.chat.model.ChatResponse;
+
+public interface FallbackPolicy {
+
+
+    boolean supports(ReviewState state);
+
+    ChatResponse apply(ChatContext context);
+}

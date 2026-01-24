@@ -7,15 +7,16 @@ import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.myRole.enums.JobType;
 import lombok.*;
 
-@Data
-public class MyRoleFormDto {
+@Getter
+public class WaitScreenForm {
     private List<MyRoleDto> availablsRoles;
 
-    public MyRoleFormDto(List<MyRoleDto> availablsRoles) {
-        this.availablsRoles = availablsRoles;
+    public WaitScreenForm(List<MyRoleDto> availableRoles) {
+        this.availablsRoles = availableRoles;
     }
 
-    @Data
+    @Getter
+    @AllArgsConstructor
     public static class MyRoleDto {
         private Long id;
         private JobType job;

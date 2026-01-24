@@ -12,9 +12,8 @@ public class ConversationSessionRepository {
 
     private final EntityManager em;
 
-    public ConversationSession save(ConversationSession session) {
+    public void save(ConversationSession session) {
         em.persist(session);
-        return session;
     }
 
     public ConversationSession findById(Long sessionId) {

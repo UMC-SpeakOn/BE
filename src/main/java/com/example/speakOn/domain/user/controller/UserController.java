@@ -4,6 +4,7 @@ import com.example.speakOn.domain.user.dto.UserResponse;
 import com.example.speakOn.domain.user.service.UserQueryService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import com.example.speakOn.global.apiPayload.code.status.ErrorStatus;
+import com.example.speakOn.global.util.AuthUtil;
 import com.example.speakOn.global.validation.annotation.ApiErrorCodeExample;
 import com.example.speakOn.global.validation.annotation.ApiErrorCodeExamples;
 import com.example.speakOn.global.validation.annotation.ApiSuccessCodeExample;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserQueryService userQueryService;
+    private final AuthUtil authUtil;
 
     // 마이페이지
     @Operation(
@@ -40,7 +42,9 @@ public class UserController {
     })
     @GetMapping("/mypage")
     public ApiResponse<UserResponse.MyPageResponseDTO> getMyPage() {
-        Long userId = 1L; // TODO: 인증된 사용자 ID로 교체
+        Long userId = authUtil.getCurrentUserId();
+        log.info("마이페이지 조회 요청 - userId: {}", userId);
+
         UserResponse.MyPageResponseDTO response = userQueryService.getMyPageInfo(userId);
         return ApiResponse.onSuccess(response);
     }

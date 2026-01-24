@@ -1,5 +1,6 @@
 package com.example.speakOn.domain.user.entity;
 
+import com.example.speakOn.domain.user.enums.Role;
 import com.example.speakOn.domain.user.enums.SocialType;
 import com.example.speakOn.global.apiPayload.code.BaseEntity;
 import jakarta.persistence.*;
@@ -38,8 +39,19 @@ public class User extends BaseEntity {
     @Column(name = "profile_img_url")
     private String profileImgUrl;
 
+    `@Enumerated`(EnumType.STRING)
+    `@Column`(name = "role", nullable = false, length = 20)
+    `@Builder.Default`
+    private Role role = Role.USER;
+
     @Column(name = "is_onboarded", nullable = false)
     @Builder.Default
     private Boolean isOnboarded = false;
+
+    // TODO: 프로필 정보 업데이트
+    public void update(String nickname) {
+        this.nickname = nickname;
+        this.profileImgUrl = profileImgUrl;
+    }
 
 }

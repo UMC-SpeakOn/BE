@@ -1,6 +1,7 @@
 package com.example.speakOn.domain.mySpeak.repository;
 
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
+
 import com.example.speakOn.domain.mySpeak.enums.SenderRole;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -32,3 +33,4 @@ public class ConversationMessageRepository {
                 .getResultList();
     }
 }
+

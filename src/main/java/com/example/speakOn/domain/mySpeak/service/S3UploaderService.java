@@ -45,7 +45,9 @@ public class S3UploaderService {
             return url;
 
         } catch (S3Exception e) {
-            log.error("S3 서비스 오류 - Bucket: {}, Key: {}", s3BucketName, e.awsErrorDetails().errorCode(), e);
+
+            log.error("S3 서비스 오류 - Bucket: {}, errorCode: {}", s3BucketName, e.awsErrorDetails().errorCode(), e);
+
             throw new MySpeakException(MySpeakErrorCode.S3_BUCKET_ACCESS_DENIED);
 
         } catch (SdkClientException e) {

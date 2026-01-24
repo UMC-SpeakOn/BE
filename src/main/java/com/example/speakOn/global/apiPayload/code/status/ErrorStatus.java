@@ -16,6 +16,11 @@ public enum ErrorStatus implements BaseCode {
     _UNAUTHORIZED(HttpStatus.UNAUTHORIZED,"COMMON401","인증이 필요합니다."),
     _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
 
+    // 인증 관련 에러
+    INVALID_SOCIAL_TYPE(HttpStatus.BAD_REQUEST, "AUTH400", "지원하지 않는 소셜 로그인 타입입니다."),
+    INVALID_SOCIAL_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH401", "유효하지 않은 소셜 로그인 액세스 토큰입니다."),
+    KAKAO_USER_INFO_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH500", "카카오 사용자 정보 조회에 실패했습니다."),
+
     // 유저 관련 에러
     USER_NOT_FOUND(HttpStatus.BAD_REQUEST, "USER401", "아이디와 일치하는 사용자가 없습니다.");
 

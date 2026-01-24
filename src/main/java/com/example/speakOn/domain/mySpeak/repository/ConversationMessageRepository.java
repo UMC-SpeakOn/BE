@@ -1,6 +1,7 @@
 package com.example.speakOn.domain.mySpeak.repository;
 
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
+import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.domain.mySpeak.enums.SenderRole;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +27,18 @@ public class ConversationMessageRepository {
         return em.createQuery("select m from ConversationMessage m " +
                         "join fetch m.session " +
                         "where m.session.id = :sessionId and m.senderRole = :senderRole " +
-                        "ORDER BY m.createdAt ASC")
+                        "ORDER BY m.createdAt ASC", ConversationMessage.class)
                 .setParameter("sessionId", sessionId)
                 .setParameter("senderRole", senderRole)
+                .getResultList();
+    }
+
+
+    public List<ConversationMessage> findAllBySessionOrderByCreatedAtAsc(ConversationSession session) {
+        return em.createQuery("select m from ConversationMessage m " +
+                        "where m.session = :session " +
+                        "ORDER BY m.createdAt ASC", ConversationMessage.class)
+                .setParameter("session", session)
                 .getResultList();
     }
 }

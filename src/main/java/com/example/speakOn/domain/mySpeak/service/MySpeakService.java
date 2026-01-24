@@ -11,6 +11,7 @@ import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
+import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.domain.mySpeak.enums.SenderRole;
 import com.example.speakOn.domain.mySpeak.enums.SessionStatus;
 import com.example.speakOn.domain.mySpeak.exception.MySpeakException;
@@ -143,6 +144,8 @@ public class MySpeakService {
             throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
         }
 
+        log.info("session={}", session);
+
         //S3 업로드
         String audioUrl = s3UploaderService.uploadAudio(audioFile, request);
 
@@ -159,6 +162,12 @@ public class MySpeakService {
                 .build();
 
         conversationMessageRepository.save(userMessage);
+
+        //질문 카운트 증가
+        if (request.getMessageType() == MessageType.MAIN) {
+            session.incrementQuestionCount();
+        }
+
 
         return new SttResponseDto(transcript);
     }
@@ -194,9 +203,6 @@ public class MySpeakService {
                 .content(request.getText())
                 .messageType(request.getMessageType())
                 .build();
-
-        //질문 카운트 증가
-        session.incrementQuestionCount();
 
         conversationMessageRepository.save(aiMessage);
 

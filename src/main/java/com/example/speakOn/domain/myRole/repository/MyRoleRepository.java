@@ -1,21 +1,18 @@
 package com.example.speakOn.domain.myRole.repository;
 
+import com.example.speakOn.domain.avatar.entity.Avatar;
+import com.example.speakOn.domain.avatar.enums.SituationType;
 import com.example.speakOn.domain.myRole.entity.MyRole;
-import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
-import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Repository;
+import com.example.speakOn.domain.myRole.enums.JobType;
+import com.example.speakOn.domain.user.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-@Repository
-@Slf4j
-@RequiredArgsConstructor
-public class MyRoleRepository {
+import java.util.Optional;
 
-    private final EntityManager em;
+public interface MyRoleRepository extends JpaRepository<MyRole, Long>, MyRoleRepositoryCustom {
 
-    //대화 세션 생성하는데 필요해서 생성
-    public MyRole findById(Long myRoleId) {
-        return em.find(MyRole.class, myRoleId);
-    }
+    boolean existsByUserAndAvatarAndJobAndSituation(User user, Avatar avatar, JobType job, SituationType situation);
+
+    Optional<MyRole> findByIdAndUser(Long id, User user);
+
 }

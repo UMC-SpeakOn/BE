@@ -3,21 +3,20 @@ package com.example.speakOn.domain.auth.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 
 public class KakaoDTO {
 
     /**
      * 카카오 인가 코드 요청 DTO
      */
-import jakarta.validation.constraints.NotBlank;
 
-`@Schema`(description = "카카오 인가 코드 요청")
-public record CodeRequest(
-        `@Schema`(description = "카카오 인가 코드 (리다이렉트 URL의 code 파라미터)", example = "aBcDeFgHiJkLmNoPqRsTuVwXyZ123456789")
-        `@NotBlank`
-        String code
-) {
-}
+    @Schema(description = "카카오 인가 코드 요청")
+    public record CodeRequest(
+            @Schema(description = "카카오 인가 코드 (리다이렉트 URL의 code 파라미터)", example = "aBcDeFgHiJkLmNoPqRsTuVwXyZ123456789")
+            @NotBlank
+            String code
+    ) {
     }
 
     /**

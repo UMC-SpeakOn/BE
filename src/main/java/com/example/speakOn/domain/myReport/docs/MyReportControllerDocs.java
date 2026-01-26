@@ -57,7 +57,9 @@ public interface MyReportControllerDocs {
 
     @Operation(summary = "사용자 소감 작성 및 난이도 수정 API", description = "리포트 상세 조회 후, 사용자가 소감을 작성하고 난이도를 수정할 때 사용합니다.")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OK, 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4041", description = "해당 ID의 리포트를 찾을 수 없습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4031", description = "본인의 리포트만 수정할 수 있습니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4001", description = "사용자 소감은 최대 120자까지만 입력 가능합니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4002", description = "소감 내용이 비어 있습니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4009", description = "난이도는 1점에서 5점 사이의 정수만 입력 가능합니다.")

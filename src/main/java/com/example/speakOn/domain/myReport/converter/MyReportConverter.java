@@ -35,7 +35,7 @@ public class MyReportConverter {
 
         return MyReportResponseDTO.ReportSummaryDTO.builder()
                 .reportId(myReport.getId())
-                .createdAt(myReport.getCreatedAt().toLocalDate())
+                .createdAt(myReport.getCreatedAt() != null ? myReport.getCreatedAt().toLocalDate() : null)
                 .situation(situationName)
                 .job(jobName)
                 .userReflection(myReport.getUserReflection())
@@ -66,7 +66,8 @@ public class MyReportConverter {
 
         LocalTime totalTime = LocalTime.of(0, 0, 0);
         if (session != null && session.getTotalTime() != null) {
-            totalTime = LocalTime.ofSecondOfDay(session.getTotalTime());
+            long seconds = Math.min(session.getTotalTime(), 86399L);
+            totalTime = LocalTime.ofSecondOfDay(seconds);
         }
 
         return MyReportResponseDTO.ReportDetailDTO.builder()
@@ -75,7 +76,7 @@ public class MyReportConverter {
                         .totalTime(totalTime)
                         .sentenceCount(session != null ? session.getSentenceCount() : 0)
                         .difficulty(myReport.getDifficulty())
-                        .createdAt(myReport.getCreatedAt().toLocalDate())
+                        .createdAt(myReport.getCreatedAt() != null ? myReport.getCreatedAt().toLocalDate() : null)
                         .job((myRole != null && myRole.getJob() != null) ? myRole.getJob().name() : "-")
                         .situation((myRole != null && myRole.getSituation() != null) ? myRole.getSituation().name() : "-")
                         .avatarName(avatar != null ? avatar.getName() : "AI")

@@ -1,16 +1,19 @@
 package com.example.speakOn.domain.mySpeak.service;
 
 import com.example.speakOn.domain.myRole.entity.MyRole;
-import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
+import com.example.speakOn.domain.myRole.repository.MyRoleRepositoryImpl;
 import com.example.speakOn.domain.mySpeak.converter.MySpeakConverter;
 import com.example.speakOn.domain.mySpeak.dto.form.WaitScreenForm;
+import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
 import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
 import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
+import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.domain.mySpeak.enums.SenderRole;
 import com.example.speakOn.domain.mySpeak.enums.SessionStatus;
 import com.example.speakOn.domain.mySpeak.exception.MySpeakException;
@@ -25,8 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -38,9 +42,10 @@ public class MySpeakService {
     private final TextSynthesisService textSynthesisService;
     private final MySpeakRepository mySpeakRepository;
     private final ConversationSessionRepository conversationSessionRepository;
-    private final MyRoleRepository myRoleRepository;
+    private final MyRoleRepositoryImpl myRoleRepositoryImpl;
     private final ConversationMessageRepository conversationMessageRepository;
     private final MySpeakConverter mySpeakConverter;
+    private final S3UploaderService s3UploaderService;
 
 
     /**
@@ -89,7 +94,7 @@ public class MySpeakService {
     public Long createSession(CreateSessionRequest request) {
         try {
             // MyRole 조회
-            MyRole myRole = myRoleRepository.findById(request.getMyRoleId());
+            MyRole myRole = myRoleRepositoryImpl.findMyRoleById(request.getMyRoleId());
             if (myRole == null) {
                 log.warn("MyRole not found - myRoleId: {}", request.getMyRoleId());
                 throw new MySpeakException(MySpeakErrorCode.NO_MYROLES_AVAILABLE);
@@ -136,24 +141,36 @@ public class MySpeakService {
 
         validateAudioFile(audioFile);
 
-        // STT 변환
-        String transcript = speechRecognitionService.recognizeFromFile(audioFile, request.getLanguageCode());
-
         // 세션 조회
         ConversationSession session = conversationSessionRepository.findById(request.getSessionId());
         if (session == null) {
             throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
         }
 
+        log.info("session={}", session);
+
+        //S3 업로드
+        String audioUrl = s3UploaderService.uploadAudio(audioFile, request);
+
+        // STT 변환
+        String transcript = speechRecognitionService.recognizeFromFile(audioFile, request.getLanguageCode());
+
         // 사용자 메시지 저장
         ConversationMessage userMessage = ConversationMessage.builder()
                 .session(session)
                 .senderRole(SenderRole.USER)
                 .content(transcript)
+                .audioUrl(audioUrl)
                 .messageType(request.getMessageType())
                 .build();
 
         conversationMessageRepository.save(userMessage);
+
+        //질문 카운트 증가
+        if (request.getMessageType() == MessageType.MAIN) {
+            session.incrementQuestionCount();
+        }
+
 
         return new SttResponseDto(transcript);
     }
@@ -196,6 +213,81 @@ public class MySpeakService {
     }
 
     /**
+     * 세션 종료 처리: 마무리 TTS 생성 후 세션 완전 종료
+     *
+     * @param sessionId 종료할 세션 ID
+     * @param request 종료 시점과 총 대화시간 정보
+     * @return 마무리 TTS base64와 통계 정보 포함 응답
+     * @throws MySpeakException 세션이 존재하지 않을 경우
+     */
+    @Transactional
+    public CompleteSessionResponse completeSession(Long sessionId, CompleteSessionRequest request) {
+
+        // 세션 조회
+        ConversationSession session = conversationSessionRepository.findById(sessionId);
+        if (session == null) {
+            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
+        }
+
+        // 문장수 계산
+        Integer sentenceCount = calculateSentenceCount(sessionId);
+
+        // 세션 종료 업데이트 (TTS 전)
+        session.completeSession(request.getTotalTime(), sentenceCount, request.getEndedAt());
+
+        // 마무리 멘트 TTS 생성 + DB 저장
+        String closingText = "Thanks for sharing your perspective. I appreciate your time.";
+        byte[] closingAudioBytes = generateSpeech(
+                new TtsRequestDto(
+                        closingText,
+                        "en-US-Neural2-F",
+                        1.0,
+                        MessageType.CLOSING,
+                        sessionId
+                )
+        );
+
+        // base64로 변환해서 응답
+        String closingTtsBase64 = Base64.getEncoder().encodeToString(closingAudioBytes);
+
+        log.info("세션 {} 종료 완료: 문장수={}, 시간={}s", sessionId, sentenceCount, request.getTotalTime());
+
+        return new CompleteSessionResponse(sessionId, request.getTotalTime(), sentenceCount, closingTtsBase64);
+    }
+
+    /**
+     * 세션 내 사용자 발화 문장 수를 정확히 계산
+     *
+     * @param sessionId 대상 세션 ID
+     * @return 사용자(User SenderRole)의 총 문장 수
+     */
+    private Integer calculateSentenceCount(Long sessionId) {
+        // User 메시지만 가져오기
+        List<ConversationMessage> userMessages = conversationMessageRepository
+                .findBySessionIdAndSenderRole(sessionId, SenderRole.USER);
+
+        return userMessages.stream()
+                .mapToInt(msg -> countUserSentences(msg.getContent()))
+                .sum();
+    }
+
+    /**
+     * 단일 사용자 발화 내용에서 영어 문장 수 카운팅
+     *
+     * @param content 사용자 발화 텍스트
+     * @return !?. 기준으로 분리된 유효 문장 수 (3글자 이상)
+     */
+    private int countUserSentences(String content) {
+        if (content == null || content.trim().isEmpty()) return 0;
+
+        // 영어 문장 기준: !?. + 공백 후 문장 분리
+        String[] sentences = content.split("[.!?]+\\s*");
+        return (int) Arrays.stream(sentences)
+                .filter(s -> s.trim().length() > 2)  // 너무 짧은 건 제외
+                .count();
+    }
+
+    /**
      * 업로드된 음성 파일 형식을 검증한다.
      *
      * @param file 업로드된 파일
@@ -205,15 +297,9 @@ public class MySpeakService {
         if (file == null || file.isEmpty()) {
             throw new MySpeakException(MySpeakErrorCode.INVALID_AUDIO_FORMAT);
         }
-        String contentType = file.getContentType();
-        if (contentType == null ||
-                !(contentType.equals("audio/mpeg") ||
-                        contentType.equals("audio/mp3") ||
-                        contentType.equals("audio/wav") ||
-                        contentType.equals("audio/x-wav") ||
-                        contentType.equals("audio/webm") ||
-                        contentType.equals("audio/ogg") ||
-                        contentType.equals("audio/flac"))) {
+
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.matches("(?i).*\\.(m4a|wav|mp3|mp4|webm|ogg|flac|aac)$")) {
             throw new MySpeakException(MySpeakErrorCode.INVALID_AUDIO_FORMAT);
         }
     }

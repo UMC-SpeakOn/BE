@@ -9,6 +9,17 @@ import java.io.File;
 @Component
 @Slf4j
 public class AudioConverter {
+    // FFmpeg 환경 변수로 가져오는 방식
+    private final String ffmpegPath;
+
+    public AudioConverter() {
+        this.ffmpegPath = System.getenv("FFMPEG_PATH");
+        if (this.ffmpegPath == null || this.ffmpegPath.trim().isEmpty()) {
+            throw new IllegalStateException("FFMPEG_PATH 환경변수가 설정되지 않았습니다.");
+        }
+        log.info("FFmpeg 경로: {}", this.ffmpegPath);  // IntelliJ에서 이 로그 확인!
+    }
+
 
     //음성 파일 -> wav 파일로 변환
     public File convertToWav(MultipartFile multipartFile) {
@@ -19,7 +30,7 @@ public class AudioConverter {
             multipartFile.transferTo(inputFile);
 
             ProcessBuilder pb = new ProcessBuilder(
-                    "ffmpeg",
+                    ffmpegPath,
                     "-y",
                     "-i", inputFile.getAbsolutePath(),
                     "-ac", "1",

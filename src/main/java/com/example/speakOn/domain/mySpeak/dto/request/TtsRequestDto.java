@@ -2,14 +2,12 @@ package com.example.speakOn.domain.mySpeak.dto.request;
 
 import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class TtsRequestDto {
     @NotBlank
     private String text; //AI가 생성한 질문

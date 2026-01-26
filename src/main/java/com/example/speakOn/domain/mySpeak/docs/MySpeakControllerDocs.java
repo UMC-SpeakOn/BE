@@ -1,8 +1,12 @@
 package com.example.speakOn.domain.mySpeak.docs;
 
+import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
 import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
 import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+
+import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
+
 import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
@@ -12,6 +16,9 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+
+import org.springframework.web.bind.annotation.PathVariable;
+
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -136,5 +143,35 @@ public interface MySpeakControllerDocs {
     )
     ApiResponse<TtsResponseDto> tts(@RequestBody TtsRequestDto request);
 
-
+    @Operation(
+            summary = "세션 종료 처리",
+            description = """
+            대화 세션을 종료하고 **마무리 TTS를 생성**합니다.
+            
+            **15분 자동 종료, 사용자 종료 버튼, 질문 완료** 3가지 시나리오 모두 처리.
+            
+            **종료 성공 시**:
+            - 마무리 멘트 TTS를 **base64 문자열**로 즉시 반환
+            - **사용자 문장수 자동 계산** 및 세션 완료 상태 저장  
+            
+            ### 📥 요청 데이터
+            | 필드 | 타입 | 필수 | 설명 |
+            |------|------|------|------|
+            | `endedAt` | `LocalDateTime` | ✅ | 종료 시점 (현재 종료 시간) |
+            | `totalTime` | `Integer` | ✅ | 총 대화 시간 (초 단위, 일시정지 제외) |
+            
+            ### 📤 응답
+            - **성공**: 마무리 TTS base64 + 통계 정보 반환
+            - **실패**: 에러 코드 반환
+            
+            ### 📌 발생 가능한 에러
+            
+            - ❌ **400**
+             - **@NotNull 위반**: `endedAt` 또는 `totalTime` 누락
+            - ❌ **404**
+             - **MS4005**: 존재하지 않는 세션 ID
+            - ❌ **500** 
+             - **MS5007**: 마무리 TTS 생성 실패 (음성 합성 오류)
+            """
+    ) ApiResponse<CompleteSessionResponse> completeSession(@PathVariable Long sessionId, @RequestBody CompleteSessionRequest request);
 }

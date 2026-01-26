@@ -24,19 +24,27 @@ repositories {
 	mavenCentral()
 }
 
+// Spring AI version configuration
+ext {
+    set('springAiVersion', "1.1.2")
+}
+
 dependencies {
 	// Spring Data JPA
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
 	// Spring Security
-//	implementation 'org.springframework.boot:spring-boot-starter-security'
-//	testImplementation 'org.springframework.security:spring-security-test'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	testImplementation 'org.springframework.security:spring-security-test'
+
+	// OAuth 2.0
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
 	// Jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
 	implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
-	implementation 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
 	// Spring Web
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -51,13 +59,32 @@ dependencies {
 	// SpringDoc (OpenAPI/Swagger for Spring Boot 3.x)
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
-	// Test
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Spring AI
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+
+	  // Test
+	  testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+	// Actuator
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
     //Google TTS, STT
     implementation 'com.google.cloud:google-cloud-speech:4.38.0'
     implementation 'com.google.cloud:google-cloud-texttospeech:2.45.0'
+
+    //AWS S3
+    implementation 'software.amazon.awssdk:s3:2.25.0'
+
+    //검증
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+}
+
+// Spring AI dependency version management (BOM)
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
 
 tasks.named('test') {

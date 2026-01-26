@@ -44,3 +44,10 @@ out/
 
 # QueryDSL generated sources
 src/main/generated/
+
+# FFmpeg binary
+ffmpeg-bin/
+ffmpeg.zip
+
+#env
+.env

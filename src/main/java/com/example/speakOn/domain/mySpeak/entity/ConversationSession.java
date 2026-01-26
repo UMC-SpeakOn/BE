@@ -51,12 +51,13 @@ public class ConversationSession extends BaseEntity {
         this.currentQuestionCount++;
     }
 
-    // 대화 종료 및 결과 업데이트
-    public void completeSession(Integer difficulty, Integer totalTime, Integer sentenceCount) {
+
+    // 대화 종료 시 결과 데이터 업데이트
+    public void completeSession(Integer totalTime, Integer sentenceCount, LocalDateTime endedAt) {
         this.status = SessionStatus.COMPLETED;
-        this.userDifficulty = difficulty;
         this.totalTime = totalTime;
         this.sentenceCount = sentenceCount;
-        this.endedAt = LocalDateTime.now();
+        this.endedAt = endedAt;
+
     }
 }

@@ -49,10 +49,7 @@ public interface MyReportControllerDocs {
     })
     ApiResponse<MyReportResponseDTO.MessageLogListDTO> getConversationLogs(
             @Parameter(description = "조회할 리포트의 ID", example = "101")
-            @PathVariable(name = "reportId") Long reportId,
-
-            @Parameter(hidden = true)
-            User user
+            @PathVariable(name = "reportId") Long reportId
     );
 
     @Operation(summary = "사용자 소감 작성 및 난이도 수정 API", description = "리포트 상세 조회 후, 사용자가 소감을 작성하고 난이도를 수정할 때 사용합니다.")

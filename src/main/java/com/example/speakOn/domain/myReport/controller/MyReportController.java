@@ -69,7 +69,7 @@ public class MyReportController implements MyReportControllerDocs {
             @PathVariable(name = "reportId") Long reportId,
             @RequestBody @Valid MyReportRequest.WriteReflectionDTO request) {
 
-        MyReportResponseDTO.WriteReflectionResultDTO result = myReportService.writeReflection(reportId, request);
+        MyReportResponseDTO.WriteReflectionResultDTO result = myReportService.writeReflection(reportId, request, getTempUser());
         return ApiResponse.onSuccess(result);
     }
 }

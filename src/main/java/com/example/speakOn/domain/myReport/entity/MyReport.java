@@ -36,7 +36,7 @@ public class MyReport extends BaseEntity {
     @Column(name = "user_reflection", length = 120)
     private String userReflection;
 
-    // 난의도
+    // 난이도
     @Column(name = "difficulty")
     private Integer difficulty;
 

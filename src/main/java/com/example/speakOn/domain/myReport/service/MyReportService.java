@@ -70,13 +70,15 @@ public class MyReportService {
         return MyReportConverter.toMessageLogListDTO(reportId, messages);
     }
 
-    /**ㅈ
+    /**
      * 사용자 소감 작성 및 난이도 수정
      */
     @Transactional
-    public MyReportResponseDTO.WriteReflectionResultDTO writeReflection(Long myReportId, MyReportRequest.WriteReflectionDTO request) {
+    public MyReportResponseDTO.WriteReflectionResultDTO writeReflection(Long myReportId, MyReportRequest.WriteReflectionDTO request, User user) {
         MyReport myReport = myReportRepository.findById(myReportId)
                 .orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
+
+        validateReportOwner(myReport, user);
 
         myReport.updateReflectionAndDifficulty(request.getFeedback(), request.getDifficulty());
 

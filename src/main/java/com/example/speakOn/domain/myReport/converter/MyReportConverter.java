@@ -21,7 +21,7 @@ public class MyReportConverter {
                 .reportId(myReport.getId())
                 .reflection(myReport.getUserReflection())
                 .difficulty(myReport.getDifficulty())
-                .updatedAt(myReport.getUpdatedAt())
+                .updatedAt(myReport.getUpdatedAt() != null ? myReport.getUpdatedAt() : myReport.getCreatedAt())
                 .build();
     }
 

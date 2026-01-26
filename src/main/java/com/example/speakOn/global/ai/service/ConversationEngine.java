@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -57,11 +58,11 @@ public class ConversationEngine {
         List<String> questions = scenario.getMainQuestions();
 
         if (questions == null || questions.isEmpty()) {
-            return "Instruction: No main questions defined. Wrap up the conversation.";
+            return "Instruction: No main questions defined. Wrap up the conversation. Chat end.";
         }
 
         if (qCount >= questions.size()) {
-            return "Instruction: All planned questions are finished. Provide a summary and gently wrap up the conversation.";
+            return "Instruction: All planned questions are finished. Provide a summary and gently wrap up the conversation. Chat end.";
         }
 
         // 질문 목록을 무작위로 섞어 자연스러운 흐름 유지
@@ -93,10 +94,10 @@ public class ConversationEngine {
         if (signals == null) return false;
 
         // 사용자 입력을 정규화하여 비교 정확도 향상
-        String normalizedMsg = userMsg.trim().toLowerCase().replaceAll("[^a-z ]", "");
+        String normalizedMsg = userMsg.trim().toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N} ]", "");
 
         return signals.stream()
-                .map(s -> s.toLowerCase().replaceAll("[^a-z ]", ""))
+                .map(s -> s.toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N} ]", ""))
                 .anyMatch(normalizedMsg::contains);
     }
 

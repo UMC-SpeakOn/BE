@@ -2,6 +2,7 @@ package com.example.speakOn.global.ai.controller;
 
 import com.example.speakOn.global.ai.domain.ChatRequest;
 import com.example.speakOn.global.ai.dto.AiRequestDto;
+import com.example.speakOn.global.ai.dto.AiTraceResponseDto;
 import com.example.speakOn.global.ai.service.AiService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,6 +50,26 @@ public class AiController {
 
         return ApiResponse.onSuccess(response);
     }
+
+    @PostMapping("/chat/trace")
+    @Operation(summary = "AI 대화 trace", description = "validation/review/fallback 경유 여부를 진단 정보와 함께 반환합니다.")
+    public ApiResponse<AiTraceResponseDto> traceAiChat(@RequestBody @Valid AiRequestDto request) {
+
+        SystemMessage systemMsg = new SystemMessage(request.getSystemMessage());
+        UserMessage userMsg = new UserMessage(request.getUserMessage());
+        Prompt prompt = new Prompt(List.of(systemMsg, userMsg));
+
+        ChatRequest chatReq = ChatRequest.voice(
+                request.getSessionId(),
+                request.getTurn(),
+                request.getUserText()
+        );
+
+        AiTraceResponseDto traced = aiService.callAiTrace(chatReq, prompt, request.getScenarioType());
+
+        return ApiResponse.onSuccess(traced);
+    }
+
 
 
 }

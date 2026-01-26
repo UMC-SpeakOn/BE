@@ -3,6 +3,8 @@ package com.example.speakOn.global.ai.review;
 import com.example.speakOn.global.ai.review.model.FailureType;
 import com.example.speakOn.global.ai.review.model.ReviewState;
 import com.example.speakOn.global.ai.fallback.policy.ChatContext;
+import com.example.speakOn.global.ai.review.scorer.IssueScore;
+import com.example.speakOn.global.ai.review.scorer.IssueScorer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -1,4 +1,4 @@
-package com.example.speakOn.global.ai.review;
+package com.example.speakOn.global.ai.review.scorer;
 
 import com.example.speakOn.global.ai.review.model.FailureType;
 

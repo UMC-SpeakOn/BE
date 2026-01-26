@@ -39,9 +39,9 @@ public class User extends BaseEntity {
     @Column(name = "profile_img_url")
     private String profileImgUrl;
 
-    `@Enumerated`(EnumType.STRING)
-    `@Column`(name = "role", nullable = false, length = 20)
-    `@Builder.Default`
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    @Builder.Default
     private Role role = Role.USER;
 
     @Column(name = "is_onboarded", nullable = false)

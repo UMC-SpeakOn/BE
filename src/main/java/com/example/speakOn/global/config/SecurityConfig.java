@@ -36,7 +36,8 @@ public class SecurityConfig {
                                 "/", "/index.html", "/css/**", "/js/**", "/images/**", "/favicon.ico",  // 정적 리소스
                                 "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", // Swagger 문서
                                 "/error", "/actuator/health",
-                                "/api/auth/**" // 인증 관련 API
+                                "/api/auth/**", // 인증 관련 API
+                                "/api/ai/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

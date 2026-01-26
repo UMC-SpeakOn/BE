@@ -1,0 +1,62 @@
+type: INTERVIEW
+
+# 1. 오프닝
+openers:
+  - "Tell me about yourself."
+  - "Could you begin by introducing yourself?"
+  - "Let's begin. Please tell me about yourself."
+
+# 2. 메인 질문
+mainQuestions:
+  - "What specifically draws you to this role and our company?"
+  - "What kind of experience do you have that is relevant to this position?"
+  - "Can you describe your main responsibilities in your previous work?"
+  - "Can you share an example of a challenging situation you faced at work and how you approached it?"
+  - "What was the outcome of your actions in that situation?"
+  - "What do you consider your greatest professional strength and a corresponding weakness?"
+  - "Is there something unique about your background that makes you stand out from other applicants?"
+  - "What skill do you think is most important for this role, and how have you developed it?"
+  - "How do you prioritize tasks when you have multiple responsibilities?"
+  - "How do you usually handle feedback or constructive criticism from others?"
+  - "What kind of work environment helps you perform at your best?"
+  - "How do you see yourself growing in this role over the next few years?"
+  - "Do you have any questions for me regarding the team or the position?"
+
+# 3. 꼬리 질문 (공통 풀 적용)
+followupQuestions:
+  expansion:
+    - "Can you explain that a bit more?"
+    - "Could you go into more detail on that point?"
+    - "Can you elaborate on how that worked in practice?"
+  reasoning:
+    - "Why do you think that?"
+    - "What led you to that conclusion?"
+    - "Could you explain the reasoning behind that approach?"
+  structuring:
+    - "How would you approach that step by step?"
+    - "What would be your first priority in this situation?"
+  perspective:
+    - "How might others see this differently?"
+    - "What would be the biggest concern or risk here?"
+
+# 4. 종료 멘트 (공통 풀 적용)
+closingMessages:
+  system_driven:
+    - "Alright, we'll wrap up the conversation here. Thank you for taking the time to speak with me."
+    - "Sounds good, Let's stop here for now. Thank you for the conversation."
+  user_driven:
+    - "Thank you for sharing your thoughts. I appreciate the conversation."
+    - "Thanks for your time today. It was good speaking with you."
+  goal_complete:
+    - "That covers all the questions I had. Thank you for the conversation."
+    - "We've reached the end of our discussion. Thank you for your time today."
+
+# 5. 종료 신호 (공통 풀 적용)
+exitSignals:
+  - "that's all from me"
+  - "that's all"
+  - "we're done"
+  - "i'm done"
+  - "let's stop here"
+  - "thank you for your time"
+  - "thanks for your time"

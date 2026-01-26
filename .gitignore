@@ -49,5 +49,8 @@ src/main/generated/
 ffmpeg-bin/
 ffmpeg.zip
 
+### Security/Secrets ###
+google-stt-tts.json
+
 #env
 .env

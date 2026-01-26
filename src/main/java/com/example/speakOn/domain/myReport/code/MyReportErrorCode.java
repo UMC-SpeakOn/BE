@@ -15,6 +15,8 @@ public enum MyReportErrorCode implements BaseCode {
     REFLECTION_TOO_LONG(HttpStatus.BAD_REQUEST, "REPORT4001", "사용자 소감은 최대 120자까지만 입력 가능합니다."),
     REFLECTION_EMPTY(HttpStatus.BAD_REQUEST, "REPORT4002", "소감 내용이 비어 있습니다."),
 
+    INVALID_DIFFICULTY_RANGE(HttpStatus.BAD_REQUEST, "REPORT4009", "난이도는 1점에서 5점 사이의 정수만 입력 가능합니다."),
+
     // 필터링 및 페이징 관련
     INVALID_REPORT_FILTER(HttpStatus.BAD_REQUEST, "REPORT4003", "잘못된 직무 또는 상황 필터 조건입니다."),
     INVALID_PAGE_PARAMETER(HttpStatus.BAD_REQUEST, "REPORT4004", "페이지 번호는 0보다 커야 합니다."),

@@ -1,0 +1,60 @@
+type: COFFEE_CHAT
+
+# 1. 오프닝
+openers:
+  - "How are you today?"
+  - "Thanks for taking the time to chat."
+  - "It’s nice to meet you. How are you?"
+
+# 2. 메인 질문
+mainQuestions:
+  - "I've been working in this industry for about 7 years now. I'd be happy to share my background if you're interested."
+  - "My career path wasn't very typical; I actually started in a completely different field. Would you like to hear how I ended up here?"
+  - "I’ve seen a lot of changes in this industry since I first joined. I can talk about how the landscape has evolved if you're curious."
+  - "My current role involves a mix of strategy and hands-on execution. I can walk you through what a typical day looks like for me."
+  - "There are parts of this job I absolutely love, but also some major challenges I face. Do you want to know about the ups and downs of this role?"
+  - "The field is moving so fast right now, especially with new technologies. I have some thoughts on where we’re headed next."
+  - "Looking back, there are a few specific skills that really helped me succeed here. I can share what those are and how I built them."
+  - "I made quite a few mistakes when I was first starting out. I’d love to share some advice so you can avoid the same pitfalls."
+  - "Staying updated in this field is a constant job. I've developed a few habits for learning new things efficiently if you'd like to hear them."
+  - "I've come across some great books and communities that really helped my growth. I'd be happy to recommend a few to you."
+  - "I know a few other people in this industry who have very different perspectives. I can suggest some other roles you might want to look into."
+
+# 3. 꼬리 질문 (공통 풀 적용)
+followupQuestions:
+  expansion:
+    - "Can you explain that a bit more?"
+    - "Could you go into more detail on that point?"
+    - "Can you elaborate on how that worked in practice?"
+  reasoning:
+    - "Why do you think that?"
+    - "What led you to that conclusion?"
+    - "Could you explain the reasoning behind that approach?"
+  structuring:
+    - "How would you approach that step by step?"
+    - "What would be your first priority in this situation?"
+  perspective:
+    - "How might others see this differently?"
+    - "What would be the biggest concern or risk here?"
+
+# 4. 종료 멘트 (공통 풀 적용)
+closingMessages:
+  system_driven:
+    - "Alright, we'll wrap up the conversation here. Thank you for taking the time to speak with me."
+    - "Sounds good, Let's stop here for now. Thank you for the conversation."
+  user_driven:
+    - "Thank you for sharing your thoughts. I appreciate the conversation."
+    - "Thanks for your time today. It was good speaking with you."
+  goal_complete:
+    - "That covers all the questions I had. Thank you for the conversation."
+    - "We've reached the end of our discussion. Thank you for your time today."
+
+# 5. 종료 신호 (공통 풀 적용)
+exitSignals:
+  - "that's all from me"
+  - "that's all"
+  - "we're done"
+  - "i'm done"
+  - "let's stop here"
+  - "thank you for your time"
+  - "thanks for your time"

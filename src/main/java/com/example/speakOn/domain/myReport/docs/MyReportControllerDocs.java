@@ -1,5 +1,6 @@
 package com.example.speakOn.domain.myReport.docs;
 
+import com.example.speakOn.domain.myReport.dto.request.MyReportRequest;
 import com.example.speakOn.domain.myReport.dto.response.MyReportResponseDTO;
 import com.example.speakOn.domain.myRole.enums.JobType;
 import com.example.speakOn.domain.avatar.enums.SituationType;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "My Report API", description = "학습 결과 리포트 관련 API입니다.")
@@ -51,5 +53,15 @@ public interface MyReportControllerDocs {
 
             @Parameter(hidden = true)
             User user
+    );
+
+    @Operation(summary = "사용자 소감 작성 및 난이도 수정 API", description = "리포트 상세 조회 후, 사용자가 소감을 작성하고 난이도를 수정할 때 사용합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OK, 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4001", description = "해당하는 리포트가 존재하지 않습니다.")
+    })
+    ApiResponse<MyReportResponseDTO.WriteReflectionResultDTO> writeReflection(
+            @Parameter(description = "수정할 리포트의 ID") @PathVariable(name = "reportId") Long reportId,
+            @RequestBody MyReportRequest.WriteReflectionDTO request
     );
 }

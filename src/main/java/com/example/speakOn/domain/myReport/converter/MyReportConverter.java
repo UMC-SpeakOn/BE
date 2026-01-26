@@ -118,6 +118,13 @@ public class MyReportConverter {
 
     // 대화 로그 조회
     public static MyReportResponseDTO.MessageLogListDTO toMessageLogListDTO(Long reportId, List<ConversationMessage> messages) {
+        if (messages == null) {
+            return MyReportResponseDTO.MessageLogListDTO.builder()
+                    .reportId(reportId)
+                    .messages(List.of())
+                    .totalMessageCount(0)
+                    .build();
+        }
         List<MyReportResponseDTO.MessageLogDTO> logList = messages.stream()
                 .map(msg -> MyReportResponseDTO.MessageLogDTO.builder()
                         .messageId(msg.getId())

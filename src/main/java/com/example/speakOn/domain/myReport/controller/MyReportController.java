@@ -61,4 +61,5 @@ public class MyReportController implements MyReportControllerDocs {
 
         return ApiResponse.onSuccess(myReportService.writeReflection(reportId, request, userId));
     }
+
 }

@@ -73,4 +73,24 @@ public class MyRoleController {
 
         return ApiResponse.onSuccess(response);
     }
+
+    @Operation(
+            summary = "내 롤 목록 조회 API",
+            description = "현재 로그인한 사용자의 모든 롤 목록을 최신순으로 조회합니다. 아바타 정보, 직무, 상황이 포함됩니다."
+    )
+    @ApiSuccessCodeExample(resultClass = MyRoleResponse.MyRoleListDTO.class)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "USER_NOT_FOUND"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_UNAUTHORIZED"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_INTERNAL_SERVER_ERROR")
+    })
+    @GetMapping
+    public ApiResponse<MyRoleResponse.MyRoleListDTO> getMyRoles() {
+
+        Long userId = authUtil.getCurrentUserId();
+
+        MyRoleResponse.MyRoleListDTO response = myRoleService.getMyRoles(userId);
+
+        return ApiResponse.onSuccess(response);
+    }
 }

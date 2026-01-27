@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -95,5 +97,25 @@ public class MyRoleServiceImpl implements MyRoleService {
 
         // 5. 응답 변환
         return MyRoleConverter.toDeleteMyRoleResultDTO(myRoleId);
+    }
+
+    /**
+     * 롤 목록 조회
+     *
+     * @param userId 현재 로그인한 사용자 ID
+     * @return 사용자의 모든 롤 목록
+     */
+    @Override
+    public MyRoleResponse.MyRoleListDTO getMyRoles(Long userId) {
+
+        // 1. 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ErrorHandler(ErrorStatus.USER_NOT_FOUND));
+
+        // 2. 사용자의 모든 MyRole 조회 (최신순)
+        List<MyRole> myRoles = myRoleRepository.findByUserOrderByCreatedAtDesc(user);
+
+        // 3. 응답 변환
+        return MyRoleConverter.toMyRoleListDTO(myRoles);
     }
 }

@@ -11,4 +11,7 @@ public interface MyRoleService {
     // 마이롤 삭제
     MyRoleResponse.DeleteMyRoleResultDTO deleteMyRole(Long userId, Long myRoleId);
 
+    // 마이롤 목록 조회
+    MyRoleResponse.MyRoleListDTO getMyRoles(Long userId);
+
 }

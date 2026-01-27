@@ -15,10 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "My Role API", description = "마이롤 관련 API")
 @Slf4j
@@ -51,6 +48,28 @@ public class MyRoleController {
         Long userId = authUtil.getCurrentUserId();
 
         MyRoleResponse.CreateMyRoleResultDTO response = myRoleService.createMyRole(userId, request);
+
+        return ApiResponse.onSuccess(response);
+    }
+
+    @Operation(
+            summary = "롤 삭제 API",
+            description = "특정 롤을 삭제합니다. 본인의 롤만 삭제할 수 있습니다."
+    )
+    @ApiSuccessCodeExample(resultClass = MyRoleResponse.DeleteMyRoleResultDTO.class)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "MY_ROLE_NOT_FOUND"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "MY_ROLE_FORBIDDEN"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "USER_NOT_FOUND"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_UNAUTHORIZED"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_INTERNAL_SERVER_ERROR")
+    })
+    @DeleteMapping("/{myRoleId}")
+    public ApiResponse<MyRoleResponse.DeleteMyRoleResultDTO> deleteMyRole(@PathVariable Long myRoleId) {
+
+        Long userId = authUtil.getCurrentUserId();
+
+        MyRoleResponse.DeleteMyRoleResultDTO response = myRoleService.deleteMyRole(userId, myRoleId);
 
         return ApiResponse.onSuccess(response);
     }

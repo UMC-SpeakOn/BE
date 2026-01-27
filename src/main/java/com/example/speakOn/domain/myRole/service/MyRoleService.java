@@ -7,5 +7,4 @@ public interface MyRoleService {
 
     MyRoleResponse.CreateMyRoleResultDTO createMyRole(Long userId, MyRoleRequest.CreateMyRoleDTO request);
 
-
 }

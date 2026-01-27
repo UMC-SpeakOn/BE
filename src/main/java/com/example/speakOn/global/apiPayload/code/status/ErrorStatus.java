@@ -26,7 +26,8 @@ public enum ErrorStatus implements BaseCode {
 
     // MyRole 관련 에러
     AVATAR_NOT_FOUND(HttpStatus.NOT_FOUND, "ROLE404", "존재하지 않는 아바타입니다."),
-    MY_ROLE_ALREADY_EXISTS(HttpStatus.CONFLICT, "ROLE409", "이미 동일한 역할이 존재합니다.");
+    MY_ROLE_ALREADY_EXISTS(HttpStatus.CONFLICT, "ROLE409", "이미 동일한 역할이 존재합니다."),
+    MY_ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "ROLE404_1", "존재하지 않는 MyRole 입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

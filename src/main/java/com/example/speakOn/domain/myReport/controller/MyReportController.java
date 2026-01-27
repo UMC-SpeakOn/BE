@@ -1,12 +1,14 @@
 package com.example.speakOn.domain.myReport.controller;
 
 import com.example.speakOn.domain.myReport.docs.MyReportControllerDocs;
+import com.example.speakOn.domain.myReport.dto.request.MyReportRequest;
 import com.example.speakOn.domain.myReport.dto.response.MyReportResponseDTO;
 import com.example.speakOn.domain.myReport.service.MyReportService;
 import com.example.speakOn.domain.avatar.enums.SituationType;
 import com.example.speakOn.domain.myRole.enums.JobType;
 import com.example.speakOn.domain.user.entity.User;
 import com.example.speakOn.global.apiPayload.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 //import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -59,5 +61,15 @@ public class MyReportController implements MyReportControllerDocs {
             User user) {
 
         return ApiResponse.onSuccess(myReportService.getConversationLogs(reportId, getTempUser()));
+    }
+
+    @Override
+    @PatchMapping("/{reportId}/reflection")
+    public ApiResponse<MyReportResponseDTO.WriteReflectionResultDTO> writeReflection(
+            @PathVariable(name = "reportId") Long reportId,
+            @RequestBody @Valid MyReportRequest.WriteReflectionDTO request) {
+
+        MyReportResponseDTO.WriteReflectionResultDTO result = myReportService.writeReflection(reportId, request, getTempUser());
+        return ApiResponse.onSuccess(result);
     }
 }

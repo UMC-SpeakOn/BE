@@ -57,3 +57,6 @@ google-stt-tts.json
 
 #env
 .env
+
+# AI Prompts (Security)
+/src/main/resources/ai-prompts/

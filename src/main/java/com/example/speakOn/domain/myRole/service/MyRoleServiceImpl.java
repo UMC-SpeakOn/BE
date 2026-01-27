@@ -65,4 +65,35 @@ public class MyRoleServiceImpl implements MyRoleService {
         // 5. 응답 변환
         return MyRoleConverter.toCreateMyRoleResultDTO(savedMyRole);
     }
+
+    /**
+     * 롤 삭제 (hard delete - DB에서 실제 삭제)
+     *
+     * @param userId   현재 로그인한 사용자 ID
+     * @param myRoleId 삭제할 MyRole ID
+     * @return 삭제된 롤 정보
+     */
+    @Transactional
+    @Override
+    public MyRoleResponse.DeleteMyRoleResultDTO deleteMyRole(Long userId, Long myRoleId) {
+
+        // 1. 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ErrorHandler(ErrorStatus.USER_NOT_FOUND));
+
+        // 2. MyRole 조회
+        MyRole myRole = myRoleRepository.findById(myRoleId)
+                .orElseThrow(() -> new ErrorHandler(ErrorStatus.MY_ROLE_NOT_FOUND));
+
+        // 3. 권한 검증 - 본인의 롤인지 확인
+        if (!myRole.getUser().getId().equals(user.getId())) {
+            throw new ErrorHandler(ErrorStatus.MY_ROLE_FORBIDDEN);
+        }
+
+        // 4. Hard delete (DB에서 실제 삭제)
+        myRoleRepository.delete(myRole);
+
+        // 5. 응답 변환
+        return MyRoleConverter.toDeleteMyRoleResultDTO(myRoleId);
+    }
 }

@@ -5,6 +5,10 @@ import com.example.speakOn.domain.myRole.dto.MyRoleResponse;
 
 public interface MyRoleService {
 
+    // 마이롤 추가
     MyRoleResponse.CreateMyRoleResultDTO createMyRole(Long userId, MyRoleRequest.CreateMyRoleDTO request);
+
+    // 마이롤 삭제
+    MyRoleResponse.DeleteMyRoleResultDTO deleteMyRole(Long userId, Long myRoleId);
 
 }

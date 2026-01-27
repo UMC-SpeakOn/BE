@@ -14,4 +14,11 @@ public class MyRoleConverter {
                 .situation(myRole.getSituation())
                 .build();
     }
+
+    public static MyRoleResponse.DeleteMyRoleResultDTO toDeleteMyRoleResultDTO(Long myRoleId) {
+        return MyRoleResponse.DeleteMyRoleResultDTO.builder()
+                .myRoleId(myRoleId)
+                .message("롤이 성공적으로 삭제되었습니다.")
+                .build();
+    }
 }

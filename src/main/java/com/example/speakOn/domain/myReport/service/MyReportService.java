@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +48,6 @@ public class MyReportService {
         User user = findUser(userId);
 
         List<MyReport> reports = myReportRepository.findAllByUserAndFilters(user, job, situation);
-
         Page<MyReport> reportPage = new PageImpl<>(reports);
 
         return MyReportConverter.toReportSummaryListDTO(reportPage);
@@ -63,7 +63,6 @@ public class MyReportService {
                 .orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
 
         validateReportOwner(report, user);
-
         return MyReportConverter.toReportDetailDTO(report);
     }
 
@@ -72,7 +71,6 @@ public class MyReportService {
      */
     public MyReportResponseDTO.MessageLogListDTO getConversationLogs(Long reportId, Long userId) {
         User user = findUser(userId);
-
         MyReport report = myReportRepository.findById(reportId)
                 .orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
 
@@ -108,7 +106,7 @@ public class MyReportService {
         User reportOwner = (session != null && session.getMyRole() != null)
                 ? session.getMyRole().getUser()
                 : null;
-
+      
         if (reportOwner == null || !reportOwner.getId().equals(user.getId())) {
             log.warn("권한 없는 리포트 접근 시도 - reportId: {}, userId: {}", report.getId(), user.getId());
             throw new MyReportException(MyReportErrorCode.REPORT_ACCESS_DENIED);

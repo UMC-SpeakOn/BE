@@ -61,4 +61,14 @@ public class MyReportController implements MyReportControllerDocs {
 
         return ApiResponse.onSuccess(myReportService.writeReflection(reportId, request, userId));
     }
+
+    @Override
+    @PatchMapping("/{reportId}/reflection")
+    public ApiResponse<MyReportResponseDTO.WriteReflectionResultDTO> writeReflection(
+            @PathVariable(name = "reportId") Long reportId,
+            @RequestBody @Valid MyReportRequest.WriteReflectionDTO request) {
+
+        MyReportResponseDTO.WriteReflectionResultDTO result = myReportService.writeReflection(reportId, request, getTempUser());
+        return ApiResponse.onSuccess(result);
+    }
 }

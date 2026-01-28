@@ -29,15 +29,17 @@ public interface MySpeakControllerDocs {
 
         ### 📌 발생 가능한 에러
 
+        - ❌ **401**: **인증 토큰 누락/만료** (AU4001)
+        - ❌ **403**: **권한 부족** (AU4002)
         - ❌ **400**: 유효하지 않은 사용자 ID (MS4001)
         - ❌ **404**: 이용 가능한 MyRole 없음 (MS4002)
         - ❌ **500**: 서버 오류
-          - MS5001: 사용자 역할 조회 실패
-          - MS5002: 역할 데이터 변환 실패
-          - MS5003: 대기화면 로드 실패
+        - MS5001: 사용자 역할 조회 실패
+        - MS5002: 역할 데이터 변환 실패
+        - MS5003: 대기화면 로드 실패
         """
     )
-    ApiResponse<WaitScreenResponse> getWaitScreen(Long userId);
+    ApiResponse<WaitScreenResponse> getWaitScreen();
 
     @Operation(
             summary = "대화 세션 생성",

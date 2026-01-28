@@ -10,6 +10,7 @@ import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
 import com.example.speakOn.domain.mySpeak.service.MySpeakService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
+import com.example.speakOn.global.util.AuthUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,10 +27,12 @@ import java.util.Base64;
 public class MySpeakController implements MySpeakControllerDocs {
 
     private final MySpeakService mySpeakService;
+    private final AuthUtil authUtil;
 
     //대기 화면 조회 api
-    @GetMapping("/{userId}")
-    public ApiResponse<WaitScreenResponse> getWaitScreen(@PathVariable Long userId) {
+    @GetMapping
+    public ApiResponse<WaitScreenResponse> getWaitScreen() {
+        Long userId = authUtil.getCurrentUserId();
         WaitScreenResponse response = mySpeakService.getWaitScreenForm(userId);
         return ApiResponse.onSuccess(response);
     }

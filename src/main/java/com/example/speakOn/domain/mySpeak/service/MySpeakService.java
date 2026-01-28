@@ -56,9 +56,6 @@ public class MySpeakService {
      */
     public WaitScreenResponse getWaitScreenForm(Long userId) {
         try {
-            // 사용자 ID 검증
-            validateUserId(userId);
-
             // 사용자의 MyRole 조회
             List<MyRole> myRoles = mySpeakRepository.findAllWithUserAvatar(userId);
             validateMyRoles(myRoles);
@@ -317,19 +314,6 @@ public class MySpeakService {
         String filename = file.getOriginalFilename();
         if (filename == null || !filename.matches("(?i).*\\.(m4a|wav|mp3|mp4|webm|ogg|flac|aac)$")) {
             throw new MySpeakException(MySpeakErrorCode.INVALID_AUDIO_FORMAT);
-        }
-    }
-
-    /**
-     * 사용자 ID 검증
-     *
-     * @param userId 검증할 사용자 ID
-     * @throws ErrorHandler userId가 null이거나 0 이하인 경우
-     */
-    private void validateUserId(Long userId) {
-        if (userId == null || userId <= 0) {
-            log.warn("유효하지 않은 사용자 ID: {}", userId);
-            throw new MySpeakException(MySpeakErrorCode.INVALID_USER_ID);
         }
     }
 

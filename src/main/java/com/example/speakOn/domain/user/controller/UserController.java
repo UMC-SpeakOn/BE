@@ -49,6 +49,3 @@ public class UserController {
         return ApiResponse.onSuccess(response);
     }
 }
-
-
-

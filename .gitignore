@@ -42,6 +42,9 @@ out/
 ## application ###
 /src/main/resources/application.yml
 
+# AI Prompts
+/src/main/resources/ai-prompts/
+
 # QueryDSL generated sources
 src/main/generated/
 
@@ -49,5 +52,11 @@ src/main/generated/
 ffmpeg-bin/
 ffmpeg.zip
 
+# STT/TTS
+google-stt-tts.json
+
 #env
 .env
+
+# AI Prompts (Security)
+/src/main/resources/ai-prompts/

@@ -1,9 +1,6 @@
 package com.example.speakOn.domain.mySpeak.docs;
 
-import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
-import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
-import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
-import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.request.*;
 
 import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
 
@@ -174,4 +171,36 @@ public interface MySpeakControllerDocs {
              - **MS5007**: 마무리 TTS 생성 실패 (음성 합성 오류)
             """
     ) ApiResponse<CompleteSessionResponse> completeSession(@PathVariable Long sessionId, @RequestBody CompleteSessionRequest request);
+
+    @Operation(
+            summary = "세션 사용자 난이도 평가 저장",
+            description = """
+                    세션 완료 후 **사용자 난이도 평가**를 저장합니다.
+                    저장이 성공하면:
+                    세션의 `userDifficulty` 필드에 **평가값 저장**
+                    리포트 화면에서 **별점 표시** 가능
+                    
+                    📥 요청 데이터
+                    필드 | 타입 | 필수 | 설명
+                    --- | --- | --- | ---
+                    `userDifficulty` | `Integer` | ✅ | **사용자 평가 난이도 (1~5)**
+                    
+                    📤 응답
+                    성공: **200 OK** (저장 완료)
+                    실패: 에러 코드 반환
+                    
+                    📌 발생 가능한 에러
+                    ❌ **400**
+                    - `userDifficulty` **누락**
+                    - `userDifficulty` **1~5 범위 초과**
+                    
+                    ❌ **404**
+                    - **존재하지 않는 세션 ID** (MS4005)
+                    
+                    ❌ **500**
+                    - **세션 업데이트 실패** (MS5008)
+                    
+                    """
+    )
+    public ApiResponse<Void> saveUserDifficulty(@PathVariable Long sessionId, @Valid @RequestBody UserDifficultyRequest request);
 }

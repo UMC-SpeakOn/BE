@@ -4,10 +4,7 @@ import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.myRole.repository.MyRoleRepositoryImpl;
 import com.example.speakOn.domain.mySpeak.converter.MySpeakConverter;
 import com.example.speakOn.domain.mySpeak.dto.form.WaitScreenForm;
-import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
-import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
-import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
-import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.request.*;
 import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
 import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
@@ -22,6 +19,7 @@ import com.example.speakOn.domain.mySpeak.repository.ConversationMessageReposito
 import com.example.speakOn.domain.mySpeak.repository.ConversationSessionRepository;
 import com.example.speakOn.domain.mySpeak.repository.MySpeakRepository;
 import com.example.speakOn.global.apiPayload.exception.handler.ErrorHandler;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -256,6 +254,24 @@ public class MySpeakService {
     }
 
     /**
+     * 세션의 사용자 난이도 평가를 저장
+     *
+     * @param sessionId 대상 세션 ID
+     * @param request 사용자 난이도 평가 정보 (1~5)
+     * @throws MySpeakException 세션이 존재하지 않을 경우 발생
+     */
+    @Transactional
+    public void saveUserDifficulty(Long sessionId, UserDifficultyRequest request) {
+        // 세션 조회
+        ConversationSession session = conversationSessionRepository.findById(sessionId);
+        if (session == null) {
+            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
+        }
+
+        session.saveUserDifficulty(request.getUserDifficulty());
+    }
+
+    /**
      * 세션 내 사용자 발화 문장 수를 정확히 계산
      *
      * @param sessionId 대상 세션 ID
@@ -329,5 +345,4 @@ public class MySpeakService {
             throw new MySpeakException(MySpeakErrorCode.NO_MYROLES_AVAILABLE);
         }
     }
-
 }

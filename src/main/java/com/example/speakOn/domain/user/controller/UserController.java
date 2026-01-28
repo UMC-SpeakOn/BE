@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "유저 관련 페이지", description = "유저에 관한 API")
+@Tag(name = "User API", description = "유저에 관한 API")
 @Slf4j
 @Validated
 @RequiredArgsConstructor
@@ -49,6 +49,3 @@ public class UserController {
         return ApiResponse.onSuccess(response);
     }
 }
-
-
-

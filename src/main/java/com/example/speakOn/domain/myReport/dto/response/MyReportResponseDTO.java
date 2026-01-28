@@ -3,10 +3,12 @@ package com.example.speakOn.domain.myReport.dto.response;
 import com.example.speakOn.domain.myReport.enums.ToneType;
 import com.example.speakOn.domain.mySpeak.enums.SenderRole;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import lombok.*;
-import java.util.List;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 public class MyReportResponseDTO {
 
@@ -14,20 +16,50 @@ public class MyReportResponseDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
+    @Schema(description = "리포트 목록 응답 (페이징 포함)")
     public static class ReportSummaryListDTO {
+        @Schema(description = "리포트 요약 목록")
         private List<ReportSummaryDTO> reportList;
+
+        @Schema(description = "현재 페이지의 리스트 크기", example = "10")
+        private Integer listSize;
+
+        @Schema(description = "총 페이지 수", example = "5")
+        private Integer totalPage;
+
+        @Schema(description = "총 데이터 개수", example = "42")
+        private Long totalElements;
+
+        @Schema(description = "첫 페이지 여부", example = "true")
+        private Boolean isFirst;
+
+        @Schema(description = "마지막 페이지 여부", example = "false")
+        private Boolean isLast;
     }
 
     @Builder
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
+    @Schema(description = "리포트 요약 정보 (목록 조회용)")
     public static class ReportSummaryDTO {
+        @Schema(description = "리포트 ID", example = "1")
         private Long reportId;
+
+        @Schema(description = "직무", example = "PM")
         private String job;
+
+        @Schema(description = "상황", example = "INTERVIEW")
         private String situation;
+
+        @Schema(description = "사용자 소감", example = "아쉬움이 남는 대화였다.")
         private String userReflection;
-        private LocalDateTime createdAt;
+
+        @Schema(description = "생성 날짜", example = "2024-01-27")
+        private LocalDate createdAt;
+
+        @Schema(description = "난이도 (1~5)", example = "3")
+        private Integer difficulty;
     }
 
     @Builder
@@ -36,11 +68,14 @@ public class MyReportResponseDTO {
     @AllArgsConstructor
     @Schema(description = "리포트 상세 정보 응답")
     public static class ReportDetailDTO {
-        @Schema(description = "리포트 기본 정보")
+        @Schema(description = "리포트 ID")
+        private Long reportId;
+
+        @Schema(description = "리포트 기본 정보 (세션 요약)")
         private SessionSummaryDTO sessionSummary;
 
         @Schema(description = "AI 인사이트 카드")
-        private AiInsightCardDTO aiInsight;
+        private AiInsightCardDTO aiInsightCard;
 
         @Schema(description = "사용자 회고")
         private String userReflection;
@@ -53,15 +88,23 @@ public class MyReportResponseDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
+    @Schema(description = "세션 요약 정보")
     public static class SessionSummaryDTO {
         private String avatarName;
         private String avatarImgUrl;
         private String job;
         private String situation;
-        private Integer totalTime;
+
+        @Schema(description = "총 소요 시간", example = "00:15:00")
+        private LocalTime totalTime;
+
+        @Schema(description = "총 문장 수", example = "25")
         private Integer sentenceCount;
-        private Integer userDifficulty;
-        private LocalDateTime createdAt;
+
+        @Schema(description = "체감 난이도 (수정된 값)", example = "3")
+        private Integer difficulty;
+
+        private LocalDate createdAt;
     }
 
     @Builder
@@ -69,10 +112,10 @@ public class MyReportResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AiInsightCardDTO {
-        private String aiSummary; // 핵심 해석
+        private String aiSummary;
         private ToneAnalysisDTO toneAnalysis;
-        private List<String> aiReason; // 근거 설명
-        private List<CorrectionDTO> corrections; // 교정 피드백
+        private List<String> aiReason;
+        private List<CorrectionDTO> corrections;
     }
 
     @Builder
@@ -132,5 +175,24 @@ public class MyReportResponseDTO {
 
         @Schema(description = "대화 시각", example = "2024-01-23T14:30:00")
         private LocalDateTime createdAt;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema(description = "소감 작성 및 난이도 수정 결과")
+    public static class WriteReflectionResultDTO {
+        @Schema(description = "리포트 ID")
+        Long reportId;
+
+        @Schema(description = "수정된 난이도")
+        Integer difficulty;
+
+        @Schema(description = "작성된 소감")
+        String reflection;
+
+        @Schema(description = "수정 완료 시각")
+        LocalDateTime updatedAt;
     }
 }

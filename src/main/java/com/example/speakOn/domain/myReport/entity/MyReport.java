@@ -36,13 +36,23 @@ public class MyReport extends BaseEntity {
     @Column(name = "user_reflection", length = 120)
     private String userReflection;
 
+    // 난이도
+    @Column(name = "difficulty")
+    private Integer difficulty;
+
     // AI 요약
     @Column(name = "ai_summary", columnDefinition = "TEXT")
     private String aiSummary;
 
-    // AI 근거 설명 (JSONB)
+    // AI 근거 설명
     @Column(name = "ai_reason", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     @Builder.Default
     private List<String> aiReason = new ArrayList<>();
+
+    // 비즈니스 로직
+    public void updateReflectionAndDifficulty(String userReflection, Integer difficulty) {
+        this.userReflection = userReflection;
+        this.difficulty = difficulty;
+    }
 }

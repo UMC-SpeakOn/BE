@@ -2,27 +2,30 @@ package com.example.speakOn.global.ai.domain;
 
 public record ChatRequest(
 
-        String sessionId,   // 음성 회화 세션 ID
-        int turn,           // 대화 턴 번호
-        String userText    // STT 결과 (사용자 발화)
+        Long myRoleId,
+        int qCount,
+        int depth,
+        String userText
 
 
 ) {
 
-    public static ChatRequest voice(
-            String sessionId,
-            int turn,
+    public static ChatRequest of(
+            Long myRoleId,
+            int qCount,
+            int depth,
             String userText
     ) {
         return new ChatRequest(
-                sessionId,
-                turn,
+                myRoleId,
+                qCount,
+                depth,
                 userText
         );
     }
 
-    public boolean isFirstTurn() {
-        return turn == 1;
+    public boolean isFirstQuestion() {
+        return qCount == 0 && depth == 0;
     }
 
     public boolean isEmptyUtterance() {

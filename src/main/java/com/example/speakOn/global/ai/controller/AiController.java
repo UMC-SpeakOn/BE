@@ -1,75 +1,47 @@
 package com.example.speakOn.global.ai.controller;
 
-import com.example.speakOn.global.ai.domain.ChatRequest;
-import com.example.speakOn.global.ai.dto.AiRequestDto;
-import com.example.speakOn.global.ai.dto.AiTraceResponseDto;
-import com.example.speakOn.global.ai.service.AiService;
+import com.example.speakOn.global.ai.docs.AiControllerDocs;
+import com.example.speakOn.global.ai.dto.AiRequest;
+import com.example.speakOn.global.ai.dto.AiResponse;
+import com.example.speakOn.global.ai.service.AiSpeakService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-@Tag(name = "AI API", description = "AI 연동 API")
 @RestController
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
-public class AiController {
+public class AiController implements AiControllerDocs { // 1. Docs 인터페이스 구현
 
-    private final AiService aiService;
+    private final AiSpeakService aiService;
 
+    /**
+     * AI 오프닝 멘트 조회
+     * 인터페이스(AiControllerDocs)에 정의된 Swagger 설정을 그대로 따릅니다.
+     */
+    @Override
+    @GetMapping("/opener")
+    public ApiResponse<String> getOpener(@RequestParam(name = "myRoleId") Long myRoleId) {
+        // 서비스 로직 호출 및 성공 응답 반환
+        return ApiResponse.onSuccess(aiService.getOpener(myRoleId));
+    }
+
+    /**
+     * AI 상황 별 질문 생성
+     * @Valid를 통해 AiRequest 내부에 설정한 검증 로직(NotNull, Min 등)을 활성화합니다.
+     */
+    @Override
     @PostMapping("/chat")
-    @Operation(summary = "AI 대화 테스트", description = "시스템 역할과 사용자 메시지를 보내 AI 응답을 받습니다.")
-    public ApiResponse<String> testAiChat(@RequestBody @Valid AiRequestDto request) {
-
-        // 1. 메시지 생성
-        SystemMessage systemMsg = new SystemMessage(request.getSystemMessage());
-        UserMessage userMsg = new UserMessage(request.getUserMessage());
-
-        // 1.2 도메인 ChatRequest 생성 (리뷰/폴백에서 사용)
-        ChatRequest chatReq = ChatRequest.voice(
-                request.getSessionId(),
-                request.getTurn(),
-                request.getUserText()
+    public ApiResponse<AiResponse> chat(@RequestBody @Valid AiRequest request) {
+        // DTO에서 데이터를 추출하여 서비스 레이어 전달
+        return ApiResponse.onSuccess(
+                aiService.chat(
+                        request.getMyRoleId(),
+                        request.getUserMessage(),
+                        request.getQCount(),
+                        request.getDepth()
+                )
         );
-
-        // 2. 프롬프트 조립 및 호출
-        Prompt prompt = new Prompt(List.of(systemMsg, userMsg));
-        String response = aiService.callAi(chatReq, prompt, request.getScenarioType());
-
-
-
-        return ApiResponse.onSuccess(response);
     }
-
-    @PostMapping("/chat/trace")
-    @Operation(summary = "AI 대화 trace", description = "validation/review/fallback 경유 여부를 진단 정보와 함께 반환합니다.")
-    public ApiResponse<AiTraceResponseDto> traceAiChat(@RequestBody @Valid AiRequestDto request) {
-
-        SystemMessage systemMsg = new SystemMessage(request.getSystemMessage());
-        UserMessage userMsg = new UserMessage(request.getUserMessage());
-        Prompt prompt = new Prompt(List.of(systemMsg, userMsg));
-
-        ChatRequest chatReq = ChatRequest.voice(
-                request.getSessionId(),
-                request.getTurn(),
-                request.getUserText()
-        );
-
-        AiTraceResponseDto traced = aiService.callAiTrace(chatReq, prompt, request.getScenarioType());
-
-        return ApiResponse.onSuccess(traced);
-    }
-
-
-
 }

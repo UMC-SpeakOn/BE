@@ -1,7 +1,7 @@
 package com.example.speakOn.domain.mySpeak.service;
 
 import com.example.speakOn.domain.myRole.entity.MyRole;
-import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
+import com.example.speakOn.domain.myRole.repository.MyRoleRepositoryImpl;
 import com.example.speakOn.domain.mySpeak.converter.MySpeakConverter;
 import com.example.speakOn.domain.mySpeak.dto.form.WaitScreenForm;
 import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
@@ -28,11 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -44,7 +42,7 @@ public class MySpeakService {
     private final TextSynthesisService textSynthesisService;
     private final MySpeakRepository mySpeakRepository;
     private final ConversationSessionRepository conversationSessionRepository;
-    private final MyRoleRepository myRoleRepository;
+    private final MyRoleRepositoryImpl myRoleRepositoryImpl;
     private final ConversationMessageRepository conversationMessageRepository;
     private final MySpeakConverter mySpeakConverter;
     private final S3UploaderService s3UploaderService;
@@ -96,7 +94,7 @@ public class MySpeakService {
     public Long createSession(CreateSessionRequest request) {
         try {
             // MyRole 조회
-            MyRole myRole = myRoleRepository.findById(request.getMyRoleId());
+            MyRole myRole = myRoleRepositoryImpl.findMyRoleById(request.getMyRoleId());
             if (myRole == null) {
                 log.warn("MyRole not found - myRoleId: {}", request.getMyRoleId());
                 throw new MySpeakException(MySpeakErrorCode.NO_MYROLES_AVAILABLE);

@@ -32,7 +32,7 @@ public class FlowIssueScorer implements IssueScorer {
             return new IssueScore(FailureType.FLOW_ISSUE, Math.min(1.0, base), "no next question / prompt");
         }
 
-        if (req != null && req.isFirstTurn() && scenario == ScenarioType.INTERVIEW) {
+        if (req != null && req.isFirstQuestion() && scenario == ScenarioType.INTERVIEW) {
             boolean hasIntro = norm.contains("introduce yourself") || norm.contains("tell me about yourself");
             if (!hasIntro) {
                 return new IssueScore(FailureType.FLOW_ISSUE, 0.62, "missing standard interview opener");

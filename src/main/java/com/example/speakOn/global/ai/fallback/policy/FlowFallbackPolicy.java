@@ -16,7 +16,7 @@ public class FlowFallbackPolicy implements FallbackPolicy {
 
     @Override
     public String apply(ChatContext context, ReviewState state) {
-        if (context.chatReq() != null && context.chatReq().isFirstTurn()) {
+        if (context.chatReq() != null && context.chatReq().isFirstQuestion()) {
             return "Thanks for joining today. To start, could you briefly introduce yourself?";
         }
         return "Let’s stay focused. Could you answer with one key point and one example?";

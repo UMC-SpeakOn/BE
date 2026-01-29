@@ -5,15 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
-public class KakaoDTO {
+public class GoogleDTO {
 
     /**
-     * 카카오 인가 코드 요청 DTO
+     * 구글 인가 코드 요청 DTO
      */
-
-    @Schema(description = "카카오 인가 코드 요청")
+    @Schema(description = "구글 인가 코드 요청")
     public record CodeRequest(
-            @Schema(description = "카카오 인가 코드 (리다이렉트 URL의 code 파라미터)", example = "aBcDeFgHiJkLmNoPqRsTuVwXyZ123456789")
+            @Schema(description = "구글 인가 코드 (리다이렉트 URL의 code 파라미터)", example = "4/0AX4XfWh_example_code_123456789")
             @NotBlank
             String code,
 
@@ -23,7 +22,7 @@ public class KakaoDTO {
     }
 
     /**
-     * 카카오 토큰 응답 DTO
+     * 구글 토큰 응답 DTO
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record TokenResponse(
@@ -31,32 +30,29 @@ public class KakaoDTO {
             String accessToken,
 
             @JsonProperty("refresh_token")
-            String refreshToken
+            String refreshToken,
+
+            @JsonProperty("token_type")
+            String tokenType,
+
+            @JsonProperty("expires_in")
+            Long expiresIn
     ) {
     }
 
     /**
-     * 카카오 사용자 정보 응답 DTO
+     * 구글 사용자 정보 응답 DTO
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record UserInfoResponse(
-            Long id,
+            String id,
 
-            @JsonProperty("kakao_account")
-            KakaoAccount kakaoAccount
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record KakaoAccount(
             String email,
-            Profile profile
-    ) {
-    }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Profile(
-            String nickname
+            String name,
+
+            @JsonProperty("picture")
+            String picture
     ) {
     }
 }

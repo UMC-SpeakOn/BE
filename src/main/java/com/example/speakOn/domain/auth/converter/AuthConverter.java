@@ -1,6 +1,7 @@
 package com.example.speakOn.domain.auth.converter;
 
 import com.example.speakOn.domain.auth.dto.AuthResponse;
+import com.example.speakOn.domain.auth.dto.GoogleDTO;
 import com.example.speakOn.domain.auth.dto.KakaoDTO;
 import com.example.speakOn.domain.user.entity.User;
 import com.example.speakOn.domain.user.enums.Role;
@@ -25,6 +26,20 @@ public class AuthConverter {
                 .email(kakaoUserInfo.kakaoAccount().email())
                 .name(kakaoUserInfo.kakaoAccount().profile().nickname())
                 .nickname(kakaoUserInfo.kakaoAccount().profile().nickname())
+                .role(Role.USER)
+                .isOnboarded(false)
+                .build();
+    }
+
+    // 구글 유저 정보 -> User 엔티티 변환
+    public static User toUser(GoogleDTO.UserInfoResponse googleUserInfo, SocialType socialType) {
+        return User.builder()
+                .socialId(googleUserInfo.id())
+                .socialType(socialType)
+                .email(googleUserInfo.email())
+                .name(googleUserInfo.name())
+                .nickname(googleUserInfo.name())
+                .profileImgUrl(googleUserInfo.picture())
                 .role(Role.USER)
                 .isOnboarded(false)
                 .build();

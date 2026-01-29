@@ -1,4 +1,4 @@
-package com.example.speakOn.global.ai.fallback.model;
+package com.example.speakOn.global.ai.review.model;
 
 public record ReviewState(
         FailureType failureType,

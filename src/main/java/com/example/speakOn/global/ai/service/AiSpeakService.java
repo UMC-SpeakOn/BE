@@ -4,8 +4,14 @@ import com.example.speakOn.domain.avatar.entity.Avatar;
 import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.avatar.repository.StyleRepository;
 import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
+import com.example.speakOn.global.ai.domain.ChatRequest;
 import com.example.speakOn.global.ai.dto.*;
 import com.example.speakOn.global.ai.exception.AiErrorCode;
+import com.example.speakOn.global.ai.fallback.AiFallbackHandler;
+import com.example.speakOn.global.ai.fallback.policy.ChatContext;
+import com.example.speakOn.global.ai.review.ReviewEngine;
+import com.example.speakOn.global.ai.review.ScenarioType;
+import com.example.speakOn.global.ai.review.model.ReviewState;
 import com.example.speakOn.global.apiPayload.code.status.ErrorStatus;
 import com.example.speakOn.global.apiPayload.exception.GeneralException;
 import com.example.speakOn.global.ai.util.ServiceExecutor;
@@ -28,6 +34,8 @@ public class AiSpeakService {
     private final StyleRepository styleRepository;
     private final PromptMapper promptMapper;
     private final ConversationEngine conversationEngine;
+    private final ReviewEngine reviewEngine;
+    private final AiFallbackHandler aiFallbackHandler;
 
     /**
      * 상황별 오프닝 멘트 조회
@@ -58,13 +66,38 @@ public class AiSpeakService {
             // 3. 프롬프트 생성
             Prompt prompt = createPrompt(myRole, userMessage, nextState);
 
-            // 4. AI 응답 생성
+            // 4. AI 1ck 응답 생성
             ChatResponse response = chatModel.call(prompt);
             String aiResponse = java.util.Optional.ofNullable(response.getResult().getOutput().getText())
                     .filter(t -> !t.isBlank())
                     .orElseThrow(() -> new GeneralException(AiErrorCode.AI_PARSE_ERROR));
 
-            // 5. 응답 DTO 조립 (isFinished() 게터 사용)
+            // 5. ChatContext 생성 (review / fallback 공통 컨텍스트)
+            ChatRequest chatReq = ChatRequest.of(
+                    myRoleId,
+                    nextState.getQCount(),
+                    nextState.getDepth(),
+                    userMessage
+            );
+            ChatContext context = ChatContext.of(chatReq, aiResponse);
+
+            // 6. 리뷰 (품질 평가)
+            ReviewState reviewState =
+                    reviewEngine.review(context, ScenarioType.INTERVIEW);
+
+            // 7. fallback 판단 및 실행
+            if (!reviewState.isOk()) {
+                log.warn(
+                        "[AI Fallback Triggered] type={}, confidence={}, reason={}",
+                        reviewState.failureType(),
+                        reviewState.confidence(),
+                        reviewState.reason()
+                );
+
+                aiResponse = aiFallbackHandler.handle(context, reviewState);
+            }
+
+            // 8. 응답 DTO 조립 (isFinished() 게터 사용)
             return AiResponse.builder()
                     .aiMessage(aiResponse)
                     .qCount(nextState.getQCount())
@@ -165,4 +198,5 @@ public class AiSpeakService {
             return "Hello! I'm ready to talk.";
         }
     }
+
 }

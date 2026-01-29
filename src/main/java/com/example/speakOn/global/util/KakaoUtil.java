@@ -28,8 +28,10 @@ public class KakaoUtil {
 
     /**
      * 인가 코드로 액세스 토큰 받아오기
+     * @param code 카카오 인가 코드
+     * @param redirectUri 프론트에서 보낸 리다이렉트 URI (없으면 설정값 사용)
      */
-    public String getAccessToken(String code) {
+    public String getAccessToken(String code, String redirectUri) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
@@ -37,7 +39,7 @@ public class KakaoUtil {
             MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
             body.add("grant_type", "authorization_code");
             body.add("client_id", clientId);
-            body.add("redirect_uri", redirectUri);
+            body.add("redirect_uri", redirectUri != null ? redirectUri : this.redirectUri);
             body.add("code", code);
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);

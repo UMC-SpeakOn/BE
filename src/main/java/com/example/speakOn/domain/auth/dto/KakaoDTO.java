@@ -15,7 +15,10 @@ public class KakaoDTO {
     public record CodeRequest(
             @Schema(description = "카카오 인가 코드 (리다이렉트 URL의 code 파라미터)", example = "aBcDeFgHiJkLmNoPqRsTuVwXyZ123456789")
             @NotBlank
-            String code
+            String code,
+
+            @Schema(description = "리다이렉트 URI (프론트 환경에 맞게: localhost:5173 또는 배포 주소)", example = "http://localhost:5173")
+            String redirectUri
     ) {
     }
 

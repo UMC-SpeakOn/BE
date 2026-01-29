@@ -39,8 +39,4 @@ public class MyRole extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "situation", nullable = false)
     private SituationType situation;
-
-    @Column(name = "is_active", nullable = false)
-    @Builder.Default
-    private boolean isActive = true;
 }

@@ -15,10 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "My Role API", description = "마이롤 관련 API")
 @Slf4j
@@ -51,6 +48,48 @@ public class MyRoleController {
         Long userId = authUtil.getCurrentUserId();
 
         MyRoleResponse.CreateMyRoleResultDTO response = myRoleService.createMyRole(userId, request);
+
+        return ApiResponse.onSuccess(response);
+    }
+
+    @Operation(
+            summary = "롤 삭제 API",
+            description = "특정 롤을 삭제합니다. 본인의 롤만 삭제할 수 있습니다."
+    )
+    @ApiSuccessCodeExample(resultClass = MyRoleResponse.DeleteMyRoleResultDTO.class)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "MY_ROLE_NOT_FOUND"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "MY_ROLE_FORBIDDEN"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "USER_NOT_FOUND"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_UNAUTHORIZED"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_INTERNAL_SERVER_ERROR")
+    })
+    @DeleteMapping("/{myRoleId}")
+    public ApiResponse<MyRoleResponse.DeleteMyRoleResultDTO> deleteMyRole(@PathVariable Long myRoleId) {
+
+        Long userId = authUtil.getCurrentUserId();
+
+        MyRoleResponse.DeleteMyRoleResultDTO response = myRoleService.deleteMyRole(userId, myRoleId);
+
+        return ApiResponse.onSuccess(response);
+    }
+
+    @Operation(
+            summary = "내 롤 목록 조회 API",
+            description = "현재 로그인한 사용자의 모든 롤 목록을 최신순으로 조회합니다. 아바타 정보, 직무, 상황이 포함됩니다."
+    )
+    @ApiSuccessCodeExample(resultClass = MyRoleResponse.MyRoleListDTO.class)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "USER_NOT_FOUND"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_UNAUTHORIZED"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_INTERNAL_SERVER_ERROR")
+    })
+    @GetMapping
+    public ApiResponse<MyRoleResponse.MyRoleListDTO> getMyRoles() {
+
+        Long userId = authUtil.getCurrentUserId();
+
+        MyRoleResponse.MyRoleListDTO response = myRoleService.getMyRoles(userId);
 
         return ApiResponse.onSuccess(response);
     }

@@ -19,7 +19,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
 public class GoogleUtil {
 

@@ -6,5 +6,5 @@ public interface AuthService {
 
     AuthResponse.SocialLoginResponseDTO loginWithKakaoCode(String code, String redirectUri);
 
-    AuthResponse.SocialLoginResponseDTO loginWithGoogleCode(String code, String redirectUri);
+//    AuthResponse.SocialLoginResponseDTO loginWithGoogleCode(String code, String redirectUri);
 }

@@ -1,9 +1,6 @@
 package com.example.speakOn.domain.mySpeak.docs;
 
-import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
-import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
-import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
-import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.request.*;
 
 import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
 
@@ -32,15 +29,17 @@ public interface MySpeakControllerDocs {
 
         ### 📌 발생 가능한 에러
 
+        - ❌ **401**: **인증 토큰 누락/만료** (AU4001)
+        - ❌ **403**: **권한 부족** (AU4002)
         - ❌ **400**: 유효하지 않은 사용자 ID (MS4001)
         - ❌ **404**: 이용 가능한 MyRole 없음 (MS4002)
         - ❌ **500**: 서버 오류
-          - MS5001: 사용자 역할 조회 실패
-          - MS5002: 역할 데이터 변환 실패
-          - MS5003: 대기화면 로드 실패
+        - MS5001: 사용자 역할 조회 실패
+        - MS5002: 역할 데이터 변환 실패
+        - MS5003: 대기화면 로드 실패
         """
     )
-    ApiResponse<WaitScreenResponse> getWaitScreen(Long userId);
+    ApiResponse<WaitScreenResponse> getWaitScreen();
 
     @Operation(
             summary = "대화 세션 생성",
@@ -174,4 +173,36 @@ public interface MySpeakControllerDocs {
              - **MS5007**: 마무리 TTS 생성 실패 (음성 합성 오류)
             """
     ) ApiResponse<CompleteSessionResponse> completeSession(@PathVariable Long sessionId, @RequestBody CompleteSessionRequest request);
+
+    @Operation(
+            summary = "세션 사용자 난이도 평가 저장",
+            description = """
+                    세션 완료 후 **사용자 난이도 평가**를 저장합니다.
+                    저장이 성공하면:
+                    세션의 `userDifficulty` 필드에 **평가값 저장**
+                    리포트 화면에서 **별점 표시** 가능
+                    
+                    📥 요청 데이터
+                    필드 | 타입 | 필수 | 설명
+                    --- | --- | --- | ---
+                    `userDifficulty` | `Integer` | ✅ | **사용자 평가 난이도 (1~5)**
+                    
+                    📤 응답
+                    성공: **200 OK** (저장 완료)
+                    실패: 에러 코드 반환
+                    
+                    📌 발생 가능한 에러
+                    ❌ **400**
+                    - `userDifficulty` **누락**
+                    - `userDifficulty` **1~5 범위 초과**
+                    
+                    ❌ **404**
+                    - **존재하지 않는 세션 ID** (MS4005)
+                    
+                    ❌ **500**
+                    - **세션 업데이트 실패** (MS5008)
+                    
+                    """
+    )
+    public ApiResponse<Void> saveUserDifficulty(@PathVariable Long sessionId, @Valid @RequestBody UserDifficultyRequest request);
 }

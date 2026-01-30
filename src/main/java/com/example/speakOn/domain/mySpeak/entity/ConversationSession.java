@@ -60,4 +60,9 @@ public class ConversationSession extends BaseEntity {
         this.endedAt = endedAt;
 
     }
+
+    // 사용자 난이도 저장
+    public void saveUserDifficulty(Integer userDifficulty) {
+        this.userDifficulty = userDifficulty;
+    }
 }

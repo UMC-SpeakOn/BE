@@ -1,10 +1,7 @@
 package com.example.speakOn.domain.mySpeak.controller;
 
 import com.example.speakOn.domain.mySpeak.docs.MySpeakControllerDocs;
-import com.example.speakOn.domain.mySpeak.dto.request.CompleteSessionRequest;
-import com.example.speakOn.domain.mySpeak.dto.request.CreateSessionRequest;
-import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
-import com.example.speakOn.domain.mySpeak.dto.request.TtsRequestDto;
+import com.example.speakOn.domain.mySpeak.dto.request.*;
 
 import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
 
@@ -13,6 +10,7 @@ import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
 import com.example.speakOn.domain.mySpeak.service.MySpeakService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
+import com.example.speakOn.global.util.AuthUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,10 +27,12 @@ import java.util.Base64;
 public class MySpeakController implements MySpeakControllerDocs {
 
     private final MySpeakService mySpeakService;
+    private final AuthUtil authUtil;
 
     //대기 화면 조회 api
-    @GetMapping("/{userId}")
-    public ApiResponse<WaitScreenResponse> getWaitScreen(@PathVariable Long userId) {
+    @GetMapping
+    public ApiResponse<WaitScreenResponse> getWaitScreen() {
+        Long userId = authUtil.getCurrentUserId();
         WaitScreenResponse response = mySpeakService.getWaitScreenForm(userId);
         return ApiResponse.onSuccess(response);
     }
@@ -71,7 +71,7 @@ public class MySpeakController implements MySpeakControllerDocs {
     }
 
     // 세션 종료 api
-    @PostMapping("/{sessionId}/complete")
+    @PostMapping("/sessions/{sessionId}/complete")
     public ApiResponse<CompleteSessionResponse> completeSession(
             @PathVariable Long sessionId,
             @Valid @RequestBody CompleteSessionRequest request) {
@@ -81,4 +81,13 @@ public class MySpeakController implements MySpeakControllerDocs {
         return ApiResponse.onSuccess(response);
     }
 
+    //사용자 난이도 저장 api
+    @PostMapping("/sessions/{sessionId}/difficulty")
+    public ApiResponse<Void> saveUserDifficulty(
+            @PathVariable Long sessionId,
+            @Valid @RequestBody UserDifficultyRequest request) {
+
+        mySpeakService.saveUserDifficulty(sessionId, request);
+        return ApiResponse.onSuccess(null);
+    }
 }

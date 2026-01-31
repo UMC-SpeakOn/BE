@@ -30,6 +30,8 @@ public class MyReportRepositoryImpl implements MyReportRepositoryCustom {
 
     @Override
     public Slice<MyReport> findAllByUserAndFilters(User user, MyReportRequest.ReportFilterDTO filter, Pageable pageable) {
+        MyReportRequest.ReportFilterDTO safeFilter =
+                (filter != null) ? filter : new MyReportRequest.ReportFilterDTO();
         QMyReport report = QMyReport.myReport;
         QConversationSession session = QConversationSession.conversationSession;
         QMyRole myRole = QMyRole.myRole;

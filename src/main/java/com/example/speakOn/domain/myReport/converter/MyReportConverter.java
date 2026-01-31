@@ -96,6 +96,9 @@ public class MyReportConverter {
     }
 
     private static List<MyReportResponseDTO.MessageLogDTO> toMessageLogDTOList(List<ConversationMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return List.of();
+            }
         return messages.stream()
                 .map(msg -> MyReportResponseDTO.MessageLogDTO.builder()
                         .messageId(msg.getId())

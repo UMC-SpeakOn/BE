@@ -61,4 +61,17 @@ public class MyReportController implements MyReportControllerDocs {
 
         return ApiResponse.onSuccess(myReportService.writeReflection(reportId, request, userId));
     }
+
+    // 리포트 AI 분석 API
+    @Override
+    @PostMapping("/sessions/{sessionId}")
+    public ApiResponse<MyReportResponseDTO.ReportDetailDTO> generateReport(
+            @PathVariable(name = "sessionId") Long sessionId) {
+
+        // 팀의 컨벤션인 authUtil을 그대로 사용합니다.
+        Long userId = authUtil.getCurrentUserId();
+
+        // 서비스 단에서 권한 검증 로직이 포함되어 있으므로 바로 호출합니다.
+        return ApiResponse.onSuccess(myReportService.generateReport(sessionId));
+    }
 }

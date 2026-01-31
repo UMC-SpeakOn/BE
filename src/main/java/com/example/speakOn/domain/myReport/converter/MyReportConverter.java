@@ -59,7 +59,7 @@ public class MyReportConverter {
     }
 
     // 리포트 상세 조회
-    public static MyReportResponseDTO.ReportDetailDTO toReportDetailDTO(MyReport myReport) {
+    public static MyReportResponseDTO.ReportDetailDTO toReportDetailDTO(MyReport myReport, List<ConversationMessage> messages) {
         ConversationSession session = myReport.getSession();
         MyRole myRole = (session != null) ? session.getMyRole() : null;
         Avatar avatar = (myRole != null) ? myRole.getAvatar() : null;
@@ -90,8 +90,22 @@ public class MyReportConverter {
                         .corrections(toCorrectionDTOList(myReport.getCorrections()))
                         .build())
                 .userReflection(myReport.getUserReflection())
-                .conversationLog(List.of())
+                .conversationLog(toMessageLogDTOList(messages))
                 .build();
+    }
+
+    private static List<MyReportResponseDTO.MessageLogDTO> toMessageLogDTOList(List<ConversationMessage> messages) {
+        if (messages == null) return List.of();
+
+        return messages.stream()
+                .map(msg -> MyReportResponseDTO.MessageLogDTO.builder()
+                        .messageId(msg.getId())
+                        .senderRole(msg.getSenderRole())
+                        .content(msg.getContent())
+                        .audioUrl(msg.getAudioUrl())
+                        .createdAt(msg.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     // 톤 분석

@@ -31,6 +31,7 @@ public class ReviewEngine {
         double threshold = switch (scenario) {
             case INTERVIEW -> 0.60;
             case ONE_ON_ONE -> 0.55;
+            case MEETING -> 0.45;
         };
 
         if (top.score() < threshold) {

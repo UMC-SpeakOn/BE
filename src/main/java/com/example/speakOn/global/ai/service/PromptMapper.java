@@ -1,15 +1,22 @@
 package com.example.speakOn.global.ai.service;
 
+
 import com.example.speakOn.global.ai.dto.PromptVariables;
 import com.example.speakOn.global.ai.util.PromptLoader;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class PromptMapper {
 
     private final PromptLoader promptLoader;
+
+    @Value("${AI_PROMPT_ANALYSIS_PATH}")
+    private String analysisPath;
 
     /**
      * 아바타 및 대화 컨텍스트 정보(PromptVariables)를
@@ -29,5 +36,12 @@ public class PromptMapper {
                 .replace("{{cadence}}", vars.getCadence())
                 .replace("{{nationality}}", vars.getNationality())
                 .replace("{{gender}}", vars.getGender());
+    }
+
+    /**
+     * 분석 전용 완성형 시스템 프롬프트 반환
+     */
+    public String getAnalysisPrompt() throws Exception {
+        return promptLoader.loadYamlAsText(analysisPath);
     }
 }

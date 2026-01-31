@@ -1,5 +1,6 @@
 package com.example.speakOn.domain.mySpeak.entity;
 
+import com.example.speakOn.domain.myReport.entity.MyReport;
 import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.mySpeak.enums.SessionStatus;
 import com.example.speakOn.global.apiPayload.code.BaseEntity;
@@ -65,4 +66,8 @@ public class ConversationSession extends BaseEntity {
     public void saveUserDifficulty(Integer userDifficulty) {
         this.userDifficulty = userDifficulty;
     }
+
+    // 리포트와의 1:1 양방향 매핑 추가
+    @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private MyReport myReport;
 }

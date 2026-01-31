@@ -24,7 +24,7 @@ public class MyRoleRequest {
         @NotNull(message = "직무(job)는 필수입니다.")
         private JobType job;
 
-        @Schema(description = "선택한 상황 (INTERVIEW, MEETING, ONE_ON_ONE_MEETING, COFFEE_CHAT)", example = "INTERVIEW")
+        @Schema(description = "선택한 상황 (INTERVIEW, MEETING, ONE_ON_ONE_MEETING)", example = "INTERVIEW")
         @NotNull(message = "상황(situation)은 필수입니다.")
         private SituationType situation;
     }

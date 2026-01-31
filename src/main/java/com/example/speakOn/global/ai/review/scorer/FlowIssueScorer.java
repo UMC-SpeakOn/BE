@@ -27,7 +27,7 @@ public class FlowIssueScorer implements IssueScorer {
 
         if (!hasQuestion) {
             int wc = wordCount(ai);
-            double base = (scenario == ScenarioType.ONE_ON_ONE) ? 0.55 : 0.62;
+            double base = (scenario == ScenarioType.ONE_ON_ONE_MEETING) ? 0.55 : 0.62;
             if (wc <= 12) base += 0.08; // 짧고 질문 없으면 더 강하게
             return new IssueScore(FailureType.FLOW_ISSUE, Math.min(1.0, base), "no next question / prompt");
         }

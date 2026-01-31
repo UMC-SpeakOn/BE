@@ -24,7 +24,6 @@ public class AiErrorConverter {
             default -> AiErrorCode.AI_SERVER_ERROR;
         };
 
-        // 실무 포인트: 변환된 에러와 원본 메시지를 로그로 남겨 추적 가능하게 함
         log.error("[AI_CONVERTER] 외부 예외 발생 -> 매핑 코드: {}, 원본 메시지: {}", errorCode.getCode(), e.getMessage());
         return errorCode;
     }

@@ -62,8 +62,10 @@ public class MyReportService {
                 .orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
 
         validateReportOwner(report, user);
-        List<ConversationMessage> messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(report.getSession());
-
+        ConversationSession session = report.getSession();
+        List<ConversationMessage> messages = (session != null)
+                ? messageRepository.findAllBySessionOrderByCreatedAtAsc(session)
+                : List.of();
         return MyReportConverter.toReportDetailDTO(report, messages);
     }
 

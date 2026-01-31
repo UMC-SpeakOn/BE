@@ -1,6 +1,8 @@
 package com.example.speakOn.domain.mySpeak.repository;
 
+import com.example.speakOn.domain.avatar.entity.Avatar;
 import com.example.speakOn.domain.myRole.entity.MyRole;
+import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.domain.mySpeak.exception.MySpeakException;
 import com.example.speakOn.domain.mySpeak.exception.code.MySpeakErrorCode;
 import jakarta.persistence.EntityManager;
@@ -41,4 +43,15 @@ public class MySpeakRepository {
         }
 
     }
+
+    public ConversationSession findByIdWithAvatar(Long sessionId) {
+        return em.createQuery(
+                        "select s from ConversationSession s " +
+                                "join fetch s.myRole r " +
+                                "join fetch r.avatar a " +
+                                "where s.id = :sessionId ", ConversationSession.class)
+                .setParameter("sessionId", sessionId)
+                .getSingleResult();
+    }
+
 }

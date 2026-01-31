@@ -24,7 +24,7 @@ public class SttTestController {
     @Operation(summary = "🔥 STT 테스트 - 파일만 업로드")
     public ApiResponse<SttResponseDto> sttSimpleTest(
             @RequestPart("file") MultipartFile file,
-            @RequestParam(defaultValue = "ko-KR") String languageCode,
+            @RequestParam(defaultValue = "en-US") String languageCode,
             @RequestParam(defaultValue = "MAIN") MessageType messageType,
             @RequestParam(defaultValue = "1") Long sessionId
     ) {

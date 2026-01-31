@@ -1,11 +1,13 @@
 package com.example.speakOn.domain.mySpeak.service;
 
+import com.example.speakOn.domain.avatar.entity.Avatar;
 import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.myRole.repository.MyRoleRepositoryImpl;
 import com.example.speakOn.domain.mySpeak.converter.MySpeakConverter;
 import com.example.speakOn.domain.mySpeak.dto.form.WaitScreenForm;
 import com.example.speakOn.domain.mySpeak.dto.request.*;
 import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
+import com.example.speakOn.domain.mySpeak.dto.response.ConversationTurnResponse;
 import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
 import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
@@ -36,14 +38,13 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class MySpeakService {
 
-    private final SpeechRecognitionService speechRecognitionService;
-    private final TextSynthesisService textSynthesisService;
     private final MySpeakRepository mySpeakRepository;
     private final ConversationSessionRepository conversationSessionRepository;
     private final MyRoleRepositoryImpl myRoleRepositoryImpl;
     private final ConversationMessageRepository conversationMessageRepository;
     private final MySpeakConverter mySpeakConverter;
     private final S3UploaderService s3UploaderService;
+    private final ConversationTurnService conversationTurnService;
 
 
     /**
@@ -134,38 +135,19 @@ public class MySpeakService {
     public SttResponseDto recognizeSpeech(MultipartFile audioFile, SttRequestDto request) {
         log.info("MySpeak: STT 요청 처리 - sessionId={}", request.getSessionId());
 
-        validateAudioFile(audioFile);
-
         // 세션 조회
         ConversationSession session = conversationSessionRepository.findById(request.getSessionId());
         if (session == null) {
             throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
         }
-
         log.info("session={}", session);
 
-        //S3 업로드
-        String audioUrl = s3UploaderService.uploadAudio(audioFile, request);
-
-        // STT 변환
-        String transcript = speechRecognitionService.recognizeFromFile(audioFile, request.getLanguageCode());
-
-        // 사용자 메시지 저장
-        ConversationMessage userMessage = ConversationMessage.builder()
-                .session(session)
-                .senderRole(SenderRole.USER)
-                .content(transcript)
-                .audioUrl(audioUrl)
-                .messageType(request.getMessageType())
-                .build();
-
-        conversationMessageRepository.save(userMessage);
-
-        //질문 카운트 증가
-        if (request.getMessageType() == MessageType.MAIN) {
-            session.incrementQuestionCount();
-        }
-
+        String transcript = conversationTurnService.sttAndSaveUserMessage(
+                audioFile,
+                session,
+                request.getLanguageCode(),
+                request.getMessageType()
+        );
 
         return new SttResponseDto(transcript);
     }
@@ -187,24 +169,11 @@ public class MySpeakService {
             throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
         }
 
-        // TTS 변환
-        byte[] audioBytes = textSynthesisService.synthesize(
-                request.getText(),
+        return conversationTurnService.ttsAndSaveAiMessage(
+                session, request.getText(),
+                request.getMessageType(),
                 request.getVoiceName(),
-                request.getSpeakingRate()
-        );
-
-        //AI 메시지 저장
-        ConversationMessage aiMessage = ConversationMessage.builder()
-                .session(session)
-                .senderRole(SenderRole.AI)
-                .content(request.getText())
-                .messageType(request.getMessageType())
-                .build();
-
-        conversationMessageRepository.save(aiMessage);
-
-        return audioBytes;
+                request.getSpeakingRate());
     }
 
     /**
@@ -219,7 +188,7 @@ public class MySpeakService {
     public CompleteSessionResponse completeSession(Long sessionId, CompleteSessionRequest request) {
 
         // 세션 조회
-        ConversationSession session = conversationSessionRepository.findById(sessionId);
+        ConversationSession session = mySpeakRepository.findByIdWithAvatar(sessionId);
         if (session == null) {
             throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
         }
@@ -230,13 +199,15 @@ public class MySpeakService {
         // 세션 종료 업데이트 (TTS 전)
         session.completeSession(request.getTotalTime(), sentenceCount, request.getEndedAt());
 
+        Avatar avatar = session.getMyRole().getAvatar();
+
         // 마무리 멘트 TTS 생성 + DB 저장
         String closingText = "Thanks for sharing your perspective. I appreciate your time.";
         byte[] closingAudioBytes = generateSpeech(
                 new TtsRequestDto(
                         closingText,
-                        "en-US-Neural2-F",
-                        1.0,
+                        avatar.getTtsVoiceId(),
+                        avatar.getCadenceType().getSpeedRate(),
                         MessageType.CLOSING,
                         sessionId
                 )
@@ -249,6 +220,50 @@ public class MySpeakService {
 
         return new CompleteSessionResponse(sessionId, request.getTotalTime(), sentenceCount, closingTtsBase64);
     }
+
+    @Transactional
+    public ConversationTurnResponse handelTurn(MultipartFile audioFile, Long sessionId, ConversationTurnRequest request) {
+        // 세션 조회
+        ConversationSession session = mySpeakRepository.findByIdWithAvatar(sessionId);
+        if (session == null) {
+            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
+        }
+
+
+
+        // STT + USER 메시지 저장
+        String userText = conversationTurnService.sttAndSaveUserMessage(
+                audioFile,
+                session,
+                request.getLanguageCode(),
+                request.getMessageType()
+        );
+
+        // AI 질문 생성 (지금은 더미)
+        //여기서 ai 질문 생성하는 메서드 호출 필요!!!!!
+        String aiQuestion = "Can you elaborate on that?";
+
+
+
+
+        Avatar avatar = session.getMyRole().getAvatar();
+
+        // TTS + AI 메시지 저장
+        byte[] audioBytes = conversationTurnService.ttsAndSaveAiMessage(
+                session,
+                aiQuestion,
+                MessageType.MAIN, //이부분 AI가 꼬리질문인지 메인 질문인지 판별한 다음 값 세팅 부탁
+                avatar.getTtsVoiceId(),
+                avatar.getCadenceType().getSpeedRate()
+        );
+
+        return new ConversationTurnResponse(
+                aiQuestion,
+                Base64.getEncoder().encodeToString(audioBytes),
+                MessageType.MAIN //이부분 AI가 꼬리질문인지 메인 질문인지 판별한 다음 값 세팅 부탁
+        );
+    }
+
 
     /**
      * 세션의 사용자 난이도 평가를 저장
@@ -300,22 +315,7 @@ public class MySpeakService {
                 .count();
     }
 
-    /**
-     * 업로드된 음성 파일 형식을 검증한다.
-     *
-     * @param file 업로드된 파일
-     * @throws MySpeakException 비어있거나 지원하지 않는 포맷일 경우
-     */
-    private void validateAudioFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new MySpeakException(MySpeakErrorCode.INVALID_AUDIO_FORMAT);
-        }
 
-        String filename = file.getOriginalFilename();
-        if (filename == null || !filename.matches("(?i).*\\.(m4a|wav|mp3|mp4|webm|ogg|flac|aac)$")) {
-            throw new MySpeakException(MySpeakErrorCode.INVALID_AUDIO_FORMAT);
-        }
-    }
 
     /**
      * MyRole 리스트 검증

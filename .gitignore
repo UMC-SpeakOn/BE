@@ -17,6 +17,10 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
+### QueryDSL (QClass) ###
+/build/generated/
+/src/main/generated/
+
 ### IntelliJ IDEA ###
 .idea
 *.iws

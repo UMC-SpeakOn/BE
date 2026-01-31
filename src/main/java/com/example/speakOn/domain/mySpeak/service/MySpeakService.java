@@ -188,7 +188,7 @@ public class MySpeakService {
     public CompleteSessionResponse completeSession(Long sessionId, CompleteSessionRequest request) {
 
         // 세션 조회
-        ConversationSession session = conversationSessionRepository.findById(sessionId);
+        ConversationSession session = mySpeakRepository.findByIdWithAvatar(sessionId);
         if (session == null) {
             throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
         }
@@ -199,13 +199,15 @@ public class MySpeakService {
         // 세션 종료 업데이트 (TTS 전)
         session.completeSession(request.getTotalTime(), sentenceCount, request.getEndedAt());
 
+        Avatar avatar = session.getMyRole().getAvatar();
+
         // 마무리 멘트 TTS 생성 + DB 저장
         String closingText = "Thanks for sharing your perspective. I appreciate your time.";
         byte[] closingAudioBytes = generateSpeech(
                 new TtsRequestDto(
                         closingText,
-                        "en-US-Neural2-F",
-                        1.0,
+                        avatar.getTtsVoiceId(),
+                        avatar.getCadenceType().getSpeedRate(),
                         MessageType.CLOSING,
                         sessionId
                 )

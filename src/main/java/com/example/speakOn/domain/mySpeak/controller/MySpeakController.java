@@ -3,11 +3,8 @@ package com.example.speakOn.domain.mySpeak.controller;
 import com.example.speakOn.domain.mySpeak.docs.MySpeakControllerDocs;
 import com.example.speakOn.domain.mySpeak.dto.request.*;
 
-import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
+import com.example.speakOn.domain.mySpeak.dto.response.*;
 
-import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
-import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
-import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
 import com.example.speakOn.domain.mySpeak.service.MySpeakService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import com.example.speakOn.global.util.AuthUtil;
@@ -89,5 +86,16 @@ public class MySpeakController implements MySpeakControllerDocs {
 
         mySpeakService.saveUserDifficulty(sessionId, request);
         return ApiResponse.onSuccess(null);
+    }
+
+    //대화 한턴을 보장하는 api
+    @PostMapping("/sessions/{sessionId}/turns")
+    public ApiResponse<ConversationTurnResponse> handleTurn(
+            @PathVariable Long sessionId,
+            @RequestPart("file") MultipartFile file,
+            @Valid @RequestPart("request") ConversationTurnRequest request) {
+
+        ConversationTurnResponse response = mySpeakService.handelTurn(file, sessionId, request);
+        return ApiResponse.onSuccess(response);
     }
 }

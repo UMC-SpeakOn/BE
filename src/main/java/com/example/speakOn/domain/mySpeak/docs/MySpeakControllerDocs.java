@@ -228,14 +228,11 @@ public interface MySpeakControllerDocs {
                     |------|------|------|------|
                     | `file` | File | ✅ | 사용자 음성 파일 |
                     | `request` | Object | ✅ | 대화 턴 메타 정보 |
-                    
-                    #### request(JSON)
-                    | 필드 | 타입 | 필수 | 설명 |
-                    |------|------|------|------|
                     | `languageCode` | String | ❌ | 음성 언어 코드 (기본값: en-US) |
-                    | `messageType` | String | ✅ | 메시지 타입 (MAIN, FOLLOW, CLOSING) |
+                    | `messageType` | String | ❌ | 메시지 타입 (MAIN, FOLLOW, CLOSING) |
                     
                     > ⚠️ 음성 파일은 반드시 `multipart/form-data` 형식으로 전송해야 합니다.
+                    > languageCode, messageType 디폴트로 en-US, MAIN 이지만 messageType은 메인 질문 아니면 꼭 보내주세요!
                     
                     ---
                     

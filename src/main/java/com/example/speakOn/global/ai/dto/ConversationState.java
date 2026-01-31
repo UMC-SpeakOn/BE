@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class ConversationState {
 
-    private final Integer qCount;
+    private final Integer mainCount;
     private final Integer depth;
     private final String instruction;
     private final Boolean isFinished;

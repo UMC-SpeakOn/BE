@@ -25,6 +25,7 @@ public enum AiErrorCode implements BaseCode {
 
     // 404 Not Found: 모델 설정 오류
     AI_MODEL_NOT_FOUND(HttpStatus.NOT_FOUND, "AI4041", "지정된 AI 모델을 찾을 수 없습니다."),
+    AI_STYLE_NOT_FOUND(HttpStatus.NOT_FOUND, "AI4042", "해당 아바타와 상황에 맞는 스타일 설정을 찾을 수 없습니다."),
 
     // 429 Too Many Requests: 요청 제한 및 결제 이슈
     AI_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI4291", "요청 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요."),

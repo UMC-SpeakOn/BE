@@ -28,7 +28,7 @@ public interface AiControllerDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "성공입니다.")
     })
     @ApiErrorCodeExamples({
-            @ApiErrorCodeExample(value = ErrorStatus.class, name = "ROLE404") // 기존 에러
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "ROLE404_1") // 기존 에러
     })
     ApiResponse<String> getOpener(@RequestParam Long myRoleId);
 
@@ -39,12 +39,11 @@ public interface AiControllerDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "성공입니다.")
     })
     @ApiErrorCodeExamples({
-            // 정의하신 AiErrorCode 기반으로 상세 에러 노출
             @ApiErrorCodeExample(value = AiErrorCode.class, name = "AI_PROMPT_TOO_LONG"),
             @ApiErrorCodeExample(value = AiErrorCode.class, name = "AI_CONTENT_POLICY_VIOLATION"),
             @ApiErrorCodeExample(value = AiErrorCode.class, name = "AI_RATE_LIMIT_EXCEEDED"),
             @ApiErrorCodeExample(value = AiErrorCode.class, name = "AI_RESPONSE_TIMEOUT"),
-            @ApiErrorCodeExample(value = ErrorStatus.class, name = "ROLE404"), // 역할 정보 부재 시
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "ROLE404_1"),
             @ApiErrorCodeExample(value = ErrorStatus.class, name = "_INTERNAL_SERVER_ERROR")
     })
     ApiResponse<AiResponse> chat(@RequestBody @Valid AiRequest request);

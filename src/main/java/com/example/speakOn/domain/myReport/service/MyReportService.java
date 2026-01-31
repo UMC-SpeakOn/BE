@@ -18,11 +18,10 @@ import com.example.speakOn.global.apiPayload.code.status.ErrorStatus;
 import com.example.speakOn.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
 import java.util.List;
 
@@ -44,13 +43,13 @@ public class MyReportService {
     /**
      * 리포트 목록 조회
      */
-    public MyReportResponseDTO.ReportSummaryListDTO getReportList(Long userId, JobType job, SituationType situation) {
+    public MyReportResponseDTO.ReportSummaryListDTO getReportList(Long userId, MyReportRequest.ReportFilterDTO filter, Pageable pageable) {
         User user = findUser(userId);
 
-        List<MyReport> reports = myReportRepository.findAllByUserAndFilters(user, job, situation);
-        Page<MyReport> reportPage = new PageImpl<>(reports);
+        Slice<MyReport> reports = myReportRepository.findAllByUserAndFilters(user, filter, pageable);
 
-        return MyReportConverter.toReportSummaryListDTO(reportPage);
+        // Slice를 Response DTO로 변환하여 반환
+        return MyReportConverter.toReportSummaryListDTOFromSlice(reports);
     }
 
     /**
@@ -59,11 +58,15 @@ public class MyReportService {
     public MyReportResponseDTO.ReportDetailDTO getReportDetail(Long reportId, Long userId) {
         User user = findUser(userId);
 
-        MyReport report = myReportRepository.findById(reportId)
+        MyReport report = myReportRepository.findReportWithAllDetails(reportId)
                 .orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
 
         validateReportOwner(report, user);
-        return MyReportConverter.toReportDetailDTO(report);
+        ConversationSession session = report.getSession();
+        List<ConversationMessage> messages = (session != null)
+                ? messageRepository.findAllBySessionOrderByCreatedAtAsc(session)
+                : List.of();
+        return MyReportConverter.toReportDetailDTO(report, messages);
     }
 
     /**

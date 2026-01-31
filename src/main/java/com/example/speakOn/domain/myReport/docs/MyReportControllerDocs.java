@@ -21,7 +21,7 @@ public interface MyReportControllerDocs {
     @Operation(summary = "리포트 목록 조회 API", description = "사용자의 전체 리포트 목록을 조회합니다. 직무별, 상황별 필터링이 가능합니다.")
     @Parameters({
             @Parameter(name = "job", description = "직무 필터 (MARKETING, DEVELOPMENT, DESIGN, PLANNING, SALES, BUSINESS)"),
-            @Parameter(name = "situation", description = "상황 필터 (INTERVIEW, MEETING, ONE_ON_ONE_MEETING, COFFEE_CHAT)")
+            @Parameter(name = "situation", description = "상황 필터 (INTERVIEW, MEETING, ONE_ON_ONE_MEETING)")
     })
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "성공입니다."),

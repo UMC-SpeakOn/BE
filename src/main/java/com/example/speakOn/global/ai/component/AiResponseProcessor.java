@@ -47,15 +47,16 @@ public class AiResponseProcessor {
                 .orElseThrow(() -> new GeneralException(AiErrorCode.AI_PARSE_ERROR));
     }
 
-    // INTERVIEW, MEETING, ONE_ON_ONE 3가지 경우의 수 처리
     private ScenarioType mapToScenarioType(String situationName) {
         if (situationName == null) {
-            return ScenarioType.ONE_ON_ONE_MEETING; // 기본값 설정 (필요시 예외 처리)
+            return ScenarioType.ONE_ON_ONE_MEETING;
         }
 
         String upperName = situationName.toUpperCase();
 
-        if (upperName.contains("INTERVIEW")) {
+        if (upperName.contains("ONE_ON_ONE_MEETING") || upperName.contains("ONE_ON_ONE")) {
+            return ScenarioType.ONE_ON_ONE_MEETING;
+        } else if (upperName.contains("INTERVIEW")) {
             return ScenarioType.INTERVIEW;
         } else if (upperName.contains("MEETING")) {
             return ScenarioType.MEETING;

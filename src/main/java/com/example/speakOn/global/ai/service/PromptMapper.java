@@ -28,6 +28,7 @@ public class PromptMapper {
                 .replace("{{situation}}", vars.getSituation())
                 .replace("{{locale}}", vars.getLocale())
                 .replace("{{nationality}}", vars.getNationality())
-                .replace("{{gender}}", vars.getGender());
+                .replace("{{gender}}", vars.getGender())
+                .replace("{{speechStyle}}", vars.getSpeechStyle());
     }
 }

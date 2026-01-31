@@ -35,8 +35,8 @@ public class AiRequest {
     private String previousAiMessage;
 
     @Schema(description = "현재 질문 인덱스 (0부터 시작)", example = "0")
-    @NotNull(message = "qCount는 필수입니다.")
-    @Min(value = 0, message = "qCount는 0 이상이어야 합니다.")
+    @NotNull(message = "mainCount는 필수입니다.")
+    @Min(value = 0, message = "mainCount는 0 이상이어야 합니다.")
     private Integer mainCount;
 
     @Schema(description = "대화 깊이 (0:오프닝, 1:메인, 2:꼬리1, 3:꼬리2)", example = "0")

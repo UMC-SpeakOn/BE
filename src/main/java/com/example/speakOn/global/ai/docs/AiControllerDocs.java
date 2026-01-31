@@ -44,6 +44,7 @@ public interface AiControllerDocs {
             @ApiErrorCodeExample(value = AiErrorCode.class, name = "AI_RATE_LIMIT_EXCEEDED"),
             @ApiErrorCodeExample(value = AiErrorCode.class, name = "AI_RESPONSE_TIMEOUT"),
             @ApiErrorCodeExample(value = ErrorStatus.class, name = "ROLE404_1"),
+            @ApiErrorCodeExample(value = AiErrorCode.class, name = "AI_STYLE_NOT_FOUND"),
             @ApiErrorCodeExample(value = ErrorStatus.class, name = "_INTERNAL_SERVER_ERROR")
     })
     ApiResponse<AiResponse> chat(@RequestBody @Valid AiRequest request);

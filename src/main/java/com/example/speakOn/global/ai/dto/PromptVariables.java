@@ -32,6 +32,4 @@ public class PromptVariables {
     @NotBlank(message = "말하기 스타일은 필수 값입니다.")
     private String speechStyle;
 
-    @NotBlank(message = "초기 인사말은 필수 값입니다.")
-    private String openGreeting;
 }

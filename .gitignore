@@ -19,7 +19,6 @@ bin/
 
 ### QueryDSL (QClass) ###
 /build/generated/
-/src/main/generated/
 
 ### IntelliJ IDEA ###
 .idea

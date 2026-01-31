@@ -4,6 +4,7 @@ import com.example.speakOn.domain.mySpeak.dto.request.*;
 
 import com.example.speakOn.domain.mySpeak.dto.response.*;
 
+import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,7 +14,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.PathVariable;
+import io.swagger.v3.oas.annotations.media.Content;
 
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -262,10 +265,11 @@ public interface MySpeakControllerDocs {
                     - AI 질문 생성 실패
                     """
     )
-    public ApiResponse<ConversationTurnResponse> handleTurn(
-            @Parameter(name = "sessionId", description = "세션 ID", required = true, example = "1")
-            @PathVariable("sessionId") Long sessionId,
+    ApiResponse<ConversationTurnResponse> handleTurn(
+            @PathVariable Long sessionId,
             @RequestPart("file") MultipartFile file,
-            @Valid @RequestPart("request") ConversationTurnRequest request);
+            @RequestParam(defaultValue = "en-US") String languageCode,  // ← @RequestParam!
+            @RequestParam(defaultValue = "MAIN") MessageType messageType  // ← @RequestParam!
+    );
 
 }

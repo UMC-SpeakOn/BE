@@ -5,6 +5,7 @@ import com.example.speakOn.domain.mySpeak.dto.request.*;
 
 import com.example.speakOn.domain.mySpeak.dto.response.*;
 
+import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.domain.mySpeak.service.MySpeakService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import com.example.speakOn.global.util.AuthUtil;
@@ -88,14 +89,18 @@ public class MySpeakController implements MySpeakControllerDocs {
         return ApiResponse.onSuccess(null);
     }
 
-    //대화 한턴을 보장하는 api
-    @PostMapping("/sessions/{sessionId}/turns")
+    @PostMapping(value = "/sessions/{sessionId}/turns",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ConversationTurnResponse> handleTurn(
             @PathVariable Long sessionId,
             @RequestPart("file") MultipartFile file,
-            @Valid @RequestPart("request") ConversationTurnRequest request) {
-
+            @RequestParam(defaultValue = "en-US") String languageCode,  // ← @RequestParam!
+            @RequestParam(defaultValue = "MAIN") MessageType messageType  // ← @RequestParam!
+    ) {
+        // 서비스에서 ConversationTurnRequest 생성
+        ConversationTurnRequest request = new ConversationTurnRequest(languageCode, messageType);
         ConversationTurnResponse response = mySpeakService.handelTurn(file, sessionId, request);
         return ApiResponse.onSuccess(response);
     }
+
 }

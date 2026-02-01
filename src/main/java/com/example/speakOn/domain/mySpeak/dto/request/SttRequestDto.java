@@ -12,7 +12,7 @@ public class SttRequestDto {
 
     private String languageCode = "en-US";
 
-    @NonNull
+    @NotNull
     private MessageType messageType;
 
     @NotNull

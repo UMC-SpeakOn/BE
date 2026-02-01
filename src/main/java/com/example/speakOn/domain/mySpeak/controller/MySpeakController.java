@@ -89,18 +89,21 @@ public class MySpeakController implements MySpeakControllerDocs {
         return ApiResponse.onSuccess(null);
     }
 
-    @PostMapping(value = "/sessions/{sessionId}/turns",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    //대화 한턴 보장하는 api
+    @PostMapping(value = "/sessions/{sessionId}/turns", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ConversationTurnResponse> handleTurn(
             @PathVariable Long sessionId,
             @RequestPart("file") MultipartFile file,
-            @RequestParam(defaultValue = "en-US") String languageCode,  // ← @RequestParam!
-            @RequestParam(defaultValue = "MAIN") MessageType messageType  // ← @RequestParam!
+            @RequestParam(defaultValue = "en-US") String languageCode,
+            @RequestParam(defaultValue = "MAIN") MessageType messageType
     ) {
-        // 서비스에서 ConversationTurnRequest 생성
         ConversationTurnRequest request = new ConversationTurnRequest(languageCode, messageType);
         ConversationTurnResponse response = mySpeakService.handelTurn(file, sessionId, request);
         return ApiResponse.onSuccess(response);
     }
+
+
+
+
 
 }

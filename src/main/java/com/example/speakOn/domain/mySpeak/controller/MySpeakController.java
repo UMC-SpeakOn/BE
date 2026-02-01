@@ -98,11 +98,18 @@ public class MySpeakController implements MySpeakControllerDocs {
             @RequestParam(defaultValue = "MAIN") MessageType messageType
     ) {
         ConversationTurnRequest request = new ConversationTurnRequest(languageCode, messageType);
-        ConversationTurnResponse response = mySpeakService.handelTurn(file, sessionId, request);
+        ConversationTurnResponse response = mySpeakService.handleTurn(file, sessionId, request);
         return ApiResponse.onSuccess(response);
     }
 
-
+    //대화 한턴 보장하는 api text
+    @PostMapping(value = "/sessions/{sessionId}/turns/text")
+    public ApiResponse<ConversationTurnTextResponse> handleTurnText(
+            @PathVariable Long sessionId,
+            @Valid @RequestBody ConversationTurnTextRequest request) {
+        ConversationTurnTextResponse response = mySpeakService.handleTurnText(sessionId, request);
+        return ApiResponse.onSuccess(response);
+    }
 
 
 

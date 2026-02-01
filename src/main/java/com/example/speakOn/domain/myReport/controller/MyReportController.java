@@ -6,12 +6,14 @@ import com.example.speakOn.domain.myReport.dto.request.MyReportRequest;
 import com.example.speakOn.domain.myReport.dto.response.MyReportResponseDTO;
 import com.example.speakOn.domain.myReport.service.MyReportService;
 import com.example.speakOn.domain.myRole.enums.JobType;
-import com.example.speakOn.domain.user.entity.User;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import com.example.speakOn.global.util.AuthUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -25,29 +27,33 @@ public class MyReportController implements MyReportControllerDocs {
     @GetMapping("")
     public ApiResponse<MyReportResponseDTO.ReportSummaryListDTO> getReportList(
             @RequestParam(name = "job", required = false) JobType job,
-            @RequestParam(name = "situation", required = false) SituationType situation) {
+            @RequestParam(name = "situation", required = false) SituationType situation,
+            @RequestParam(name = "startDate", required = false) LocalDate startDate,
+            @RequestParam(name = "endDate", required = false) LocalDate endDate,
+            Pageable pageable) {
 
         Long userId = authUtil.getCurrentUserId();
 
-        return ApiResponse.onSuccess(myReportService.getReportList(userId, job, situation));
+        MyReportRequest.ReportFilterDTO filter = new MyReportRequest.ReportFilterDTO();
+        filter.setJob(job);
+        filter.setSituation(situation);
+        filter.setStartDate(startDate);
+        filter.setEndDate(endDate);
+
+        return ApiResponse.onSuccess(myReportService.getReportList(userId, filter, pageable));
     }
 
     @Override
     @GetMapping("/{reportId}")
     public ApiResponse<MyReportResponseDTO.ReportDetailDTO> getReportDetail(@PathVariable(name = "reportId") Long reportId) {
-
         Long userId = authUtil.getCurrentUserId();
-
         return ApiResponse.onSuccess(myReportService.getReportDetail(reportId, userId));
     }
 
     @Override
     @GetMapping("/{reportId}/logs")
-    public ApiResponse<MyReportResponseDTO.MessageLogListDTO> getConversationLogs(
-            @PathVariable(name = "reportId") Long reportId) {
-
+    public ApiResponse<MyReportResponseDTO.MessageLogListDTO> getConversationLogs(@PathVariable(name = "reportId") Long reportId) {
         Long userId = authUtil.getCurrentUserId();
-
         return ApiResponse.onSuccess(myReportService.getConversationLogs(reportId, userId));
     }
 
@@ -58,7 +64,6 @@ public class MyReportController implements MyReportControllerDocs {
             @RequestBody @Valid MyReportRequest.WriteReflectionDTO request) {
 
         Long userId = authUtil.getCurrentUserId();
-
         return ApiResponse.onSuccess(myReportService.writeReflection(reportId, request, userId));
     }
 }

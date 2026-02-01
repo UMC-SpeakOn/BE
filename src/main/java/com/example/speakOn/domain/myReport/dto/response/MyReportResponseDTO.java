@@ -160,7 +160,6 @@ public class MyReportResponseDTO {
     @AllArgsConstructor
     @Schema(description = "개별 대화 메시지 상세 정보")
     public static class MessageLogDTO {
-
         @Schema(description = "메시지 ID", example = "5432")
         private Long messageId;
 
@@ -169,9 +168,6 @@ public class MyReportResponseDTO {
 
         @Schema(description = "대화 내용", example = "Could you tell me about the speak-on?")
         private String content;
-
-        @Schema(description = "오디오 파일 URL (다시 듣기용)", example = "https://s3.ap-northeast-2.amazonaws.com/speakon/audio/123.mp3")
-        private String audioUrl;
 
         @Schema(description = "대화 시각", example = "2024-01-23T14:30:00")
         private LocalDateTime createdAt;

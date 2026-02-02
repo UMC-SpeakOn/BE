@@ -2,20 +2,21 @@ package com.example.speakOn.domain.mySpeak.docs;
 
 import com.example.speakOn.domain.mySpeak.dto.request.*;
 
-import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
+import com.example.speakOn.domain.mySpeak.dto.response.*;
 
-import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
-import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
-import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
+import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.PathVariable;
+import io.swagger.v3.oas.annotations.media.Content;
 
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -205,4 +206,95 @@ public interface MySpeakControllerDocs {
                     """
     )
     public ApiResponse<Void> saveUserDifficulty(@PathVariable Long sessionId, @Valid @RequestBody UserDifficultyRequest request);
+
+
+    @Operation(
+            summary = "대화 한 턴 처리",
+            description = """
+                    사용자가 녹음한 **음성 파일을 입력으로 받아**
+                    한 턴의 대화를 **원자적으로 처리**합니다.
+                    
+                    처리 흐름:
+                    1. 사용자 음성 STT 변환
+                    2. USER 메시지 저장
+                    3. AI 질문 생성
+                    4. AI 질문을 TTS로 변환
+                    5. AI 메시지 저장
+                    6. AI 메시지 저장 후 음성 응답 반환
+                    
+                    ### 📥 요청 데이터 (multipart/form-data)
+                    
+                    | 필드 | 타입 | 필수 | 설명 |
+                    |------|------|------|------|
+                    | `file` | File | ✅ | 사용자 음성 파일 |
+                    | `request` | Object | ✅ | 대화 턴 메타 정보 |
+                    | `languageCode` | String | ❌ | 음성 언어 코드 (기본값: en-US) |
+                    | `messageType` | String | ❌ | 메시지 타입 (MAIN, FOLLOW, CLOSING) |
+                    
+                    > ⚠️ 음성 파일은 반드시 `multipart/form-data` 형식으로 전송해야 합니다.
+                    > languageCode, messageType 디폴트로 en-US, MAIN 이지만 messageType은 메인 질문 아니면 꼭 보내주세요!
+                    
+                    ---
+                    
+                    ### 📤 응답 데이터
+                    
+                    | 필드 | 타입 | 설명 |
+                    |------|------|------|
+                    | `text` | String | AI가 생성한 질문 텍스트 |
+                    | `base64Audio` | String | base64 인코딩된 AI 음성(mp3) |
+                    | `messageType` | String | 대화 메시지 타입 |
+                    
+                    ---
+                    
+                    ### ❗ 발생 가능한 에러
+                    
+                    #### ❌ 400 Bad Request
+                    - 음성 파일 누락
+                    - request 데이터 누락 또는 형식 오류
+                    - 지원하지 않는 오디오 파일 형식 (MS4004)
+                    
+                    #### ❌ 404 Not Found
+                    - 존재하지 않는 세션 ID (MS4004)
+                    
+                    #### ❌ 500 Internal Server Error
+                    - STT 변환 실패 (MS5005)
+                    - TTS 변환 실패
+                    - AI 질문 생성 실패
+                    """
+    )
+    ApiResponse<ConversationTurnResponse> handleTurn(
+            @PathVariable Long sessionId,
+            @RequestPart("file") MultipartFile file,
+            @RequestParam(defaultValue = "en-US") String languageCode,  // ← @RequestParam!
+            @RequestParam(defaultValue = "MAIN") MessageType messageType  // ← @RequestParam!
+    );
+
+    @Operation(
+            summary = "대화 한 턴 처리 (텍스트 입력)",
+            description = """
+                    STT 없이 **텍스트 입력만으로**
+                    한 턴의 대화를 처리합니다.
+                    
+                    ### 📥 요청 데이터
+                    | 필드 | 타입 | 필수 | 설명 |
+                    |------|------|------|------|
+                    | `text` | String | ✅ | 사용자 입력 텍스트 |
+                    | `languageCode` | String | ❌ | 언어 코드 (기본값: en-US) |
+                    | `messageType` | String | ✅ | 메시지 타입 (MAIN, FOLLOW, CLOSING) |
+                    
+                    ### 📤 응답
+                    | 필드 | 타입 | 설명 |
+                    |------|------|------|
+                    | `text` | String | AI 질문 텍스트 |
+                    | `base64Audio` | String | base64 인코딩된 AI 음성 |
+                    | `messageType` | String | AI 메시지 타입 |
+                    
+                    ### ❗ 에러
+                    - ❌ 404: 존재하지 않는 세션 (MS4004)
+                    - ❌ 500: AI 질문 생성 / TTS 실패
+                    """
+    )
+    ApiResponse<ConversationTurnTextResponse> handleTurnText(Long sessionId, ConversationTurnTextRequest request);
+
+
 }

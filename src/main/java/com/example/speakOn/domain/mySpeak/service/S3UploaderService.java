@@ -23,10 +23,10 @@ public class S3UploaderService {
     private final S3Client s3Client;
     private final String s3BucketName;
 
-    public String uploadAudio(MultipartFile file, SttRequestDto requestDto) {
+    public String uploadAudio(MultipartFile file, Long sessionId) {
         try {
             String ext = getExtension(file.getOriginalFilename());
-            String key = "audio/" + requestDto.getSessionId() + "/" + UUID.randomUUID() + ext;
+            String key = "audio/" + sessionId + "/" + UUID.randomUUID() + ext;
 
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(s3BucketName)

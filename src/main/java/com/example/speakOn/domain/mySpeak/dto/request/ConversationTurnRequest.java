@@ -1,20 +1,18 @@
 package com.example.speakOn.domain.mySpeak.dto.request;
 
 import com.example.speakOn.domain.mySpeak.enums.MessageType;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SttRequestDto {
+public class ConversationTurnRequest {
 
     private String languageCode = "en-US";
 
     @NotNull
     private MessageType messageType;
-
-    @NotNull
-    private Long sessionId;         // ConversationSession ID (보안)
 }

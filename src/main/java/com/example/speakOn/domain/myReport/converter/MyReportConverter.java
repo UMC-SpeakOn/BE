@@ -8,6 +8,7 @@ import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 
 import java.time.LocalTime;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 
 public class MyReportConverter {
 
-    // 소감 작성 결과
+    // 소감 작성
     public static MyReportResponseDTO.WriteReflectionResultDTO toWriteReflectionResultDTO(MyReport myReport) {
         return MyReportResponseDTO.WriteReflectionResultDTO.builder()
                 .reportId(myReport.getId())
@@ -77,8 +78,8 @@ public class MyReportConverter {
                         .sentenceCount(session != null ? session.getSentenceCount() : 0)
                         .difficulty(myReport.getDifficulty())
                         .createdAt(myReport.getCreatedAt() != null ? myReport.getCreatedAt().toLocalDate() : null)
-                        .job((myRole != null && myRole.getJob() != null) ? myRole.getJob().name() : "-")
-                        .situation((myRole != null && myRole.getSituation() != null) ? myRole.getSituation().name() : "-")
+                        .job(myRole != null && myRole.getJob() != null ? myRole.getJob().name() : "UNKNOWN")
+                        .situation(myRole != null && myRole.getSituation() != null ? myRole.getSituation().name() : "UNKNOWN")
                         .avatarName(avatar != null ? avatar.getName() : "AI")
                         .avatarImgUrl(avatar != null ? avatar.getImgUrl() : "")
                         .build())
@@ -95,7 +96,9 @@ public class MyReportConverter {
     }
 
     private static List<MyReportResponseDTO.MessageLogDTO> toMessageLogDTOList(List<ConversationMessage> messages) {
-        if (messages == null) return List.of();
+        if (messages == null || messages.isEmpty()) {
+            return List.of();
+            }
 
         return messages.stream()
                 .map(msg -> MyReportResponseDTO.MessageLogDTO.builder()
@@ -144,7 +147,6 @@ public class MyReportConverter {
                         .messageId(msg.getId())
                         .senderRole(msg.getSenderRole())
                         .content(msg.getContent())
-                        .audioUrl(msg.getAudioUrl())
                         .createdAt(msg.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());
@@ -153,6 +155,19 @@ public class MyReportConverter {
                 .reportId(reportId)
                 .messages(logList)
                 .totalMessageCount(logList.size())
+                .build();
+    }
+
+    public static MyReportResponseDTO.ReportSummaryListDTO toReportSummaryListDTOFromSlice(Slice<MyReport> reportSlice) {
+        List<MyReportResponseDTO.ReportSummaryDTO> reportList = reportSlice.stream()
+                .map(MyReportConverter::toReportSummaryDTO)
+                .collect(Collectors.toList());
+
+        return MyReportResponseDTO.ReportSummaryListDTO.builder()
+                .reportList(reportList)
+                .listSize(reportList.size())
+                .isFirst(reportSlice.isFirst())
+                .isLast(reportSlice.isLast())
                 .build();
     }
 }

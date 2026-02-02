@@ -1,13 +1,14 @@
 package com.example.speakOn.domain.myReport.repository;
 
-import com.example.speakOn.domain.avatar.enums.SituationType;
+import com.example.speakOn.domain.myReport.dto.request.MyReportRequest;
 import com.example.speakOn.domain.myReport.entity.MyReport;
-import com.example.speakOn.domain.myRole.enums.JobType;
 import com.example.speakOn.domain.user.entity.User;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
-import java.util.List;
+import java.util.Optional;
 
 public interface MyReportRepositoryCustom {
-    // 필터링 적용하여 리포트 목록을 조회
-    List<MyReport> findAllByUserAndFilters(User user, JobType job, SituationType situation);
+    Slice<MyReport> findAllByUserAndFilters(User user, MyReportRequest.ReportFilterDTO filter, Pageable pageable);
+    Optional<MyReport> findReportWithAllDetails(Long reportId);
 }

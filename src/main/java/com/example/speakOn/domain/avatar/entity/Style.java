@@ -1,6 +1,7 @@
 package com.example.speakOn.domain.avatar.entity;
 
 import com.example.speakOn.domain.avatar.enums.SituationType;
+import com.example.speakOn.domain.avatar.enums.SpeechType;
 import com.example.speakOn.global.apiPayload.code.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,4 +32,8 @@ public class Style extends BaseEntity {
 
     @Column(name = "open_greeting", nullable = false, columnDefinition = "TEXT")
     private String openGreeting;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "speech_style_default", nullable = false, length = 20)
+    private SpeechType speechType;
 }

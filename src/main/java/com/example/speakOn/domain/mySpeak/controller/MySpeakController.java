@@ -3,11 +3,9 @@ package com.example.speakOn.domain.mySpeak.controller;
 import com.example.speakOn.domain.mySpeak.docs.MySpeakControllerDocs;
 import com.example.speakOn.domain.mySpeak.dto.request.*;
 
-import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
+import com.example.speakOn.domain.mySpeak.dto.response.*;
 
-import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
-import com.example.speakOn.domain.mySpeak.dto.response.TtsResponseDto;
-import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
+import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.domain.mySpeak.service.MySpeakService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import com.example.speakOn.global.util.AuthUtil;
@@ -90,4 +88,29 @@ public class MySpeakController implements MySpeakControllerDocs {
         mySpeakService.saveUserDifficulty(sessionId, request);
         return ApiResponse.onSuccess(null);
     }
+
+    //대화 한턴 보장하는 api
+    @PostMapping(value = "/sessions/{sessionId}/turns", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ConversationTurnResponse> handleTurn(
+            @PathVariable Long sessionId,
+            @RequestPart("file") MultipartFile file,
+            @RequestParam(defaultValue = "en-US") String languageCode,
+            @RequestParam(defaultValue = "MAIN") MessageType messageType
+    ) {
+        ConversationTurnRequest request = new ConversationTurnRequest(languageCode, messageType);
+        ConversationTurnResponse response = mySpeakService.handleTurn(file, sessionId, request);
+        return ApiResponse.onSuccess(response);
+    }
+
+    //대화 한턴 보장하는 api text
+    @PostMapping(value = "/sessions/{sessionId}/turns/text")
+    public ApiResponse<ConversationTurnTextResponse> handleTurnText(
+            @PathVariable Long sessionId,
+            @Valid @RequestBody ConversationTurnTextRequest request) {
+        ConversationTurnTextResponse response = mySpeakService.handleTurnText(sessionId, request);
+        return ApiResponse.onSuccess(response);
+    }
+
+
+
 }

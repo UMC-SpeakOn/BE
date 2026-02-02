@@ -2,5 +2,6 @@ package com.example.speakOn.global.ai.review;
 
 public enum ScenarioType {
     INTERVIEW,
-    ONE_ON_ONE
+    MEETING,
+    ONE_ON_ONE_MEETING
 }

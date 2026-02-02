@@ -6,10 +6,7 @@ import com.example.speakOn.domain.myRole.repository.MyRoleRepositoryImpl;
 import com.example.speakOn.domain.mySpeak.converter.MySpeakConverter;
 import com.example.speakOn.domain.mySpeak.dto.form.WaitScreenForm;
 import com.example.speakOn.domain.mySpeak.dto.request.*;
-import com.example.speakOn.domain.mySpeak.dto.response.CompleteSessionResponse;
-import com.example.speakOn.domain.mySpeak.dto.response.ConversationTurnResponse;
-import com.example.speakOn.domain.mySpeak.dto.response.SttResponseDto;
-import com.example.speakOn.domain.mySpeak.dto.response.WaitScreenResponse;
+import com.example.speakOn.domain.mySpeak.dto.response.*;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.domain.mySpeak.enums.MessageType;
@@ -21,7 +18,6 @@ import com.example.speakOn.domain.mySpeak.repository.ConversationMessageReposito
 import com.example.speakOn.domain.mySpeak.repository.ConversationSessionRepository;
 import com.example.speakOn.domain.mySpeak.repository.MySpeakRepository;
 import com.example.speakOn.global.apiPayload.exception.handler.ErrorHandler;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -222,7 +218,7 @@ public class MySpeakService {
     }
 
     @Transactional
-    public ConversationTurnResponse handelTurn(MultipartFile audioFile, Long sessionId, ConversationTurnRequest request) {
+    public ConversationTurnResponse handleTurn(MultipartFile audioFile, Long sessionId, ConversationTurnRequest request) {
         // 세션 조회
         ConversationSession session = mySpeakRepository.findByIdWithAvatar(sessionId);
         if (session == null) {
@@ -258,6 +254,53 @@ public class MySpeakService {
         );
 
         return new ConversationTurnResponse(
+                aiQuestion,
+                Base64.getEncoder().encodeToString(audioBytes),
+                MessageType.MAIN //이부분 AI가 꼬리질문인지 메인 질문인지 판별한 다음 값 세팅 부탁
+        );
+    }
+
+    @Transactional
+    public ConversationTurnTextResponse handleTurnText(Long sessionId, ConversationTurnTextRequest request) {
+
+        // 세션 조회
+        ConversationSession session = mySpeakRepository.findByIdWithAvatar(sessionId);
+        if (session == null) {
+            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
+        }
+
+        // USER 메시지 저장
+        ConversationMessage userMessage = ConversationMessage.builder()
+                .session(session)
+                .senderRole(SenderRole.USER)
+                .content(request.getAnswerText())
+                .messageType(request.getMessageType())
+                .build();
+
+        conversationMessageRepository.save(userMessage);
+
+        if (request.getMessageType() == MessageType.MAIN) {
+            session.incrementQuestionCount();
+        }
+
+        // AI 질문 생성 (지금은 더미)
+        //여기서 ai 질문 생성하는 메서드 호출 필요!!!!!
+        String aiQuestion = "Can you elaborate on that?";
+
+
+
+        Avatar avatar = session.getMyRole().getAvatar();
+
+        // TTS + AI 메시지 저장
+        byte[] audioBytes = conversationTurnService.ttsAndSaveAiMessage(
+                session,
+                aiQuestion,
+                MessageType.MAIN, //이부분 AI가 꼬리질문인지 메인 질문인지 판별한 다음 값 세팅 부탁
+                avatar.getTtsVoiceId(),
+                avatar.getCadenceType().getSpeedRate()
+        );
+
+        return new ConversationTurnTextResponse(
                 aiQuestion,
                 Base64.getEncoder().encodeToString(audioBytes),
                 MessageType.MAIN //이부분 AI가 꼬리질문인지 메인 질문인지 판별한 다음 값 세팅 부탁

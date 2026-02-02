@@ -269,4 +269,32 @@ public interface MySpeakControllerDocs {
             @RequestParam(defaultValue = "MAIN") MessageType messageType  // ← @RequestParam!
     );
 
+    @Operation(
+            summary = "대화 한 턴 처리 (텍스트 입력)",
+            description = """
+                    STT 없이 **텍스트 입력만으로**
+                    한 턴의 대화를 처리합니다.
+                    
+                    ### 📥 요청 데이터
+                    | 필드 | 타입 | 필수 | 설명 |
+                    |------|------|------|------|
+                    | `text` | String | ✅ | 사용자 입력 텍스트 |
+                    | `languageCode` | String | ❌ | 언어 코드 (기본값: en-US) |
+                    | `messageType` | String | ✅ | 메시지 타입 (MAIN, FOLLOW, CLOSING) |
+                    
+                    ### 📤 응답
+                    | 필드 | 타입 | 설명 |
+                    |------|------|------|
+                    | `text` | String | AI 질문 텍스트 |
+                    | `base64Audio` | String | base64 인코딩된 AI 음성 |
+                    | `messageType` | String | AI 메시지 타입 |
+                    
+                    ### ❗ 에러
+                    - ❌ 404: 존재하지 않는 세션 (MS4004)
+                    - ❌ 500: AI 질문 생성 / TTS 실패
+                    """
+    )
+    ApiResponse<ConversationTurnTextResponse> handleTurnText(Long sessionId, ConversationTurnTextRequest request);
+
+
 }

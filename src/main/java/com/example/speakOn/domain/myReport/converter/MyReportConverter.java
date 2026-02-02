@@ -99,11 +99,13 @@ public class MyReportConverter {
         if (messages == null || messages.isEmpty()) {
             return List.of();
             }
+
         return messages.stream()
                 .map(msg -> MyReportResponseDTO.MessageLogDTO.builder()
                         .messageId(msg.getId())
                         .senderRole(msg.getSenderRole())
                         .content(msg.getContent())
+                        .audioUrl(msg.getAudioUrl())
                         .createdAt(msg.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());

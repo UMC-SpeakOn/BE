@@ -74,4 +74,7 @@ public interface MyReportControllerDocs {
             @PathVariable(name = "reportId") Long reportId,
             @RequestBody MyReportRequest.WriteReflectionDTO request
     );
+
+    @Operation(summary = "리포트 AI 분석 생성 API", description = "대화 세션을 분석하여 리포트를 생성합니다.")
+    ApiResponse<MyReportResponseDTO.ReportDetailDTO> generateReport(Long sessionId);
 }

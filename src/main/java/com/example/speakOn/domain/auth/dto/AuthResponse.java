@@ -25,6 +25,9 @@ public class AuthResponse {
         @Schema(description = "Refresh Token", example = "eyJhbGciOiJIUz...")
         private String refreshToken;
 
+        @Schema(description = "온보딩 완료 여부 (false = 온보딩 필요, true = 온보딩 완료)", example = "false")
+        private Boolean isOnboarded;
+
     }
 
 }

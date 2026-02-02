@@ -9,5 +9,8 @@ public interface UserQueryService {
 
     // 마이페이지 유저 정보 조회
     UserResponse.MyPageResponseDTO getMyPageInfo(Long userId);
+
+    // 온보딩 완료
+    void completeOnboarding(Long userId);
 }
 

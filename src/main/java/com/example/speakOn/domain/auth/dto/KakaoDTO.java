@@ -17,7 +17,7 @@ public class KakaoDTO {
             @NotBlank
             String code,
 
-            @Schema(description = "리다이렉트 URI (프론트 환경에 맞게: localhost:5173 또는 배포 주소)", example = "http://localhost:5173")
+            @Schema(description = "리다이렉트 URI (프론트 환경에 맞게: localhost:5173 또는 배포 주소)", example = "http://localhost:5173/login/oauth2/code/kakao")
             String redirectUri
     ) {
     }

@@ -54,4 +54,9 @@ public class User extends BaseEntity {
         this.profileImgUrl = profileImgUrl;
     }
 
+    // 온보딩 완료
+    public void completeOnboarding() {
+        this.isOnboarded = true;
+    }
+
 }

@@ -43,7 +43,8 @@ public class AuthServiceImpl implements AuthService {
         String jwtAccessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getRole().toString());
         String jwtRefreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
-        return AuthConverter.toSocialLoginResponseDTO(user.getId(), jwtAccessToken, jwtRefreshToken);
+        // 5. 온보딩 상태와 함께 응답
+        return AuthConverter.toSocialLoginResponseDTO(user.getId(), jwtAccessToken, jwtRefreshToken, user.getIsOnboarded());
     }
 
     @Override
@@ -63,7 +64,8 @@ public class AuthServiceImpl implements AuthService {
         String jwtAccessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getRole().toString());
         String jwtRefreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
-        return AuthConverter.toSocialLoginResponseDTO(user.getId(), jwtAccessToken, jwtRefreshToken);
+        // 5. 온보딩 상태와 함께 응답
+        return AuthConverter.toSocialLoginResponseDTO(user.getId(), jwtAccessToken, jwtRefreshToken, user.getIsOnboarded());
     }
 
     private User registerOrLogin(KakaoDTO.UserInfoResponse userInfo, SocialType socialType) {

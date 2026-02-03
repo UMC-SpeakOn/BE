@@ -1,6 +1,5 @@
 package com.example.speakOn.domain.myReport.service;
 
-import com.example.speakOn.domain.avatar.enums.SituationType;
 import com.example.speakOn.domain.myReport.code.MyReportErrorCode;
 import com.example.speakOn.domain.myReport.converter.MyReportConverter;
 import com.example.speakOn.domain.myReport.dto.request.MyReportRequest;
@@ -11,7 +10,6 @@ import com.example.speakOn.domain.myReport.exception.MyReportException;
 import com.example.speakOn.domain.myReport.repository.ConversationCorrectionRepository;
 import com.example.speakOn.domain.myReport.repository.MyReportRepository;
 import com.example.speakOn.domain.myRole.entity.MyRole;
-import com.example.speakOn.domain.myRole.enums.JobType;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.domain.mySpeak.repository.ConversationMessageRepository;
@@ -31,8 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;

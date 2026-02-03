@@ -1,6 +1,5 @@
 package com.example.speakOn.global.ai.converter;
 
-import com.example.speakOn.global.ai.converter.AiErrorConverter;
 import com.example.speakOn.global.ai.exception.AiErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

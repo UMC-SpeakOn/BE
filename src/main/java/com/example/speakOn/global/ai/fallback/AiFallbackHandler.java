@@ -1,6 +1,5 @@
 package com.example.speakOn.global.ai.fallback;
 
-import com.example.speakOn.global.ai.exception.AiResponseValidator;
 import com.example.speakOn.global.ai.exception.AiValidationResult;
 import com.example.speakOn.global.ai.fallback.policy.ChatContext;
 import com.example.speakOn.global.ai.fallback.policy.FallbackPolicy;

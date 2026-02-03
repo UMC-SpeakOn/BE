@@ -2,15 +2,19 @@ package com.example.speakOn.global.ai.component;
 
 import com.example.speakOn.domain.avatar.entity.Avatar;
 import com.example.speakOn.domain.avatar.entity.Style;
+import com.example.speakOn.domain.avatar.enums.SituationType;
 import com.example.speakOn.domain.avatar.repository.StyleRepository;
 import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
-import com.example.speakOn.domain.avatar.enums.SituationType;
+import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
+import com.example.speakOn.domain.mySpeak.repository.ConversationSessionRepository;
+
 import com.example.speakOn.global.ai.exception.AiErrorCode;
 import com.example.speakOn.global.apiPayload.code.status.ErrorStatus;
 import com.example.speakOn.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -18,10 +22,17 @@ public class AiDataReader {
 
     private final MyRoleRepository myRoleRepository;
     private final StyleRepository styleRepository;
+    private final ConversationSessionRepository conversationSessionRepository;
 
     public MyRole getMyRoleOrThrow(Long myRoleId) {
         return myRoleRepository.findById(myRoleId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MY_ROLE_NOT_FOUND));
+    }
+
+    public ConversationSession getSessionOrThrow(Long sessionId) {
+        ConversationSession session = conversationSessionRepository.findById(sessionId);
+        return Optional.ofNullable(session)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.SESSION_NOT_FOUND));
     }
 
     public Style getStyleOrThrow(Avatar avatar, SituationType situation) {

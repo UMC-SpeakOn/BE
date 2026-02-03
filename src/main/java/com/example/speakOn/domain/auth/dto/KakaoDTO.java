@@ -12,7 +12,7 @@ public class KakaoDTO {
      */
 
     @Schema(description = "카카오 인가 코드 요청")
-    public record CodeRequest(
+    public record KaKaoCodeRequest(
             @Schema(description = "카카오 인가 코드 (리다이렉트 URL의 code 파라미터)", example = "aBcDeFgHiJkLmNoPqRsTuVwXyZ123456789")
             @NotBlank
             String code,

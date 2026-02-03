@@ -29,7 +29,7 @@ public class AuthController {
     )
     @PostMapping("/kakao")
     public ApiResponse<AuthResponse.SocialLoginResponseDTO> loginWithKakaoCode(
-            @Valid @RequestBody KakaoDTO.CodeRequest request
+            @Valid @RequestBody KakaoDTO.KaKaoCodeRequest request
     ) {
         AuthResponse.SocialLoginResponseDTO response = authService.loginWithKakaoCode(request.code(), request.redirectUri());
         return ApiResponse.onSuccess(response);
@@ -43,7 +43,7 @@ public class AuthController {
     )
     @PostMapping("/google")
     public ApiResponse<AuthResponse.SocialLoginResponseDTO> loginWithGoogleCode(
-            @Valid @RequestBody GoogleDTO.CodeRequest request
+            @Valid @RequestBody GoogleDTO.GoogleCodeRequest request
     ) {
         AuthResponse.SocialLoginResponseDTO response = authService.loginWithGoogleCode(request.code(), request.redirectUri());
         return ApiResponse.onSuccess(response);

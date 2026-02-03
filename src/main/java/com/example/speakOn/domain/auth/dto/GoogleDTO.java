@@ -11,7 +11,7 @@ public class GoogleDTO {
      * 구글 인가 코드 요청 DTO
      */
     @Schema(description = "구글 인가 코드 요청")
-    public record CodeRequest(
+    public record GoogleCodeRequest(
             @Schema(description = "구글 인가 코드 (리다이렉트 URL의 code 파라미터)", example = "4/0A456789...userinfo.email&authuser=0&prompt=none")
             @NotBlank
             String code,

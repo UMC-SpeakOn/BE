@@ -1,12 +1,7 @@
 package com.example.speakOn.global.ai.service;
 
-import com.example.speakOn.global.ai.component.AiDataReader;
-import com.example.speakOn.global.ai.component.AiPromptComponent;
-import com.example.speakOn.global.ai.component.AiResponseProcessor;
-import com.example.speakOn.global.ai.component.AiStateComponent;
-import com.example.speakOn.global.ai.dto.AiRequest;
-import com.example.speakOn.global.ai.dto.AiResponse;
-import com.example.speakOn.global.ai.dto.ConversationState;
+import com.example.speakOn.global.ai.component.*; // Import 줄임
+import com.example.speakOn.global.ai.dto.*;
 import com.example.speakOn.domain.avatar.entity.Avatar;
 import com.example.speakOn.domain.avatar.entity.Style;
 import com.example.speakOn.domain.myRole.entity.MyRole;
@@ -21,12 +16,11 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Transactional; // ✅ 추가
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class AiSpeakServiceImpl implements AiSpeakService {
 
     private final ChatModel chatModel;
@@ -59,11 +53,8 @@ public class AiSpeakServiceImpl implements AiSpeakService {
             Avatar avatar = myRole.getAvatar();
             Style style = dataReader.getStyleOrThrow(avatar, myRole.getSituation());
 
-            // [2] Context 조회
-            AiConversationContext aiContext = aiContextRepository.findBySessionId(session.getId())
-                    .orElseGet(() -> aiContextRepository.save(
-                            AiConversationContext.builder().session(session).depth(0).build()
-                    ));
+            // [2] Context 조회/생성
+            AiConversationContext aiContext = getOrCreateContext(session);
 
             // [3] 이전 문맥 준비
             String prevMessage = aiContext.getPreviousAiMessage();
@@ -97,8 +88,8 @@ public class AiSpeakServiceImpl implements AiSpeakService {
                     nextState.getDepth()
             );
 
-            // [6] Context 업데이트 (엔티티 메서드 직접 호출)
-            aiContext.updateContext(nextState.getDepth(), finalAiMessage);
+            // [6] Context 업데이트
+            updateAndSaveContext(aiContext.getId(), nextState.getDepth(), finalAiMessage);
 
             // [7] 결과 반환
             return AiResponse.builder()
@@ -107,5 +98,22 @@ public class AiSpeakServiceImpl implements AiSpeakService {
                     .build();
 
         }, AiErrorCode.AI_SERVER_ERROR);
+    }
+
+    @Transactional
+    protected AiConversationContext getOrCreateContext(ConversationSession session) {
+        return aiContextRepository.findBySessionId(session.getId())
+                .orElseGet(() -> aiContextRepository.save(
+                        AiConversationContext.builder().session(session).depth(0).build()
+                ));
+    }
+
+    @Transactional
+    protected void updateAndSaveContext(Long contextId, int newDepth, String newMessage) {
+        AiConversationContext context = aiContextRepository.findById(contextId)
+                .orElseThrow(() -> new IllegalStateException("Context not found for update"));
+
+        // Dirty Checking으로 자동 업데이트
+        context.updateContext(newDepth, newMessage);
     }
 }

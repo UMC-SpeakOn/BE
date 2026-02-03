@@ -2,15 +2,14 @@ package com.example.speakOn.global.ai.repository;
 
 import com.example.speakOn.global.ai.entity.AiConversationContext;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
 public interface AiConversationContextRepository extends JpaRepository<AiConversationContext, Long> {
 
-    /**
-     * 세션 ID를 기반으로 AI 대화 컨텍스트(Depth, 문맥)를 조회합니다.
-     * * @param sessionId ConversationSession의 PK
-     * @return AiConversationContext (존재하지 않을 경우 Empty)
-     */
-    Optional<AiConversationContext> findBySessionId(Long sessionId);
+    @Query("SELECT a FROM AiConversationContext a WHERE a.session.id = :sessionId")
+    Optional<AiConversationContext> findBySessionId(@Param("sessionId") Long sessionId);
+
 }

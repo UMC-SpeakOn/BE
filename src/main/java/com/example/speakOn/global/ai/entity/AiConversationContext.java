@@ -15,7 +15,7 @@ public class AiConversationContext extends BaseEntity {
 
     // 세션과 1:1 관계
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id", nullable = false)
+    @JoinColumn(name = "session_id", nullable = false, unique = true)
     private ConversationSession session;
 
     // 질문 깊이

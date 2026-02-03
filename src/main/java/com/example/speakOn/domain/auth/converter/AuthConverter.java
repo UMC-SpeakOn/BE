@@ -10,11 +10,12 @@ import com.example.speakOn.domain.user.enums.SocialType;
 public class AuthConverter {
 
     // 로그인 응답 DTO 변환
-    public static AuthResponse.SocialLoginResponseDTO toSocialLoginResponseDTO(Long userId, String accessToken, String refreshToken) {
+    public static AuthResponse.SocialLoginResponseDTO toSocialLoginResponseDTO(Long userId, String accessToken, String refreshToken, Boolean isOnboarded) {
         return AuthResponse.SocialLoginResponseDTO.builder()
                 .userId(userId)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .isOnboarded(isOnboarded)
                 .build();
     }
 

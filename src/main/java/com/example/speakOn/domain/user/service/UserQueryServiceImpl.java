@@ -36,4 +36,14 @@ public class UserQueryServiceImpl implements UserQueryService {
         // 2. 응답 DTO 반환
         return UserConverter.toMyPageResponseDTO(user);
     }
+
+    // 온보딩 완료
+    @Override
+    @Transactional
+    public void completeOnboarding(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ErrorHandler(ErrorStatus.USER_NOT_FOUND));
+
+        user.completeOnboarding();
+    }
 }

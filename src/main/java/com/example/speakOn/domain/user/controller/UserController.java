@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -47,5 +48,24 @@ public class UserController {
 
         UserResponse.MyPageResponseDTO response = userQueryService.getMyPageInfo(userId);
         return ApiResponse.onSuccess(response);
+    }
+
+    // 온보딩 완료
+    @Operation(
+            summary = "온보딩 완료 API",
+            description = "사용자의 온보딩을 완료 처리합니다."
+    )
+    @ApiSuccessCodeExample(resultClass = Void.class)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "USER_NOT_FOUND"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_UNAUTHORIZED"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_INTERNAL_SERVER_ERROR")
+    })
+    @PatchMapping("/onboarded")
+    public ApiResponse<Void> completeOnboarding() {
+        Long userId = authUtil.getCurrentUserId();
+
+        userQueryService.completeOnboarding(userId);
+        return ApiResponse.onSuccess(null);
     }
 }

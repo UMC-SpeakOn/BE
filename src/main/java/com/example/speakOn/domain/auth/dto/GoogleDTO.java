@@ -12,11 +12,11 @@ public class GoogleDTO {
      */
     @Schema(description = "구글 인가 코드 요청")
     public record CodeRequest(
-            @Schema(description = "구글 인가 코드 (리다이렉트 URL의 code 파라미터)", example = "4/0AX4XfWh_example_code_123456789")
+            @Schema(description = "구글 인가 코드 (리다이렉트 URL의 code 파라미터)", example = "4/0A456789...userinfo.email&authuser=0&prompt=none")
             @NotBlank
             String code,
 
-            @Schema(description = "리다이렉트 URI (프론트 환경에 맞게: localhost:5173 또는 배포 주소)", example = "http://localhost:5173")
+            @Schema(description = "리다이렉트 URI", example = "http://localhost:5173/login/oauth2/code/google")
             String redirectUri
     ) {
     }

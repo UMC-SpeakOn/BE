@@ -19,7 +19,7 @@ public class PromptMapper {
     @Value("${spring.ai.prompt.system.speak}")
     private String systemPromptPath;
 
-    @Value("${AI_PROMPT_ANALYSIS_PATH}")
+    @Value("${spring.ai.prompt.analysis}")
     private String analysisPath;
 
 

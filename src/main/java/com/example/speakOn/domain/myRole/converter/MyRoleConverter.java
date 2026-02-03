@@ -14,8 +14,8 @@ public class MyRoleConverter {
                 .myRoleId(myRole.getId())
                 .avatarId(myRole.getAvatar().getId())
                 .avatarName(myRole.getAvatar().getName())
-                .job(myRole.getJob())
-                .situation(myRole.getSituation())
+                .job(myRole.getJob().getDescription())
+                .situation(myRole.getSituation().getDescription())
                 .build();
     }
 
@@ -34,8 +34,8 @@ public class MyRoleConverter {
                 .avatarName(avatar.getName())
                 .avatarAge(avatar.getAge())
                 .avatarNationality(avatar.getNationality())
-                .job(myRole.getJob())
-                .situation(myRole.getSituation())
+                .job(myRole.getJob().getDescription())
+                .situation(myRole.getSituation().getDescription())
                 .build();
     }
 

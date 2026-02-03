@@ -1,7 +1,6 @@
 package com.example.speakOn.domain.user.dto;
 
 import com.example.speakOn.domain.user.enums.SocialType;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,6 +34,8 @@ public class UserResponse {
         @Schema(description = "소셜 로그인 타입", example = "GOOGLE")
         private SocialType socialType;
 
-    }
+        @Schema(description = "서비스 가입일", example = "2025.12.19")
+        private String createdAt;
 
+    }
 }

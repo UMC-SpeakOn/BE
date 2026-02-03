@@ -1,5 +1,6 @@
 package com.example.speakOn.global.ai.dto;
 
+import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -11,5 +12,6 @@ public class ConversationState {
     private final Integer depth;
     private final String instruction;
     private final Boolean isFinished;
+    private MessageType messageType;
 
 }

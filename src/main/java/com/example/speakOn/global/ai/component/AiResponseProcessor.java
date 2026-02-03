@@ -23,17 +23,30 @@ public class AiResponseProcessor {
 
     private final AiFallbackService aiFallbackService;
 
-    public String processResponse(AiRequest request, ChatResponse response, String situationName) {
+    /**
+     * AI 응답 텍스트 추출 -> 문맥 생성 -> 검토/수정(Fallback) 수행
+     * * @param request AI 요청 정보 (User Message 등)
+     * @param response LLM 응답 객체
+     * @param situationName 상황 이름 (ScenarioType 매핑용)
+     * @param currentMainCount 현재 메인 질문 카운트 (DB/Service에서 전달)
+     * @param currentDepth 현재 꼬리질문 깊이 (DB/Service에서 전달)
+     * @return 최종 검토된 AI 답변 문자열
+     */
+    public String processResponse(AiRequest request, ChatResponse response, String situationName,
+                                  Integer currentMainCount, Integer currentDepth) {
         // 1. 텍스트 추출
         String rawAiText = extractResponseText(response);
 
         // 2. 검토를 위한 Context 생성
         ChatRequest chatReq = ChatRequest.of(
-                request.getMyRoleId(), request.getMainCount(), request.getDepth(), request.getUserMessage()
+                request.getMyRoleId(),
+                currentMainCount,
+                currentDepth,
+                request.getUserMessage()
         );
         ChatContext context = ChatContext.of(chatReq, rawAiText);
 
-        // 3. 시나리오 타입 매핑 (3가지 상황 처리)
+        // 3. 시나리오 타입 매핑
         ScenarioType scenarioType = mapToScenarioType(situationName);
 
         // 4. 검토 및 수정(Fallback) 실행 -> 결과 반환
@@ -42,7 +55,9 @@ public class AiResponseProcessor {
 
     private String extractResponseText(ChatResponse response) {
         return Optional.ofNullable(response)
-                .map(ChatResponse::getResult).map(Generation::getOutput).map(AssistantMessage::getText)
+                .map(ChatResponse::getResult)
+                .map(Generation::getOutput)
+                .map(AssistantMessage::getText)
                 .filter(text -> !text.isBlank())
                 .orElseThrow(() -> new GeneralException(AiErrorCode.AI_PARSE_ERROR));
     }

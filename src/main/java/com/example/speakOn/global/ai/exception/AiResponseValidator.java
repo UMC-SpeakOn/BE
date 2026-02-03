@@ -1,6 +1,5 @@
 package com.example.speakOn.global.ai.exception;
 
-import com.example.speakOn.global.apiPayload.exception.GeneralException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatResponse;
 

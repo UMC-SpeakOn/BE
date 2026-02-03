@@ -1,28 +1,13 @@
 package com.example.speakOn.global.ai.service;
-import com.example.speakOn.domain.avatar.entity.Avatar;
-import com.example.speakOn.domain.myRole.entity.MyRole;
-import com.example.speakOn.domain.avatar.repository.StyleRepository;
-import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
-import com.example.speakOn.global.ai.domain.ChatRequest;
-import com.example.speakOn.global.ai.dto.*;
 import com.example.speakOn.global.ai.exception.AiErrorCode;
-import com.example.speakOn.global.ai.fallback.AiFallbackHandler;
-import com.example.speakOn.global.ai.fallback.policy.ChatContext;
-import com.example.speakOn.global.ai.review.ReviewEngine;
-import com.example.speakOn.global.ai.review.ScenarioType;
-import com.example.speakOn.global.ai.review.model.ReviewState;
-import com.example.speakOn.global.apiPayload.code.status.ErrorStatus;
-import com.example.speakOn.global.apiPayload.exception.GeneralException;
 import com.example.speakOn.global.ai.util.ServiceExecutor;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.chat.model.*;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

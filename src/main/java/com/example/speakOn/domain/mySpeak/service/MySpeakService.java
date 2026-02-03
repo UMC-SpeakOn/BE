@@ -17,6 +17,9 @@ import com.example.speakOn.domain.mySpeak.exception.code.MySpeakErrorCode;
 import com.example.speakOn.domain.mySpeak.repository.ConversationMessageRepository;
 import com.example.speakOn.domain.mySpeak.repository.ConversationSessionRepository;
 import com.example.speakOn.domain.mySpeak.repository.MySpeakRepository;
+import com.example.speakOn.global.ai.dto.AiRequest;
+import com.example.speakOn.global.ai.dto.AiResponse;
+import com.example.speakOn.global.ai.service.AiSpeakService;
 import com.example.speakOn.global.apiPayload.exception.handler.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +44,7 @@ public class MySpeakService {
     private final MySpeakConverter mySpeakConverter;
     private final S3UploaderService s3UploaderService;
     private final ConversationTurnService conversationTurnService;
+    private final AiSpeakService aiSpeakService;
 
 
     /**
@@ -220,12 +224,7 @@ public class MySpeakService {
     @Transactional
     public ConversationTurnResponse handleTurn(MultipartFile audioFile, Long sessionId, ConversationTurnRequest request) {
         // 세션 조회
-        ConversationSession session = mySpeakRepository.findByIdWithAvatar(sessionId);
-        if (session == null) {
-            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
-        }
-
-
+        ConversationSession session = findSessionOrThrow(sessionId);
 
         // STT + USER 메시지 저장
         String userText = conversationTurnService.sttAndSaveUserMessage(
@@ -235,39 +234,15 @@ public class MySpeakService {
                 request.getMessageType()
         );
 
-        // AI 질문 생성 (지금은 더미)
-        //여기서 ai 질문 생성하는 메서드 호출 필요!!!!!
-        String aiQuestion = "Can you elaborate on that?";
-
-
-
-
-        Avatar avatar = session.getMyRole().getAvatar();
-
-        // TTS + AI 메시지 저장
-        byte[] audioBytes = conversationTurnService.ttsAndSaveAiMessage(
-                session,
-                aiQuestion,
-                MessageType.MAIN, //이부분 AI가 꼬리질문인지 메인 질문인지 판별한 다음 값 세팅 부탁
-                avatar.getTtsVoiceId(),
-                avatar.getCadenceType().getSpeedRate()
-        );
-
-        return new ConversationTurnResponse(
-                aiQuestion,
-                Base64.getEncoder().encodeToString(audioBytes),
-                MessageType.MAIN //이부분 AI가 꼬리질문인지 메인 질문인지 판별한 다음 값 세팅 부탁
-        );
+        // 대화 흐름 공통 처리 (카운트 증가 + AI 호출)
+        return processConversationFlow(session, userText, request.getMessageType());
     }
 
     @Transactional
     public ConversationTurnTextResponse handleTurnText(Long sessionId, ConversationTurnTextRequest request) {
 
         // 세션 조회
-        ConversationSession session = mySpeakRepository.findByIdWithAvatar(sessionId);
-        if (session == null) {
-            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
-        }
+        ConversationSession session = findSessionOrThrow(sessionId);
 
         // USER 메시지 저장
         ConversationMessage userMessage = ConversationMessage.builder()
@@ -279,31 +254,13 @@ public class MySpeakService {
 
         conversationMessageRepository.save(userMessage);
 
-        if (request.getMessageType() == MessageType.MAIN) {
-            session.incrementQuestionCount();
-        }
-
-        // AI 질문 생성 (지금은 더미)
-        //여기서 ai 질문 생성하는 메서드 호출 필요!!!!!
-        String aiQuestion = "Can you elaborate on that?";
-
-
-
-        Avatar avatar = session.getMyRole().getAvatar();
-
-        // TTS + AI 메시지 저장
-        byte[] audioBytes = conversationTurnService.ttsAndSaveAiMessage(
-                session,
-                aiQuestion,
-                MessageType.MAIN, //이부분 AI가 꼬리질문인지 메인 질문인지 판별한 다음 값 세팅 부탁
-                avatar.getTtsVoiceId(),
-                avatar.getCadenceType().getSpeedRate()
-        );
+        // 대화 흐름 공통 처리 (카운트 증가 + AI 호출)
+        ConversationTurnResponse result = processConversationFlow(session, request.getAnswerText(), request.getMessageType());
 
         return new ConversationTurnTextResponse(
-                aiQuestion,
-                Base64.getEncoder().encodeToString(audioBytes),
-                MessageType.MAIN //이부분 AI가 꼬리질문인지 메인 질문인지 판별한 다음 값 세팅 부탁
+                result.getQuestionText(),
+                result.getBase64Audio(),
+                result.getMessageType()
         );
     }
 
@@ -358,7 +315,66 @@ public class MySpeakService {
                 .count();
     }
 
+    /**
+     * 세션 조회 및 예외 처리 공통 메서드
+     */
+    private ConversationSession findSessionOrThrow(Long sessionId) {
+        ConversationSession session = mySpeakRepository.findByIdWithAvatar(sessionId);
+        if (session == null) {
+            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
+        }
+        return session;
+    }
 
+    /**
+     * 대화 흐름 제어 공통 로직
+     * 메인 질문 시 카운트 증가 후 AI 대화 생성 위임
+     */
+    private ConversationTurnResponse processConversationFlow(ConversationSession session, String userText, MessageType messageType) {
+        // 메인 질문이면 카운트 증가
+        if (messageType == MessageType.MAIN) {
+            session.incrementQuestionCount();
+        }
+
+        // AI 대화 생성 및 TTS 처리
+        return processAiTurn(session, userText);
+    }
+
+    /**
+     * AI 대화 공통 처리 로직
+     * AI 호출 -> TTS 생성 -> 결과 반환
+     *
+     * @param session 대화 세션
+     * @param userText 사용자 발화 텍스트
+     * @return AI 응답 및 TTS 데이터
+     */
+    private ConversationTurnResponse processAiTurn(ConversationSession session, String userText) {
+        // AI 서비스 호출
+        AiRequest aiRequest = AiRequest.builder()
+                .sessionId(session.getId())
+                .myRoleId(session.getMyRole().getId())
+                .userMessage(userText)
+                .build();
+
+        // AiSpeakService가 DB 조회, 프롬프트, 문맥 업데이트, 타입 결정까지 수행
+        AiResponse aiResponse = aiSpeakService.chat(aiRequest);
+
+        // TTS 생성 및 AI 메시지 저장
+        Avatar avatar = session.getMyRole().getAvatar();
+        byte[] audioBytes = conversationTurnService.ttsAndSaveAiMessage(
+                session,
+                aiResponse.getAiMessage(),
+                aiResponse.getMessageType(),
+                avatar.getTtsVoiceId(),
+                avatar.getCadenceType().getSpeedRate()
+        );
+
+        return new ConversationTurnResponse(
+                aiResponse.getAiMessage(),
+                Base64.getEncoder().encodeToString(audioBytes),
+                aiResponse.getMessageType()
+        );
+    }
 
     /**
      * MyRole 리스트 검증

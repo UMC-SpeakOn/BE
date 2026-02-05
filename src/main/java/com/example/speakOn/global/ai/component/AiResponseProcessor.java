@@ -1,5 +1,6 @@
 package com.example.speakOn.global.ai.component;
 
+import com.example.speakOn.domain.avatar.enums.SituationType;
 import com.example.speakOn.global.ai.domain.ChatRequest;
 import com.example.speakOn.global.ai.dto.AiRequest;
 import com.example.speakOn.global.ai.exception.AiErrorCode;
@@ -27,12 +28,12 @@ public class AiResponseProcessor {
      * AI 응답 텍스트 추출 -> 문맥 생성 -> 검토/수정(Fallback) 수행
      * * @param request AI 요청 정보 (User Message 등)
      * @param response LLM 응답 객체
-     * @param situationName 상황 이름 (ScenarioType 매핑용)
+     * @param situation 상황 정보 (SituationType Enum)
      * @param currentMainCount 현재 메인 질문 카운트 (DB/Service에서 전달)
      * @param currentDepth 현재 꼬리질문 깊이 (DB/Service에서 전달)
      * @return 최종 검토된 AI 답변 문자열
      */
-    public String processResponse(AiRequest request, ChatResponse response, String situationName,
+    public String processResponse(AiRequest request, ChatResponse response, SituationType situation,
                                   Integer currentMainCount, Integer currentDepth) {
         // 1. 텍스트 추출
         String rawAiText = extractResponseText(response);
@@ -44,13 +45,11 @@ public class AiResponseProcessor {
                 currentDepth,
                 request.getUserMessage()
         );
-        ChatContext context = ChatContext.of(chatReq, rawAiText);
+        ChatContext context = ChatContext.of(chatReq, rawAiText, situation);
 
-        // 3. 시나리오 타입 매핑
-        ScenarioType scenarioType = mapToScenarioType(situationName);
 
-        // 4. 검토 및 수정(Fallback) 실행 -> 결과 반환
-        return aiFallbackService.reviewAndCorrect(context, scenarioType);
+        //  검토 및 수정(Fallback) 실행 -> 결과 반환
+        return aiFallbackService.reviewAndCorrect(context);
     }
 
     private String extractResponseText(ChatResponse response) {

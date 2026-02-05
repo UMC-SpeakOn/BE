@@ -318,7 +318,7 @@ public interface MySpeakControllerDocs {
                     ### 📤 응답
                     | 필드 | 타입 | 설명 |
                     |------|------|------|
-                    | `text` | String | 오프닝 멘트 텍스트 |
+                    | `questionText` | String | 오프닝 멘트 텍스트 |
                     | `base64Audio` | String | Base64 인코딩된 음성 데이터 |
                     | `messageType` | String | AI 메시지 타입 |
                     

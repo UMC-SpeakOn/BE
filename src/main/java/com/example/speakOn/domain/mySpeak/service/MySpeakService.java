@@ -20,6 +20,7 @@ import com.example.speakOn.domain.mySpeak.repository.MySpeakRepository;
 import com.example.speakOn.global.ai.dto.AiRequest;
 import com.example.speakOn.global.ai.dto.AiResponse;
 import com.example.speakOn.global.ai.service.AiSpeakService;
+import com.example.speakOn.global.ai.service.AiSpeakServiceImpl;
 import com.example.speakOn.global.apiPayload.exception.handler.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,6 @@ public class MySpeakService {
     private final S3UploaderService s3UploaderService;
     private final ConversationTurnService conversationTurnService;
     private final AiSpeakService aiSpeakService;
-
 
     /**
      * 대기화면 데이터 조회
@@ -281,6 +281,29 @@ public class MySpeakService {
         }
 
         session.saveUserDifficulty(request.getUserDifficulty());
+    }
+
+    @Transactional
+    public OpeningResponse opening(Long sessionId) {
+        ConversationSession session = findSessionOrThrow(sessionId);
+
+        String openerText = aiSpeakService.getOpener(session.getMyRole().getId());
+
+
+        Avatar avatar = session.getMyRole().getAvatar();
+        byte[] audioBytes = conversationTurnService.ttsAndSaveAiMessage(
+                session,
+                openerText,
+                MessageType.OPENING,
+                avatar.getTtsVoiceId(),
+                avatar.getCadenceType().getSpeedRate()
+        );
+
+        return new OpeningResponse(
+                openerText,
+                Base64.getEncoder().encodeToString(audioBytes),
+                MessageType.OPENING
+        );
     }
 
     /**

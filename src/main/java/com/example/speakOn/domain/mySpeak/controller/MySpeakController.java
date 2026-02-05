@@ -7,6 +7,8 @@ import com.example.speakOn.domain.mySpeak.dto.response.*;
 
 import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.domain.mySpeak.service.MySpeakService;
+import com.example.speakOn.global.ai.service.AiSpeakService;
+import com.example.speakOn.global.ai.service.AiSpeakServiceImpl;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import com.example.speakOn.global.util.AuthUtil;
 import jakarta.validation.Valid;
@@ -26,6 +28,7 @@ public class MySpeakController implements MySpeakControllerDocs {
 
     private final MySpeakService mySpeakService;
     private final AuthUtil authUtil;
+    private final AiSpeakServiceImpl aiSpeakService;
 
     //대기 화면 조회 api
     @GetMapping
@@ -66,6 +69,14 @@ public class MySpeakController implements MySpeakControllerDocs {
         String base64 = Base64.getEncoder().encodeToString(audioBytes);
 
         return ApiResponse.onSuccess(new TtsResponseDto(base64));
+    }
+
+    //오프닝 멘트 api
+    @GetMapping("/sessions/{sessionId}/opener")
+    public ApiResponse<OpeningResponse> getOpener(@PathVariable Long sessionId) {
+        OpeningResponse response = mySpeakService.opening(sessionId);
+
+        return ApiResponse.onSuccess(response);
     }
 
     // 세션 종료 api

@@ -94,7 +94,6 @@ public class MyRoleServiceImpl implements MyRoleService {
 
         // 4. Soft delete (isActive를 false로 변경)
         myRole.deactivate();
-        myRoleRepository.save(myRole);
 
         // 5. 응답 변환
         return MyRoleConverter.toDeleteMyRoleResultDTO(myRoleId);

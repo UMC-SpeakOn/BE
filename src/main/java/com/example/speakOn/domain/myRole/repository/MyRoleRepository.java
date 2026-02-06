@@ -12,10 +12,13 @@ import java.util.Optional;
 
 public interface MyRoleRepository extends JpaRepository<MyRole, Long>, MyRoleRepositoryCustom {
 
-    boolean existsByUserAndAvatarAndJobAndSituation(User user, Avatar avatar, JobType job, SituationType situation);
+    // 활성화된 롤 중복 체크 (soft delete 지원)
+    boolean existsByUserAndAvatarAndJobAndSituationAndIsActiveTrue(User user, Avatar avatar, JobType job, SituationType situation);
 
+    // 특정 사용자의 모든 활성화된 MyRole 조회 (최신순)
     List<MyRole> findByUserAndIsActiveTrueOrderByCreatedAtDesc(User user);
 
+    // ID와 활성화 상태로 MyRole 조회 (soft delete 지원)
     Optional<MyRole> findByIdAndIsActiveTrue(Long id);
 
 }

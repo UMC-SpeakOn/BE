@@ -47,8 +47,8 @@ public class MyRoleServiceImpl implements MyRoleService {
         Avatar avatar = avatarRepository.findById(request.getAvatarId())
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.AVATAR_NOT_FOUND));
 
-        // 3. 중복 체크 (같은 user, avatar, job, situation 조합이 이미 존재하는지)
-        boolean exists = myRoleRepository.existsByUserAndAvatarAndJobAndSituation(
+        // 3. 중복 체크 (같은 user, avatar, job, situation 조합의 활성화된 롤이 이미 존재하는지)
+        boolean exists = myRoleRepository.existsByUserAndAvatarAndJobAndSituationAndIsActiveTrue(
                 user, avatar, request.getJob(), request.getSituation());
         if (exists) {
             throw new ErrorHandler(ErrorStatus.MY_ROLE_ALREADY_EXISTS);

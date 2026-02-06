@@ -50,4 +50,11 @@ public class MyRole extends BaseEntity {
     public void deactivate() {
         this.isActive = false;
     }
+
+    /**
+     * 롤을 다시 활성화 (soft delete 되었던 롤을 복구)
+     */
+    public void reactivate() {
+        this.isActive = true;
+    }
 }

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -47,20 +48,31 @@ public class MyRoleServiceImpl implements MyRoleService {
         Avatar avatar = avatarRepository.findById(request.getAvatarId())
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.AVATAR_NOT_FOUND));
 
-        // 3. 중복 체크 (같은 user, avatar, job, situation 조합의 활성화된 롤이 이미 존재하는지)
-        boolean exists = myRoleRepository.existsByUserAndAvatarAndJobAndSituationAndIsActiveTrue(
+        // 3. 활성화된 롤 중복 체크
+        boolean activeExists = myRoleRepository.existsByUserAndAvatarAndJobAndSituationAndIsActiveTrue(
                 user, avatar, request.getJob(), request.getSituation());
-        if (exists) {
+        if (activeExists) {
             throw new ErrorHandler(ErrorStatus.MY_ROLE_ALREADY_EXISTS);
         }
 
-        // 4. MyRole 생성 및 저장
-        MyRole myRole = MyRole.builder()
-                .user(user)
-                .avatar(avatar)
-                .job(request.getJob())
-                .situation(request.getSituation())
-                .build();
+        // 4. 비활성화된 롤 조회 (삭제됐던 롤이 있으면 재활성화)
+        Optional<MyRole> inactiveRole = myRoleRepository.findByUserAndAvatarAndJobAndSituationAndIsActiveFalse(
+                user, avatar, request.getJob(), request.getSituation());
+
+        MyRole myRole;
+        if (inactiveRole.isPresent()) {
+            // 4-1. 비활성화된 롤이 있으면 재활성화
+            myRole = inactiveRole.get();
+            myRole.reactivate();
+        } else {
+            // 4-2. 없으면 새로운 롤 생성
+            myRole = MyRole.builder()
+                    .user(user)
+                    .avatar(avatar)
+                    .job(request.getJob())
+                    .situation(request.getSituation())
+                    .build();
+        }
 
         MyRole savedMyRole = myRoleRepository.save(myRole);
 

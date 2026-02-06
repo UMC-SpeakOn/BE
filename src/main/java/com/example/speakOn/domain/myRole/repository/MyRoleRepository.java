@@ -15,6 +15,9 @@ public interface MyRoleRepository extends JpaRepository<MyRole, Long>, MyRoleRep
     // 활성화된 롤 중복 체크 (soft delete 지원)
     boolean existsByUserAndAvatarAndJobAndSituationAndIsActiveTrue(User user, Avatar avatar, JobType job, SituationType situation);
 
+    // 비활성화된 롤 조회 (재활성화용)
+    Optional<MyRole> findByUserAndAvatarAndJobAndSituationAndIsActiveFalse(User user, Avatar avatar, JobType job, SituationType situation);
+
     // 특정 사용자의 모든 활성화된 MyRole 조회 (최신순)
     List<MyRole> findByUserAndIsActiveTrueOrderByCreatedAtDesc(User user);
 

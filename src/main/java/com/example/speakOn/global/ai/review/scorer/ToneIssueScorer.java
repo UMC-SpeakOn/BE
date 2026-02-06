@@ -1,56 +1,70 @@
 package com.example.speakOn.global.ai.review.scorer;
 
+import com.example.speakOn.domain.avatar.enums.SituationType;
 import com.example.speakOn.global.ai.fallback.policy.ChatContext;
 import com.example.speakOn.global.ai.review.ScenarioType;
 import com.example.speakOn.global.ai.review.model.FailureType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Component
 public class ToneIssueScorer implements IssueScorer {
 
-    private static final List<String> RUDE = List.of(
+
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
+    private static final Pattern AGGRESSIVE_PATTERN = Pattern.compile(".*[A-Z]{6,}.*|.*!!!.*");
+
+
+    private static final List<String> RUDE_CUES = List.of(
             "shut up", "whatever", "that's stupid", "i don't care"
     );
 
-    private static final List<String> CASUAL = List.of(
-            "lol", "bro", "dude", "gonna", "wanna", "kinda", "ya", " pls", " thx", " u ", " ur "
+
+    private static final List<Pattern> CASUAL_PATTERNS = List.of(
+            Pattern.compile("\\blol\\b"), Pattern.compile("\\bbro\\b"), Pattern.compile("\\bdude\\b"),
+            Pattern.compile("\\bgonna\\b"), Pattern.compile("\\bwanna\\b"), Pattern.compile("\\bkinda\\b"),
+            Pattern.compile("\\bya\\b"), Pattern.compile("\\bpls\\b"), Pattern.compile("\\bthx\\b"),
+            Pattern.compile("\\bu\\b"), Pattern.compile("\\bur\\b")
     );
 
     @Override
-    public IssueScore score(ChatContext context, ScenarioType scenario) {
-        String ai = safe(context.originalText());
-        if (ai.isBlank()) return new IssueScore(FailureType.NONE, 0.0, "ok");
+    public IssueScore score(ChatContext context, SituationType situation) {
+        String original = context.originalText();
+        if (original == null || original.isBlank()) {
+            return new IssueScore(FailureType.NONE, 0.0, "ok");
+        }
 
-        String norm = normalize(ai);
+        String norm = normalize(original);
 
-        if (containsAny(norm, RUDE)) {
+        // 1. 무례한 표현 체크
+        if (RUDE_CUES.stream().anyMatch(norm::contains)) {
             return new IssueScore(FailureType.TONE_ISSUE, 0.90, "rude phrase detected");
         }
 
-        int casualHits = countHits(norm, CASUAL);
-        if (casualHits >= 3) return new IssueScore(FailureType.TONE_ISSUE, 0.75, "too casual hits=" + casualHits);
-        if (casualHits == 2) return new IssueScore(FailureType.TONE_ISSUE, 0.62, "casual hits=2");
-
-        if (ai.matches(".*[A-Z]{6,}.*") || ai.contains("!!!")) {
+        // 2. 공격적 강조
+        if (AGGRESSIVE_PATTERN.matcher(original).matches()) {
             return new IssueScore(FailureType.TONE_ISSUE, 0.65, "aggressive emphasis");
+        }
+
+        // 3. 캐주얼 표현 횟수 체크
+        long casualHits = CASUAL_PATTERNS.stream()
+                .filter(p -> p.matcher(norm).find())
+                .count();
+
+        if (casualHits >= 3) {
+            return new IssueScore(FailureType.TONE_ISSUE, 0.75, "too casual: hits=" + casualHits);
+        } else if (casualHits >= 1) {
+
+            double score = (casualHits == 2) ? 0.62 : 0.45;
+            return new IssueScore(FailureType.TONE_ISSUE, score, "casual expression detected");
         }
 
         return new IssueScore(FailureType.NONE, 0.0, "ok");
     }
 
-    private static String safe(String s) { return s == null ? "" : s.trim(); }
-    private static String normalize(String s) { return safe(s).toLowerCase().replaceAll("\\s+", " "); }
-
-    private static boolean containsAny(String text, List<String> needles) {
-        for (String n : needles) if (text.contains(n)) return true;
-        return false;
-    }
-
-    private static int countHits(String text, List<String> needles) {
-        int hits = 0;
-        for (String n : needles) if (text.contains(n)) hits++;
-        return hits;
+    private String normalize(String s) {
+        return WHITESPACE.matcher(s.trim().toLowerCase()).replaceAll(" ");
     }
 }

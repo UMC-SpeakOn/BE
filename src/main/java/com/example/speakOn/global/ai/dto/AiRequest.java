@@ -1,5 +1,6 @@
 package com.example.speakOn.global.ai.dto;
 
+import com.example.speakOn.global.ai.domain.ChatRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,4 +30,13 @@ public class AiRequest {
     @Size(max = 1000, message = "메시지는 1000자를 넘을 수 없습니다.")
     private String userMessage;
 
+    public ChatRequest toChatRequest(int qCount, int depth) {
+        return new ChatRequest(
+                this.myRoleId,
+                qCount,
+                depth,
+                this.userMessage
+        );
+    }
 }
+

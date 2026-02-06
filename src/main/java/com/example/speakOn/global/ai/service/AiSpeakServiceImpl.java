@@ -8,6 +8,7 @@ import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.global.ai.entity.AiConversationContext;
 import com.example.speakOn.global.ai.exception.AiErrorCode;
+import com.example.speakOn.global.ai.fallback.policy.ChatContext;
 import com.example.speakOn.global.ai.util.ServiceExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class AiSpeakServiceImpl implements AiSpeakService {
     private final AiStateComponent stateComponent;
     private final AiPromptComponent promptComponent;
     private final AiResponseProcessor responseProcessor;
+    private final AiFallbackService aiFallbackService;
 
     @Override
     public String getOpener(Long myRoleId) {
@@ -81,10 +83,11 @@ public class AiSpeakServiceImpl implements AiSpeakService {
             String finalAiMessage = responseProcessor.processResponse(
                     request,
                     response,
-                    myRole.getSituation().name(),
+                    myRole.getSituation(),
                     session.getCurrentQuestionCount(),
                     nextState.getDepth()
             );
+
 
             // [6] Context 업데이트
             aiContextService.updateContext(aiContext.getId(), nextState.getDepth(), finalAiMessage);

@@ -39,4 +39,15 @@ public class MyRole extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "situation", nullable = false)
     private SituationType situation;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean isActive = true;
+
+    /**
+     * 롤을 비활성화 (soft delete)
+     */
+    public void deactivate() {
+        this.isActive = false;
+    }
 }

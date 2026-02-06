@@ -69,7 +69,7 @@ public class MyRoleServiceImpl implements MyRoleService {
     }
 
     /**
-     * 롤 삭제 (hard delete - DB에서 실제 삭제)
+     * 롤 삭제 (soft delete - isActive를 false로 변경)
      *
      * @param userId   현재 로그인한 사용자 ID
      * @param myRoleId 삭제할 MyRole ID
@@ -83,8 +83,8 @@ public class MyRoleServiceImpl implements MyRoleService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.USER_NOT_FOUND));
 
-        // 2. MyRole 조회
-        MyRole myRole = myRoleRepository.findById(myRoleId)
+        // 2. MyRole 조회 (active=true인 항목만)
+        MyRole myRole = myRoleRepository.findByIdAndIsActiveTrue(myRoleId)
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.MY_ROLE_NOT_FOUND));
 
         // 3. 권한 검증 - 본인의 롤인지 확인
@@ -92,8 +92,9 @@ public class MyRoleServiceImpl implements MyRoleService {
             throw new ErrorHandler(ErrorStatus.MY_ROLE_FORBIDDEN);
         }
 
-        // 4. Hard delete (DB에서 실제 삭제)
-        myRoleRepository.delete(myRole);
+        // 4. Soft delete (isActive를 false로 변경)
+        myRole.deactivate();
+        myRoleRepository.save(myRole);
 
         // 5. 응답 변환
         return MyRoleConverter.toDeleteMyRoleResultDTO(myRoleId);
@@ -103,7 +104,7 @@ public class MyRoleServiceImpl implements MyRoleService {
      * 롤 목록 조회
      *
      * @param userId 현재 로그인한 사용자 ID
-     * @return 사용자의 모든 롤 목록
+     * @return 사용자의 모든 롤 목록 (활성화된 롤만)
      */
     @Override
     public MyRoleResponse.MyRoleListDTO getMyRoles(Long userId) {
@@ -112,8 +113,8 @@ public class MyRoleServiceImpl implements MyRoleService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.USER_NOT_FOUND));
 
-        // 2. 사용자의 모든 MyRole 조회 (최신순)
-        List<MyRole> myRoles = myRoleRepository.findByUserOrderByCreatedAtDesc(user);
+        // 2. 사용자의 모든 MyRole 조회 (최신순, active=true만)
+        List<MyRole> myRoles = myRoleRepository.findByUserAndIsActiveTrueOrderByCreatedAtDesc(user);
 
         // 3. 응답 변환
         return MyRoleConverter.toMyRoleListDTO(myRoles);

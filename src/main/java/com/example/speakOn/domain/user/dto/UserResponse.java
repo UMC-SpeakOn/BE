@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 public class UserResponse {
 
     @Builder
@@ -34,8 +36,17 @@ public class UserResponse {
         @Schema(description = "소셜 로그인 타입", example = "GOOGLE")
         private SocialType socialType;
 
-        @Schema(description = "서비스 가입일", example = "2025.12.19")
-        private String createdAt;
+        @Schema(description = "서비스 가입일", example = "2026-01-24T20:56:20.663238")
+        private LocalDateTime createdAt;
+
+        @Schema(description = "구독 여부", example = "true")
+        private Boolean isSubscribed;
+
+        @Schema(description = "구독 만료일", example = "2026-01-24T20:56:20.663238")
+        private LocalDateTime subscriptionExpiredAt;
 
     }
 }
+
+
+

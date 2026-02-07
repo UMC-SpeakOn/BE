@@ -1,5 +1,6 @@
 package com.example.speakOn.domain.user.service;
 
+import com.example.speakOn.domain.subscription.repository.SubscriptionRepository;
 import com.example.speakOn.domain.user.converter.UserConverter;
 import com.example.speakOn.domain.user.dto.UserResponse;
 import com.example.speakOn.domain.user.entity.User;
@@ -11,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserQueryServiceImpl implements UserQueryService {
 
     private final UserRepository userRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     // User 존재 여부 검증
     @Override
@@ -33,8 +37,17 @@ public class UserQueryServiceImpl implements UserQueryService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.USER_NOT_FOUND));
 
-        // 2. 응답 DTO 반환
-        return UserConverter.toMyPageResponseDTO(user);
+        // 2. 구독 정보 조회
+        var activeSubscription = subscriptionRepository
+                .findActiveSubscriptionByUserId(userId, LocalDateTime.now());
+
+        Boolean isSubscribed = activeSubscription.isPresent();
+        LocalDateTime subscriptionExpiredAt = activeSubscription
+                .map(subscription -> subscription.getExpiredAt())
+                .orElse(null);
+
+        // 3. 응답 DTO 반환
+        return UserConverter.toMyPageResponseDTO(user, isSubscribed, subscriptionExpiredAt);
     }
 
     // 온보딩 완료

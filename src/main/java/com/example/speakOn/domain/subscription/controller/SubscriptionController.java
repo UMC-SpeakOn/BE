@@ -7,6 +7,7 @@ import com.example.speakOn.global.apiPayload.ApiResponse;
 import com.example.speakOn.global.util.AuthUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -30,7 +31,7 @@ public class SubscriptionController {
     @PostMapping("/confirm")
     @Operation(summary = "결제 승인", description = "토스페이먼츠 결제를 승인하고 구독을 생성합니다.")
     public ApiResponse<SubscriptionResponse.SubscriptionResponseDto> confirmPayment(
-            @RequestBody SubscriptionRequest.SubscriptionRequestDto request) {
+            @Valid @RequestBody SubscriptionRequest.SubscriptionRequestDto request) {
 
         Long userId = authUtil.getCurrentUserId();
         log.info("결제 승인 요청 - userId: {}, orderId: {}", userId, request.getOrderId());
@@ -40,4 +41,6 @@ public class SubscriptionController {
         return ApiResponse.onSuccess(response);
     }
 }
+
+
 

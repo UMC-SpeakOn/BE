@@ -81,7 +81,7 @@ public class AiSpeakServiceImpl implements AiSpeakService {
                     session.getCurrentQuestionCount(), nextState.getDepth());
 
             // [4] 마무리 및 DB 저장
-            if ("[EXIT]".equals(finalAiMessage.trim())) {
+            if (finalAiMessage != null && "[EXIT]".equals(finalAiMessage.trim())) {
                 return finalizeSession(session, aiContext, AiStateComponent.FIXED_CLOSING_MESSAGE);
             }
 
@@ -97,10 +97,23 @@ public class AiSpeakServiceImpl implements AiSpeakService {
     /**
      * 세션 종료 공통 로직 처리
      */
-    private AiResponse finalizeSession(ConversationSession session, AiConversationContext aiContext, String closingMessage) {
-        session.completeSession(session.getTotalTime(), session.getSentenceCount(), LocalDateTime.now());
+    @Transactional
+    protected AiResponse finalizeSession(ConversationSession session, AiConversationContext aiContext, String closingMessage) {
 
-        // DB 문맥 업데이트 (마지막 인사 저장)
+        // 실제 소요 시간 계산 (현재 시간 - 시작 시간)
+        long actualTotalTime = java.time.Duration.between(
+                session.getStartedAt(),
+                java.time.LocalDateTime.now()
+        ).toSeconds();
+
+        // 누적된 문장 수와 계산된 시간을 넘겨줌
+        session.completeSession(
+                (int) actualTotalTime,
+                session.getSentenceCount(),
+                java.time.LocalDateTime.now()
+        );
+
+        // 문맥 업데이트 (즉시 반영)
         aiContextService.updateContext(aiContext.getId(), aiContext.getDepth(), closingMessage);
 
         return AiResponse.builder()

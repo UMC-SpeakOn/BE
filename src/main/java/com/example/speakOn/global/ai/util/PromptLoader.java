@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,12 +25,23 @@ public class PromptLoader {
     // 1. 공통 시나리오 데이터 (common.yml)
     private ScenarioMapper commonData;
 
+    @PostConstruct
+    public void init() {
+        try {
+            this.commonData = loadScenarioInternal("common");
+            log.info("[PromptLoader] common.yml loaded.");
+        } catch (Exception e) {
+            log.warn("[PromptLoader] common.yml load failed.", e);
+            this.commonData = new ScenarioMapper();
+        }
+    }
+
     /**
      * [PromptMapper용] YAML 파일을 텍스트로 통째로 읽기 (기존 메서드 유지)
      * - PromptMapper는 이 메서드를 통해 {{name}} 등을 치환하여 사용
      */
     public String loadYamlAsText(String path) throws IOException {
-        // 경로가 없거나 리소스 경로라면 처리
+        if (path == null || path.isBlank()) return "";
         if (path.startsWith("classpath:")) {
             path = path.substring(10);
         }

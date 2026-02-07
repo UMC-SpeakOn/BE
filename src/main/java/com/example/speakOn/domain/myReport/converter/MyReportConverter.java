@@ -31,8 +31,8 @@ public class MyReportConverter {
         ConversationSession session = myReport.getSession();
         MyRole myRole = (session != null) ? session.getMyRole() : null;
 
-        String jobName = (myRole != null && myRole.getJob() != null) ? myRole.getJob().name() : "UNKNOWN";
-        String situationName = (myRole != null && myRole.getSituation() != null) ? myRole.getSituation().name() : "UNKNOWN";
+        String jobName = (myRole != null && myRole.getJob() != null) ? myRole.getJob().getDescription() : "UNKNOWN";
+        String situationName = (myRole != null && myRole.getSituation() != null) ? myRole.getSituation().getDescription() : "UNKNOWN";
 
         return MyReportResponseDTO.ReportSummaryDTO.builder()
                 .reportId(myReport.getId())
@@ -78,8 +78,8 @@ public class MyReportConverter {
                         .sentenceCount(session != null ? session.getSentenceCount() : 0)
                         .difficulty(myReport.getDifficulty())
                         .createdAt(myReport.getCreatedAt() != null ? myReport.getCreatedAt().toLocalDate() : null)
-                        .job(myRole != null && myRole.getJob() != null ? myRole.getJob().name() : "UNKNOWN")
-                        .situation(myRole != null && myRole.getSituation() != null ? myRole.getSituation().name() : "UNKNOWN")
+                        .job(myRole != null && myRole.getJob() != null ? myRole.getJob().getDescription() : "UNKNOWN")
+                        .situation(myRole != null && myRole.getSituation() != null ? myRole.getSituation().getDescription() : "UNKNOWN")
                         .avatarName(avatar != null ? avatar.getName() : "AI")
                         .avatarImgUrl(avatar != null ? avatar.getImgUrl() : "")
                         .build())

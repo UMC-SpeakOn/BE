@@ -46,10 +46,10 @@ public class MyReportResponseDTO {
         @Schema(description = "리포트 ID", example = "1")
         private Long reportId;
 
-        @Schema(description = "직무", example = "PM")
+        @Schema(description = "직무", example = "마케팅")
         private String job;
 
-        @Schema(description = "상황", example = "INTERVIEW")
+        @Schema(description = "상황", example = "면접")
         private String situation;
 
         @Schema(description = "사용자 소감", example = "아쉬움이 남는 대화였다.")

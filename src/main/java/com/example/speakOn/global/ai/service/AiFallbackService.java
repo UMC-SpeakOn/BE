@@ -2,35 +2,35 @@ package com.example.speakOn.global.ai.service;
 
 import com.example.speakOn.global.ai.fallback.policy.ChatContext;
 import com.example.speakOn.global.ai.fallback.policy.FallbackPolicy;
-import com.example.speakOn.global.ai.review.ScenarioType;
 import com.example.speakOn.global.ai.review.model.FailureType;
 import com.example.speakOn.global.ai.review.model.ReviewState;
 import com.example.speakOn.global.ai.review.scorer.IssueScore;
 import com.example.speakOn.global.ai.review.scorer.IssueScorer;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiFallbackService {
 
+    private final ChatModel chatModel;
     private final List<IssueScorer> scorers;
     private final List<FallbackPolicy> policies;
 
+    /**
+     * [1] AI 답변 검토 및 수정 (Post-Processing)
+     */
     public String reviewAndCorrect(ChatContext context) {
         IssueScore maxScore = new IssueScore(FailureType.NONE, 0.0, "ok");
 
         // 1. [검토]
         for (IssueScorer scorer : scorers) {
-            // 이제 Scorer 내부에서도 context.situation()을 사용합니다.
             IssueScore score = scorer.score(context, context.situation());
             if (score.score() > maxScore.score()) {
                 maxScore = score;
@@ -56,5 +56,32 @@ public class AiFallbackService {
                 .findFirst()
                 .map(p -> p.apply(context, issueState))
                 .orElse("I'm sorry, I didn't quite catch that. Could you say that again clearly?"); // 최후의 보루
+    }
+
+    /**
+     * [2] 종료 의도 파악 (Intent Check) - ConversationEngine에서 호출
+     * LLM을 사용하여 유저가 대화를 끝내고 싶어하는지 "TRUE/FALSE"로 판단
+     */
+    public boolean checkExitIntent(String userMessage, String promptTemplate) {
+        try {
+            // 1. 프롬프트에 유저 메시지 주입
+            String fullPrompt = promptTemplate.replace("{input}", userMessage);
+
+            // 2. LLM 호출
+            String response = chatModel.call(new Prompt(fullPrompt))
+                    .getResult()
+                    .getOutput()
+                    .getText()
+                    .trim()
+                    .toUpperCase();
+
+            // 3. 결과 판단
+            log.info("[ExitIntent] LLM Check Result: {}", response);
+            return response.contains("TRUE");
+
+        } catch (Exception e) {
+            log.error("[ExitIntent] LLM Check Failed", e);
+            return false;
+        }
     }
 }

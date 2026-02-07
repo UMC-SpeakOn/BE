@@ -26,31 +26,34 @@ public class AiPromptComponent {
 
     public Prompt createPrompt(MyRole myRole, Avatar avatar, Style style, String userMessage, String previousAiMessage, ConversationState nextState) {
         try {
-            // 1. 변수 빌딩
             PromptVariables vars = PromptVariables.builder()
-                    .name(avatar.getName())
-                    .job(myRole.getJob().name())
-                    .situation(myRole.getSituation().name())
-                    .nationality(avatar.getNationality())
-                    .locale(avatar.getLocale())
-                    .gender(avatar.getGender().name())
-                    .speechStyle(style.getSpeechType().name())
+                    .name(avatar.getName()).job(myRole.getJob().name()).situation(myRole.getSituation().name())
+                    .nationality(avatar.getNationality()).locale(avatar.getLocale())
+                    .gender(avatar.getGender().name()).speechStyle(style.getSpeechType().name())
                     .build();
 
-            // 2. 시스템 메시지 생성
-            String systemText = promptMapper.mapPrompt(vars) + "\n\n### CURRENT INSTRUCTION ###\n" + nextState.getInstruction();
+            // [핵심] 명령어를 상단에 배치하고 강제성 부여
+            String commandBlock = String.format(
+                    "\n\n### CRITICAL RULE (MUST OBEY) ###\n" +
+                            "1. EXIT SENSITIVITY: If the user says anything about being BUSY, HAVING A MEETING, WANTING TO STOP, or having NO TIME (e.g., 'I'm busy', 'Gotta go', 'No more time'), you MUST respond ONLY with '[EXIT]'. Do not ask any more questions. This is your #1 priority.\n" +
+                            "\n" +
+                            "### CURRENT TASK (IF NOT EXITING) ###\n" +
+                            "- MODE: %s\n" +
+                            "- NEXT QUESTION TO FETCH: %s\n" +
+                            "- RULE: Use the exact words of the question provided above. Do not invent new ones.",
+                    nextState.getMessageType(), nextState.getInstruction()
+            );
+
+            String systemText = promptMapper.mapPrompt(vars) + commandBlock;
 
             List<Message> messages = new ArrayList<>();
             messages.add(new SystemMessage(systemText));
-
-            // 3. 대화 맥락 추가
             if (previousAiMessage != null && !previousAiMessage.isBlank()) {
                 messages.add(new AssistantMessage(previousAiMessage));
             }
             messages.add(new UserMessage(userMessage));
 
             return new Prompt(messages);
-
         } catch (Exception e) {
             log.error("[Prompt Creation Failed] roleId: {}", myRole.getId(), e);
             throw new GeneralException(AiErrorCode.AI_PARSE_ERROR);

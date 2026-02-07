@@ -12,41 +12,52 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class AiStateComponent {
-
     private final ConversationEngine conversationEngine;
+    public static final String FIXED_CLOSING_MESSAGE = "Thanks for sharing your perspective. I appreciate your time.";
 
-    public ConversationState calculateNextState(MyRole myRole, String userMessage, int currentQCount, int currentDepth, Long sessionId) throws Exception {
+    public ConversationState calculateNextState(MyRole myRole, String userMessage, int currentQCount, int currentDepth, Long sessionId, MessageType userMessageType) throws Exception {
         String situation = myRole.getSituation().name();
 
-        // 1. 종료 시그널 확인
+        // [1] Java 기반 1차 필터링 (0ms)
         if (conversationEngine.isExitSignal(situation, userMessage)) {
-            return new ConversationState(currentQCount, currentDepth, "User wants to end. Say goodbye.", true, MessageType.CLOSING);
+            return new ConversationState(currentQCount, currentDepth, FIXED_CLOSING_MESSAGE, true, MessageType.CLOSING);
         }
 
-        // 2. 상태 갱신 로직 (0:오프닝 -> 1:메인 -> 2:꼬리1 -> 3:꼬리2 -> 1:다음메인)
         int nextDepth;
         int nextQCount = currentQCount;
 
-        if (currentDepth == 3) {
-            nextDepth = 1;      // 꼬리2(3) -> 다음 메인(1)
-            nextQCount++;       // 질문 카운트 증가
+        // [2] 유저 답변 타입을 기반으로 한 강제 상태 전이 (비동기 지연 방어)
+        if (userMessageType == MessageType.OPENING) {
+            // 오프닝 답변 후엔 무조건 첫 번째 메인 질문
+            nextDepth = 1;
+            nextQCount = 1;
+        } else if (userMessageType == MessageType.MAIN) {
+            // 메인 답변 후엔 무조건 첫 번째 꼬리 질문
+            nextDepth = 2;
+        } else if (userMessageType == MessageType.FOLLOW) {
+            // 꼬리 질문 답변 후 단계별 처리
+            if (currentDepth == 2) {
+                nextDepth = 3; // 두 번째 꼬리 질문으로
+            } else {
+                nextDepth = 1; // 꼬리 질문 종료 후 다음 주제(MAIN)로
+                nextQCount = currentQCount + 1;
+            }
         } else {
-            nextDepth = currentDepth + 1; // 0->1, 1->2, 2->3
+            // 예외 상황 방어 로직
+            nextDepth = (currentDepth >= 3) ? 1 : currentDepth + 1;
+            if (currentDepth >= 3) nextQCount++;
         }
 
-        // 3. 지시사항 조회
+        // [3] 지시사항 조회 (엔진이 YAML에서 가져옴)
         String instruction = conversationEngine.determineNextInstruction(situation, userMessage, nextQCount, nextDepth, sessionId);
-        boolean isFinished = instruction.toLowerCase().contains("finished");
 
-        // 4. 메시지 타입 결정 (1: 메인, 그 외: 꼬리)
-        MessageType messageType;
-        if (isFinished) {
-            messageType = MessageType.CLOSING;
-        } else {
-            messageType = (nextDepth == 1) ? MessageType.MAIN : MessageType.FOLLOW;
+        // [4] 시스템 종료 신호 체크
+        if (instruction.toLowerCase().contains("finished") || instruction.toLowerCase().contains("chat end")) {
+            return new ConversationState(nextQCount, nextDepth, FIXED_CLOSING_MESSAGE, true, MessageType.CLOSING);
         }
 
-        return new ConversationState(nextQCount, nextDepth, instruction, isFinished, messageType);
+        MessageType messageType = (nextDepth == 1) ? MessageType.MAIN : MessageType.FOLLOW;
+        return new ConversationState(nextQCount, nextDepth, instruction, false, messageType);
     }
 
     public String safeGetEngineOpener(String situationName) {

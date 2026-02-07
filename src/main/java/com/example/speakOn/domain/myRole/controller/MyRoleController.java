@@ -64,7 +64,7 @@ public class MyRoleController {
             @ApiErrorCodeExample(value = ErrorStatus.class, name = "_UNAUTHORIZED"),
             @ApiErrorCodeExample(value = ErrorStatus.class, name = "_INTERNAL_SERVER_ERROR")
     })
-    @DeleteMapping("/{myRoleId}")
+    @PatchMapping("/{myRoleId}")
     public ApiResponse<MyRoleResponse.DeleteMyRoleResultDTO> deleteMyRole(@PathVariable Long myRoleId) {
 
         Long userId = authUtil.getCurrentUserId();

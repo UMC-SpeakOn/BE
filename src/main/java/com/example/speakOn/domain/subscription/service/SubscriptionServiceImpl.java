@@ -37,16 +37,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             throw new RuntimeException("결제 금액이 올바르지 않습니다.");
         }
 
-        // 2. 토스페이먼츠 결제 승인 요청
+        // 2. 유저 조회 (결제 승인 전에 수행)
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ErrorHandler(ErrorStatus.USER_NOT_FOUND));
+
+        // 3. 토스페이먼츠 결제 승인 요청
         tossPaymentUtil.confirm(
                 request.getPaymentKey(),
                 request.getOrderId(),
                 request.getAmount()
         );
 
-        // 3. 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ErrorHandler(ErrorStatus.USER_NOT_FOUND));
 
         // 4. 구독 정보 생성
         Subscription subscription = Subscription.createSubscription(

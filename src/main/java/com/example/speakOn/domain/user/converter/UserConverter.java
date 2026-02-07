@@ -2,13 +2,17 @@ package com.example.speakOn.domain.user.converter;
 
 import com.example.speakOn.domain.user.dto.UserResponse;
 import com.example.speakOn.domain.user.entity.User;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 
 public class UserConverter {
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-
-    public static UserResponse.MyPageResponseDTO toMyPageResponseDTO(User user) {
+    /**
+     * User 엔티티와 구독 정보를 포함한 마이페이지 응답 DTO로 변환
+     */
+    public static UserResponse.MyPageResponseDTO toMyPageResponseDTO(
+            User user,
+            Boolean isSubscribed,
+            LocalDateTime subscriptionExpiredAt) {
 
         return UserResponse.MyPageResponseDTO.builder()
                 .userId(user.getId())
@@ -17,7 +21,9 @@ public class UserConverter {
                 .name(user.getName())
                 .email(user.getEmail())
                 .socialType(user.getSocialType())
-                .createdAt(user.getCreatedAt().format(DATE_FORMATTER))
+                .createdAt(user.getCreatedAt())
+                .isSubscribed(isSubscribed)
+                .subscriptionExpiredAt(subscriptionExpiredAt)
                 .build();
     }
 }

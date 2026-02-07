@@ -14,6 +14,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -46,6 +47,7 @@ public class AiSpeakServiceImpl implements AiSpeakService {
         });
     }
 
+    @Transactional
     @Override
     public AiResponse chat(AiRequest request) {
         return serviceExecutor.executeSafe(() -> {

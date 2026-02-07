@@ -36,6 +36,9 @@ public class AiStateComponent {
             nextDepth = 2;
         } else if (userMessageType == MessageType.FOLLOW) {
             // 꼬리 질문 답변 후 단계별 처리
+            if (currentDepth < 2) {
+                log.warn("Session {}: FOLLOW 메시지이나 currentDepth={}로 비정상 상태입니다.", sessionId, currentDepth);
+            }
             if (currentDepth == 2) {
                 nextDepth = 3; // 두 번째 꼬리 질문으로
             } else {

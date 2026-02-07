@@ -7,7 +7,6 @@ import com.example.speakOn.domain.mySpeak.dto.response.*;
 
 import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.domain.mySpeak.service.MySpeakService;
-import com.example.speakOn.global.ai.service.AiSpeakService;
 import com.example.speakOn.global.ai.service.AiSpeakServiceImpl;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import com.example.speakOn.global.util.AuthUtil;
@@ -17,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 

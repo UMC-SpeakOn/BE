@@ -32,7 +32,6 @@ public class AiPromptComponent {
                     .gender(avatar.getGender().name()).speechStyle(style.getSpeechType().name())
                     .build();
 
-            // [핵심] 명령어를 상단에 배치하고 강제성 부여
             String commandBlock = String.format(
                     "\n\n### CRITICAL RULE (MUST OBEY) ###\n" +
                             "1. EXIT SENSITIVITY: If the user says anything about being BUSY, HAVING A MEETING, WANTING TO STOP, or having NO TIME (e.g., 'I'm busy', 'Gotta go', 'No more time'), you MUST respond ONLY with '[EXIT]'. Do not ask any more questions. This is your #1 priority.\n" +

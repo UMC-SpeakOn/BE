@@ -1,10 +1,8 @@
 package com.example.speakOn.global.ai.util;
 
 import com.example.speakOn.global.ai.dto.ScenarioMapper;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -25,23 +23,6 @@ public class PromptLoader {
 
     // 1. 공통 시나리오 데이터 (common.yml)
     private ScenarioMapper commonData;
-
-    // 2. 시스템 설정 데이터 (speak_role.yml)
-    private JsonNode roleConfig;
-
-    @PostConstruct
-    public void init() {
-        try {
-            // 서버 시작 시 두 파일을 메모리에 로드 (캐싱)
-            this.commonData = loadScenarioInternal("common");
-            loadRoleConfigInternal();
-
-            log.info("[PromptLoader] common.yml & speak_role.yml loaded.");
-        } catch (Exception e) {
-            log.warn("[PromptLoader] YAML Load Failed.", e);
-            this.commonData = new ScenarioMapper();
-        }
-    }
 
     /**
      * [PromptMapper용] YAML 파일을 텍스트로 통째로 읽기 (기존 메서드 유지)
@@ -70,6 +51,7 @@ public class PromptLoader {
         try {
             scenario = loadScenarioInternal(situation);
         } catch (IOException e) {
+            log.warn("[PromptLoader] Scenario '{}' load failed: {}", situation, e.getMessage());
             scenario = new ScenarioMapper();
         }
         scenario.mergeCommonData(this.commonData);
@@ -83,11 +65,4 @@ public class PromptLoader {
         return yamlMapper.readValue(resource.getInputStream(), ScenarioMapper.class);
     }
 
-    private void loadRoleConfigInternal() throws IOException {
-        String path = "ai-prompts/speak_role.yml";
-        ClassPathResource resource = new ClassPathResource(path);
-        if (resource.exists()) {
-            this.roleConfig = yamlMapper.readTree(resource.getInputStream());
-        }
-    }
 }

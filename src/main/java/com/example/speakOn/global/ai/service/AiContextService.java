@@ -19,11 +19,12 @@ public class AiContextService {
     public AiConversationContext getOrCreateContext(ConversationSession session) {
         return repository.findBySessionId(session.getId())
                 .orElseGet(() -> {
-                    AiConversationContext newContext = AiConversationContext.builder()
-                            .session(session)
-                            .depth(0)
-                            .build();
-                    return repository.saveAndFlush(newContext); // Flush까지 확실히
+                    try {
+                        AiConversationContext newContext = AiConversationContext.builder().session(session).depth(0).build();
+                        return repository.saveAndFlush(newContext);
+                    } catch (org.springframework.dao.DataIntegrityViolationException e) {return repository.findBySessionId(session.getId())
+                        .orElseThrow(() -> new RuntimeException("Context 생성 실패: sessionId=" + session.getId(), e));
+                    }
                 });
     }
 

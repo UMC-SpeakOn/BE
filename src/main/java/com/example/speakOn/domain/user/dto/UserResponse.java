@@ -45,6 +45,9 @@ public class UserResponse {
         @Schema(description = "구독 만료일", example = "2026-01-24T20:56:20.663238")
         private LocalDateTime subscriptionExpiredAt;
 
+        @Schema(description = "구독 해지 여부", example = "false")
+        private Boolean isSubscriptionCancelled;
+
     }
 
     @Builder

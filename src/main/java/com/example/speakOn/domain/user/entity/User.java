@@ -49,7 +49,7 @@ public class User extends BaseEntity {
     private Boolean isOnboarded = false;
 
     // 리포트 대화 로그 조회 횟수
-    @Column(name = "total_log_view_count")
+    @Column(name = "total_log_view_count", nullable = false, columnDefinition = "integer default 0")
     @Builder.Default
     private Integer totalLogViewCount = 0;
 

@@ -1,11 +1,19 @@
 package com.example.speakOn.global.ai.service;
 
+
+import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.global.ai.dto.PromptVariables;
 import com.example.speakOn.global.ai.util.PromptLoader;
+import com.example.speakOn.global.apiPayload.code.status.ErrorStatus;
+import com.example.speakOn.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PromptMapper {
@@ -40,8 +48,18 @@ public class PromptMapper {
     /**
      * 분석 전용 완성형 시스템 프롬프트 반환
      */
-    public String getAnalysisPrompt() throws Exception {
-        return promptLoader.loadYamlAsText(analysisPath);
+    public String getAnalysisPrompt(MyRole myRole) throws Exception {
+        try {
+            String template = promptLoader.loadYamlAsText(analysisPath);
+
+            return template
+                    .replace("{{job}}", myRole.getJob().name())
+                    .replace("{{situation}}", myRole.getSituation().name());
+
+        } catch (IOException e) {
+            log.error("Analysis prompt load failed", e);
+            throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+        }
     }
 }
 

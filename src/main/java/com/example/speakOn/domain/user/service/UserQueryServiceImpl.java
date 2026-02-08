@@ -46,7 +46,7 @@ public class UserQueryServiceImpl implements UserQueryService {
                 .map(subscription -> subscription.getExpiredAt())
                 .orElse(null);
 
-        // 해지 여부
+        // 해지 여부: 활성 구독이 있으면서 해지된 경우
         Boolean isSubscriptionCancelled = activeSubscription
                 .map(subscription -> subscription.getIsCancelled())
                 .orElse(false);

@@ -13,8 +13,9 @@ import java.util.Optional;
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
 
     /**
-     * 유저의 유효한 구독 정보 조회 (현재 시간 기준 만료되지 않고, 해지되지 않음)
+     * 유저의 유효한 구독 정보 조회 (현재 시간 기준 만료되지 않음)
+     * 해지 여부와 무관하게 expiredAt으로만 판단
      */
-    @Query("SELECT s FROM Subscription s WHERE s.user.id = :userId AND s.expiredAt > :currentTime AND s.isCancelled = false")
+    @Query("SELECT s FROM Subscription s WHERE s.user.id = :userId AND s.expiredAt > :currentTime")
     Optional<Subscription> findActiveSubscriptionByUserId(@Param("userId") Long userId, @Param("currentTime") LocalDateTime currentTime);
 }

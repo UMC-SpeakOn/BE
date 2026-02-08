@@ -39,13 +39,13 @@ public class UserResponse {
         @Schema(description = "서비스 가입일", example = "2026-01-24T20:56:20.663238")
         private LocalDateTime createdAt;
 
-        @Schema(description = "구독 여부", example = "true")
+        @Schema(description = "구독 여부 (만료일 기준)", example = "true")
         private Boolean isSubscribed;
 
         @Schema(description = "구독 만료일", example = "2026-01-24T20:56:20.663238")
         private LocalDateTime subscriptionExpiredAt;
 
-        @Schema(description = "구독 해지 여부", example = "false")
+        @Schema(description = "구독 해지 여부 (만료일 이전에 해지한 경우 true)", example = "false")
         private Boolean isSubscriptionCancelled;
 
     }

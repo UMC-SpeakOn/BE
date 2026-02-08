@@ -47,29 +47,6 @@ public class MySpeakController implements MySpeakControllerDocs {
                 .body(ApiResponse.onSuccess(sessionId));
     }
 
-    // STT api
-    @PostMapping(value = "/stt", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<SttResponseDto> stt(
-            @RequestPart("file") MultipartFile file,
-            @Valid @RequestPart("meta") SttRequestDto request
-            // Jwt 토큰 구현시에 userId 받아오게 수정
-    ) {
-        SttResponseDto result = mySpeakService.recognizeSpeech(file, request);
-        return ApiResponse.onSuccess(result);
-    }
-
-
-    // TTS api
-    @PostMapping("/tts")
-    public ApiResponse<TtsResponseDto> tts(@Valid @RequestBody TtsRequestDto request) {
-
-        byte[] audioBytes = mySpeakService.generateSpeech(request);
-
-        String base64 = Base64.getEncoder().encodeToString(audioBytes);
-
-        return ApiResponse.onSuccess(new TtsResponseDto(base64));
-    }
-
     //오프닝 멘트 api
     @GetMapping("/sessions/{sessionId}/opener")
     public ApiResponse<OpeningResponse> getOpener(@PathVariable Long sessionId) {

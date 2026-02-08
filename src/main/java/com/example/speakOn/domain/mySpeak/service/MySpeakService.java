@@ -42,7 +42,6 @@ public class MySpeakService {
     private final MyRoleRepositoryImpl myRoleRepositoryImpl;
     private final ConversationMessageRepository conversationMessageRepository;
     private final MySpeakConverter mySpeakConverter;
-    private final S3UploaderService s3UploaderService;
     private final ConversationTurnService conversationTurnService;
     private final AiSpeakService aiSpeakService;
 
@@ -123,35 +122,6 @@ public class MySpeakService {
     }
 
     /**
-     * 음성 파일을 텍스트로 변환(STT)하고 USER 메시지로 저장한다.
-     *
-     * @param audioFile 업로드된 음성 파일
-     * @param request 세션 정보 및 언어 코드
-     * @return 변환된 텍스트
-     * @throws MySpeakException 세션 없음, 오디오 오류, STT 실패 시
-     */
-    @Transactional
-    public SttResponseDto recognizeSpeech(MultipartFile audioFile, SttRequestDto request) {
-        log.info("MySpeak: STT 요청 처리 - sessionId={}", request.getSessionId());
-
-        // 세션 조회
-        ConversationSession session = conversationSessionRepository.findById(request.getSessionId());
-        if (session == null) {
-            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
-        }
-        log.info("session={}", session);
-
-        String transcript = conversationTurnService.sttAndSaveUserMessage(
-                audioFile,
-                session,
-                request.getLanguageCode(),
-                request.getMessageType()
-        );
-
-        return new SttResponseDto(transcript);
-    }
-
-    /**
      * 텍스트를 음성으로 변환(TTS)하고 AI 메시지로 저장한다.
      *
      * @param request TTS 요청 정보
@@ -160,16 +130,11 @@ public class MySpeakService {
      */
     @Transactional
     public byte[] generateSpeech(TtsRequestDto request) {
-        log.info("MySpeak: TTS 요청 처리 - sessionId={}", request.getSessionId());
-
-        // 세션 조회
-        ConversationSession session = conversationSessionRepository.findById(request.getSessionId());
-        if (session == null) {
-            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
-        }
+        log.info("MySpeak: TTS 요청 처리 - sessionId={}", request.getSession().getId());
 
         return conversationTurnService.ttsAndSaveAiMessage(
-                session, request.getText(),
+                request.getSession(),
+                request.getText(),
                 request.getMessageType(),
                 request.getVoiceName(),
                 request.getSpeakingRate());
@@ -208,7 +173,7 @@ public class MySpeakService {
                         avatar.getTtsVoiceId(),
                         avatar.getCadenceType().getSpeedRate(),
                         MessageType.CLOSING,
-                        sessionId
+                        session
                 )
         );
 
@@ -217,7 +182,7 @@ public class MySpeakService {
 
         log.info("세션 {} 종료 완료: 문장수={}, 시간={}s", sessionId, sentenceCount, request.getTotalTime());
 
-        return new CompleteSessionResponse(sessionId, request.getTotalTime(), sentenceCount, closingTtsBase64);
+        return new CompleteSessionResponse(sessionId, request.getTotalTime(), sentenceCount, closingTtsBase64, closingText);
     }
 
     @Transactional

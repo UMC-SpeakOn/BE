@@ -28,7 +28,8 @@ public class UserConverter {
     public static UserResponse.MyPageResponseDTO toMyPageResponseDTO(
             User user,
             Boolean isSubscribed,
-            LocalDateTime subscriptionExpiredAt) {
+            LocalDateTime subscriptionExpiredAt,
+            Boolean isSubscriptionCancelled) {
 
         return UserResponse.MyPageResponseDTO.builder()
                 .userId(user.getId())
@@ -40,6 +41,7 @@ public class UserConverter {
                 .createdAt(user.getCreatedAt())
                 .isSubscribed(isSubscribed)
                 .subscriptionExpiredAt(subscriptionExpiredAt)
+                .isSubscriptionCancelled(isSubscriptionCancelled)
                 .build();
     }
 

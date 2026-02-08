@@ -37,6 +37,15 @@ public class Subscription extends BaseEntity {
     // 결제 완료 시간
     private LocalDateTime approvedAt;
 
+    // 구독 해지 관련
+    @Column(name = "is_cancelled", nullable = false)
+    @Builder.Default
+    private Boolean isCancelled = false;
+
+    // 구독 해지 시간
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
+
     public static Subscription createSubscription(User user, String orderId, String orderName, Long amount, String paymentKey) {
         LocalDateTime now = LocalDateTime.now();
 
@@ -48,7 +57,14 @@ public class Subscription extends BaseEntity {
                 .paymentKey(paymentKey)
                 .approvedAt(now)
                 .expiredAt(now.plusDays(30)) // 만료기준 : +30일
+                .isCancelled(false)
                 .build();
     }
-}
 
+    // 구독 해지
+    public void cancel() {
+        this.isCancelled = true;
+        this.cancelledAt = LocalDateTime.now();
+    }
+
+}

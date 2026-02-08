@@ -38,4 +38,21 @@ public class SubscriptionResponse {
         @Schema(description = "구독 상태 메시지", example = "구독이 완료되었습니다.")
         private String message;
     }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @Schema(description = "구독 해지 응답 DTO")
+    public static class CancelSubscriptionResponseDto {
+
+        @Schema(description = "구독 ID", example = "1")
+        private Long subscriptionId;
+
+        @Schema(description = "해지 시간", example = "2026-02-08T10:30:00")
+        private LocalDateTime cancelledAt;
+
+        @Schema(description = "해지 완료 메시지", example = "구독이 해지되었습니다.")
+        private String message;
+    }
 }

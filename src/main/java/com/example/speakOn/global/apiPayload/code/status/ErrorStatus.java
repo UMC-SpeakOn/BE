@@ -25,6 +25,10 @@ public enum ErrorStatus implements BaseCode {
     USER_NOT_FOUND(HttpStatus.BAD_REQUEST, "USER401", "아이디와 일치하는 사용자가 없습니다."),
     PROFILE_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "USER400", "닉네임 또는 프로필 이미지 중 최소 1개를 입력해주세요."),
 
+    // 구독 관련 에러
+    SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SUB404", "활성 구독이 없습니다."),
+    SUBSCRIPTION_ALREADY_CANCELLED(HttpStatus.CONFLICT, "SUB409", "이미 해지된 구독입니다."),
+
     // MyRole 관련 에러
     AVATAR_NOT_FOUND(HttpStatus.NOT_FOUND, "ROLE404", "존재하지 않는 아바타입니다."),
     MY_ROLE_ALREADY_EXISTS(HttpStatus.CONFLICT, "ROLE409", "이미 동일한 역할이 존재합니다."),

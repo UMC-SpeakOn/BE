@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -63,6 +65,30 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         // 6. 응답 DTO 반환
         return SubscriptionConverter.toSubscriptionResponseDto(savedSubscription);
+
+    }
+
+    @Transactional
+    @Override
+    public SubscriptionResponse.CancelSubscriptionResponseDto cancelSubscription(Long userId) {
+
+        // 1. 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ErrorHandler(ErrorStatus.USER_NOT_FOUND));
+
+        // 2. 활성 구독 조회
+        Subscription subscription = subscriptionRepository
+                .findActiveSubscriptionByUserId(userId, LocalDateTime.now())
+                .orElseThrow(() -> new ErrorHandler(ErrorStatus.SUBSCRIPTION_NOT_FOUND));
+
+        // 3. 구독 해지
+        subscription.cancel();
+        subscriptionRepository.save(subscription);
+
+        log.info("구독 해지 완료 - userId: {}, subscriptionId: {}", userId, subscription.getId());
+
+        // 4. 응답 DTO 반환
+        return SubscriptionConverter.toCancelSubscriptionResponseDto(subscription);
 
     }
 }

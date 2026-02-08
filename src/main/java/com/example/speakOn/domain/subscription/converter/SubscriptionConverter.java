@@ -19,4 +19,15 @@ public class SubscriptionConverter {
                 .message("구독이 완료되었습니다.")
                 .build();
     }
+
+    /**
+     * 구독 해지 응답 DTO 생성
+     */
+    public static SubscriptionResponse.CancelSubscriptionResponseDto toCancelSubscriptionResponseDto(Subscription subscription) {
+        return SubscriptionResponse.CancelSubscriptionResponseDto.builder()
+                .subscriptionId(subscription.getId())
+                .cancelledAt(subscription.getCancelledAt())
+                .message("구독이 해지되었습니다.")
+                .build();
+    }
 }

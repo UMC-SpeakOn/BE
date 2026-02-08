@@ -28,9 +28,10 @@ public class S3DownloaderService {
     }
 
     public File downloadToTempFile(String bucket, String key) {
+        File temp = null;
         try {
             String suffix = guessSuffixFromKey(key);
-            File temp = File.createTempFile("s3_audio_", suffix);
+            temp = File.createTempFile("s3_audio_", suffix);
 
             GetObjectRequest req = GetObjectRequest.builder()
                     .bucket(bucket)
@@ -46,6 +47,7 @@ public class S3DownloaderService {
             return temp;
 
         } catch (Exception e) {
+            safeDelete(temp);
             log.error("S3 download failed: bucket={}, key={}", bucket, key, e);
             throw new MySpeakException(MySpeakErrorCode.S3_DOWNLOAD_FAILED);
         }

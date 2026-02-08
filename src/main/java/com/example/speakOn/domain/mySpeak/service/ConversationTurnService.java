@@ -7,7 +7,6 @@ import com.example.speakOn.domain.mySpeak.enums.SenderRole;
 import com.example.speakOn.domain.mySpeak.exception.MySpeakException;
 import com.example.speakOn.domain.mySpeak.exception.code.MySpeakErrorCode;
 import com.example.speakOn.domain.mySpeak.repository.ConversationMessageRepository;
-import com.example.speakOn.domain.mySpeak.repository.MySpeakRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,6 @@ public class ConversationTurnService {
     private final ConversationMessageRepository conversationMessageRepository;
     private final SpeechRecognitionService speechRecognitionService;
     private final TextSynthesisService textSynthesisService;
-    private final MySpeakRepository mySpeakRepository;
 
 
     // STT 공용로직

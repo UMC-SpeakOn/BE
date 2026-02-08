@@ -45,7 +45,7 @@ public class SubscriptionController {
      * 구독 해지
      * 현재 활성 구독을 해지합니다.
      */
-    @DeleteMapping("/cancel")
+    @PatchMapping("/cancel")
     @Operation(summary = "구독 해지", description = "현재 활성 구독을 해지합니다.")
     public ApiResponse<SubscriptionResponse.CancelSubscriptionResponseDto> cancelSubscription() {
 

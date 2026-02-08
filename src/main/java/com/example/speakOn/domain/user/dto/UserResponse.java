@@ -46,7 +46,24 @@ public class UserResponse {
         private LocalDateTime subscriptionExpiredAt;
 
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema(description = "프로필 수정 응답 DTO")
+    public static class UpdateProfileResponseDTO {
+
+        @Schema(description = "유저 ID", example = "1")
+        private Long userId;
+
+        @Schema(description = "변경된 닉네임", example = "newNickname")
+        private String nickname;
+
+        @Schema(description = "변경된 프로필 이미지 URL", example = "https://bucket.s3.region.amazonaws.com/profile/uuid_filename.jpg")
+        private String profileImgUrl;
+
+        @Schema(description = "수정 완료 메시지", example = "프로필이 성공적으로 수정되었습니다.")
+        private String message;
+    }
 }
-
-
-

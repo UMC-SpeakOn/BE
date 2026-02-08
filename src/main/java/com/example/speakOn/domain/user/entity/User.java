@@ -54,6 +54,20 @@ public class User extends BaseEntity {
         this.profileImgUrl = profileImgUrl;
     }
 
+    /**
+     * 닉네임 수정
+     */
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    /**
+     * 프로필 이미지 URL 수정
+     */
+    public void updateProfileImage(String profileImgUrl) {
+        this.profileImgUrl = profileImgUrl;
+    }
+
     // 온보딩 완료
     public void completeOnboarding() {
         this.isOnboarded = true;

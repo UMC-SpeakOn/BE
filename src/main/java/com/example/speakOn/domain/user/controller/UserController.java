@@ -1,6 +1,9 @@
 package com.example.speakOn.domain.user.controller;
 
+import com.example.speakOn.domain.user.converter.UserConverter;
+import com.example.speakOn.domain.user.dto.UserRequest;
 import com.example.speakOn.domain.user.dto.UserResponse;
+import com.example.speakOn.domain.user.service.UserCommandService;
 import com.example.speakOn.domain.user.service.UserQueryService;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import com.example.speakOn.global.apiPayload.code.status.ErrorStatus;
@@ -13,10 +16,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "User API", description = "유저에 관한 API")
 @Slf4j
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserQueryService userQueryService;
+    private final UserCommandService userCommandService;
     private final AuthUtil authUtil;
 
     // 마이페이지
@@ -67,5 +69,34 @@ public class UserController {
 
         userQueryService.completeOnboarding(userId);
         return ApiResponse.onSuccess(null);
+    }
+
+    // 프로필 수정
+    @Operation(
+            summary = "프로필 정보 수정 API",
+            description = "닉네임과 프로필 이미지를 수정합니다. (이미지는 S3에 업로드됩니다)"
+    )
+    @ApiSuccessCodeExample(resultClass = UserResponse.UpdateProfileResponseDTO.class)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "USER_NOT_FOUND"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_UNAUTHORIZED"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_BAD_REQUEST"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_INTERNAL_SERVER_ERROR")
+    })
+    @PatchMapping(value = "/profile", consumes = {"multipart/form-data"})
+    public ApiResponse<UserResponse.UpdateProfileResponseDTO> updateProfile(
+            @RequestPart(value = "nickname", required = false) String nickname,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+
+        Long userId = authUtil.getCurrentUserId();
+        log.info("프로필 수정 요청 - userId: {}, nickname: {}, hasImage: {}",
+                userId, nickname, profileImage != null);
+
+        // Converter를 사용하여 Request DTO 생성
+        UserRequest.UpdateProfileRequestDto request = UserConverter.toUpdateProfileRequestDto(nickname, profileImage);
+
+        UserResponse.UpdateProfileResponseDTO response = userCommandService.updateProfile(userId, request);
+
+        return ApiResponse.onSuccess(response);
     }
 }

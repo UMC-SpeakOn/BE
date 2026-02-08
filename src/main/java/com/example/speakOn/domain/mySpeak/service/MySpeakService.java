@@ -20,7 +20,6 @@ import com.example.speakOn.domain.mySpeak.repository.MySpeakRepository;
 import com.example.speakOn.global.ai.dto.AiRequest;
 import com.example.speakOn.global.ai.dto.AiResponse;
 import com.example.speakOn.global.ai.service.AiSpeakService;
-import com.example.speakOn.global.ai.service.AiSpeakServiceImpl;
 import com.example.speakOn.global.apiPayload.exception.handler.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

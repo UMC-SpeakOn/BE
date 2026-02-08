@@ -1,5 +1,6 @@
 package com.example.speakOn.global.ai.dto;
 
+import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.global.ai.domain.ChatRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -29,6 +30,10 @@ public class AiRequest {
     @NotBlank(message = "userMessage는 필수입니다.")
     @Size(max = 1000, message = "메시지는 1000자를 넘을 수 없습니다.")
     private String userMessage;
+
+    @Schema(description = "메시지 타입", example = "MAIN")
+    @NotNull(message = "messageType은 필수입니다.")
+    private MessageType messageType;
 
     public ChatRequest toChatRequest(int qCount, int depth) {
         return new ChatRequest(

@@ -1,6 +1,5 @@
 package com.example.speakOn.domain.mySpeak.service;
 
-import com.example.speakOn.domain.avatar.entity.Avatar;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.domain.mySpeak.enums.MessageType;

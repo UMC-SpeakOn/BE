@@ -4,41 +4,36 @@ import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.global.ai.entity.AiConversationContext;
 import com.example.speakOn.global.ai.repository.AiConversationContextRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiContextService {
+    private final AiConversationContextRepository repository;
 
-    private final AiConversationContextRepository aiContextRepository;
-
-    /**
-     * 문맥 조회 혹은 생성 (트랜잭션 보장)
-     */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW) // 생성 즉시 커밋하여 비동기 쓰레드에 노출
     public AiConversationContext getOrCreateContext(ConversationSession session) {
-        return aiContextRepository.findBySessionId(session.getId())
+        return repository.findBySessionId(session.getId())
                 .orElseGet(() -> {
                     try {
-                        return aiContextRepository.save(
-                                AiConversationContext.builder().session(session).depth(0).build()
-                        );
-                    } catch (Exception e) {
-                        return aiContextRepository.findBySessionId(session.getId())
-                                .orElseThrow(() -> new IllegalStateException("Context create failed"));
+                        AiConversationContext newContext = AiConversationContext.builder().session(session).depth(0).build();
+                        return repository.saveAndFlush(newContext);
+                    } catch (org.springframework.dao.DataIntegrityViolationException e) {return repository.findBySessionId(session.getId())
+                        .orElseThrow(() -> new RuntimeException("Context 생성 실패: sessionId=" + session.getId(), e));
                     }
                 });
     }
 
-    /**
-     * 문맥 업데이트 (Dirty Checking 작동 보장)
-     */
     @Transactional
-    public void updateContext(Long contextId, int newDepth, String newMessage) {
-        AiConversationContext context = aiContextRepository.findById(contextId)
-                .orElseThrow(() -> new IllegalStateException("Context not found for update"));
+    public void updateContext(Long contextId, int depth, String aiMessage) {
+        AiConversationContext context = repository.findById(contextId)
+                .orElseThrow(() -> new RuntimeException("Context not found: ID=" + contextId));
 
-        context.updateContext(newDepth, newMessage);
+        context.updateContext(depth, aiMessage);
+        repository.save(context);
     }
 }

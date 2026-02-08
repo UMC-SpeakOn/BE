@@ -7,12 +7,11 @@ import com.example.speakOn.domain.mySpeak.dto.response.*;
 
 import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import com.example.speakOn.domain.mySpeak.service.MySpeakService;
-import com.example.speakOn.global.ai.service.AiSpeakService;
-import com.example.speakOn.global.ai.service.AiSpeakServiceImpl;
 import com.example.speakOn.global.apiPayload.ApiResponse;
 import com.example.speakOn.global.util.AuthUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +23,11 @@ import java.util.Base64;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/myspeak")
+@Slf4j
 public class MySpeakController implements MySpeakControllerDocs {
 
     private final MySpeakService mySpeakService;
     private final AuthUtil authUtil;
-    private final AiSpeakServiceImpl aiSpeakService;
 
     //대기 화면 조회 api
     @GetMapping

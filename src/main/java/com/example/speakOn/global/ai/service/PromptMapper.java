@@ -1,6 +1,5 @@
 package com.example.speakOn.global.ai.service;
 
-
 import com.example.speakOn.global.ai.dto.PromptVariables;
 import com.example.speakOn.global.ai.util.PromptLoader;
 import lombok.RequiredArgsConstructor;

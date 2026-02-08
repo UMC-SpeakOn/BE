@@ -14,7 +14,6 @@ import com.example.speakOn.global.apiPayload.code.status.ErrorStatus;
 import com.example.speakOn.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -30,8 +29,7 @@ public class AiDataReader {
     }
 
     public ConversationSession getSessionOrThrow(Long sessionId) {
-        ConversationSession session = conversationSessionRepository.findById(sessionId);
-        return Optional.ofNullable(session)
+        return conversationSessionRepository.findByIdWithAll(sessionId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.SESSION_NOT_FOUND));
     }
 

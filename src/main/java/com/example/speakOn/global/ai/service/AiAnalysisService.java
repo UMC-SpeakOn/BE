@@ -1,6 +1,5 @@
 package com.example.speakOn.global.ai.service;
-import com.example.speakOn.global.ai.exception.AiErrorCode;
-import com.example.speakOn.global.ai.util.ServiceExecutor;
+import com.example.speakOn.global.ai.component.ServiceExecutor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.chat.model.*;
@@ -14,10 +13,11 @@ import java.util.List;
 public class AiAnalysisService {
 
     private final ChatModel chatModel;
-    private final PromptMapper promptMapper; // YAML 데이터를 읽어오는 역할
+    private final PromptMapper promptMapper;
+    private final ServiceExecutor serviceExecutor;
 
     public String getAnalysisResult(String transcript) {
-        return ServiceExecutor.executeSafe(() -> {
+        return serviceExecutor.executeSafe(() -> {
 
             // 1. YAML에서 여러 섹션의 프롬프트를 합쳐서 시스템 메시지 생성
             String systemInstruction = promptMapper.getAnalysisPrompt();
@@ -30,6 +30,6 @@ public class AiAnalysisService {
             ChatResponse response = chatModel.call(prompt);
             return response.getResult().getOutput().getText();
 
-        }, AiErrorCode.AI_SERVER_ERROR);
+        });
     }
 }

@@ -77,4 +77,12 @@ public interface MyReportControllerDocs {
 
     @Operation(summary = "리포트 AI 분석 생성 API", description = "대화 세션을 분석하여 리포트를 생성합니다.")
     ApiResponse<MyReportResponseDTO.ReportDetailDTO> generateReport(Long sessionId);
+
+    @Operation(summary = "리포트 삭제 API", description = "특정 리포트를 삭제합니다. 관련된 AI 분석 데이터와 교정 내역이 함께 삭제되지만, 대화 로그(Session)는 유지됩니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "성공입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4041", description = "해당 ID의 리포트를 찾을 수 없습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4031", description = "본인의 리포트만 삭제할 수 있습니다.")
+    })
+    ApiResponse<MyReportResponseDTO.DeleteReportResultDTO> deleteReport(@PathVariable(name = "reportId") Long reportId);
 }

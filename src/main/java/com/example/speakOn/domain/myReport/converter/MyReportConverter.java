@@ -10,6 +10,7 @@ import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -168,6 +169,13 @@ public class MyReportConverter {
                 .listSize(reportList.size())
                 .isFirst(reportSlice.isFirst())
                 .isLast(reportSlice.isLast())
+                .build();
+    }
+
+    public static MyReportResponseDTO.DeleteReportResultDTO toDeleteReportResultDTO(Long reportId) {
+        return MyReportResponseDTO.DeleteReportResultDTO.builder()
+                .reportId(reportId)
+                .deletedAt(LocalDateTime.now())
                 .build();
     }
 }

@@ -81,13 +81,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .findActiveSubscriptionByUserId(userId, LocalDateTime.now())
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.SUBSCRIPTION_NOT_FOUND));
 
-        // 3. 구독 해지
+        // 3. 이미 해지된 구독 검증 (중복 해지 방어)
+        if (subscription.getIsCancelled()) {
+            throw new ErrorHandler(ErrorStatus.SUBSCRIPTION_ALREADY_CANCELLED);
+        }
+
+        // 4. 구독 해지
         subscription.cancel();
         subscriptionRepository.save(subscription);
 
-        log.info("구독 해지 완료 - userId: {}, subscriptionId: {}", userId, subscription.getId());
-
-        // 4. 응답 DTO 반환
+        // 5. 응답 DTO 반환
         return SubscriptionConverter.toCancelSubscriptionResponseDto(subscription);
 
     }

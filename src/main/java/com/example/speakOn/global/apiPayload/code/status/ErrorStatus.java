@@ -27,6 +27,7 @@ public enum ErrorStatus implements BaseCode {
 
     // 구독 관련 에러
     SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SUB404", "활성 구독이 없습니다."),
+    SUBSCRIPTION_ALREADY_CANCELLED(HttpStatus.CONFLICT, "SUB409", "이미 해지된 구독입니다."),
 
     // MyRole 관련 에러
     AVATAR_NOT_FOUND(HttpStatus.NOT_FOUND, "ROLE404", "존재하지 않는 아바타입니다."),

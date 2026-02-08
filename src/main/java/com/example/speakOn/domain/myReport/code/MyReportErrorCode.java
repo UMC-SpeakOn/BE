@@ -21,9 +21,6 @@ public enum MyReportErrorCode implements BaseCode {
     INVALID_REPORT_FILTER(HttpStatus.BAD_REQUEST, "REPORT4003", "잘못된 직무 또는 상황 필터 조건입니다."),
     INVALID_PAGE_PARAMETER(HttpStatus.BAD_REQUEST, "REPORT4004", "페이지 번호는 0보다 커야 합니다."),
 
-    // 비즈니스 로직 관련 (다시 듣기)
-    REPLAY_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "REPORT4005", "무료 다시 듣기 5회 횟수를 모두 소진하였습니다. 구독이 필요합니다."),
-
     // AI가 분석중인 경우
     REPORT_ANALYSIS_PENDING(HttpStatus.BAD_REQUEST, "REPORT4007", "AI가 아직 대화를 분석 중입니다. 잠시 후 다시 시도해 주세요."),
 

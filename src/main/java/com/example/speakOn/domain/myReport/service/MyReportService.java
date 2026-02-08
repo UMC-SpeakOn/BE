@@ -243,4 +243,20 @@ public class MyReportService {
                         .build())
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 리포트 삭제
+     */
+    @Transactional
+    public MyReportResponseDTO.DeleteReportResultDTO deleteReport(Long reportId, Long userId) {
+        User user = findUser(userId);
+
+        MyReport report = myReportRepository.findById(reportId)
+                .orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
+
+        validateReportOwner(report, user);
+        myReportRepository.delete(report);
+
+        return MyReportConverter.toDeleteReportResultDTO(reportId);
+    }
 }

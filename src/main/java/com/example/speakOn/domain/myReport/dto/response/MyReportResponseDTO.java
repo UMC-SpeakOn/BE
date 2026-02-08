@@ -194,4 +194,18 @@ public class MyReportResponseDTO {
         @Schema(description = "수정 완료 시각")
         LocalDateTime updatedAt;
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema(description = "리포트 삭제 응답 DTO")
+    public static class DeleteReportResultDTO {
+
+        @Schema(description = "삭제된 리포트 ID", example = "101")
+        private Long reportId;
+
+        @Schema(description = "삭제 시간")
+        private LocalDateTime deletedAt;
+    }
 }

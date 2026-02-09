@@ -39,7 +39,10 @@ public enum MyReportErrorCode implements BaseCode {
     AUDIO_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT4045", "음성 파일을 찾을 수 없습니다. (관리자에게 문의해주세요.)"),
 
     // --- [500 INTERNAL SERVER ERROR] : 서버 내부 오류 (AI 관련) ---
-    AI_ANALYSIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "REPORT5001", "AI 분석 과정에서 오류가 발생하여 리포트를 완료하지 못했습니다.");
+    AI_ANALYSIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "REPORT5001", "AI 분석 과정에서 오류가 발생하여 리포트를 완료하지 못했습니다."),
+
+    // 무료 로그 조회
+    REPORT_VIEW_LIMIT_EXCEEDED(HttpStatus.FORBIDDEN, "REPORT4032", "무료 대화 로그 조회 횟수(5회)를 모두 소진했습니다. 무제한 조회를 원하시면 구독해주세요.");
 
     private final HttpStatus httpStatus;
     private final String code;

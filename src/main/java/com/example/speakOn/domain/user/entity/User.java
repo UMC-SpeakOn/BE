@@ -48,6 +48,11 @@ public class User extends BaseEntity {
     @Builder.Default
     private Boolean isOnboarded = false;
 
+    // 리포트 대화 로그 조회 횟수
+    @Column(name = "total_log_view_count", nullable = false, columnDefinition = "integer default 0")
+    @Builder.Default
+    private Integer totalLogViewCount = 0;
+
     // TODO: 프로필 정보 업데이트
     public void update(String nickname) {
         this.nickname = nickname;
@@ -71,6 +76,24 @@ public class User extends BaseEntity {
     // 온보딩 완료
     public void completeOnboarding() {
         this.isOnboarded = true;
+    }
+
+    /**
+     * [비즈니스 로직] 대화 로그 조회 가능 여부 확인
+     * 구독자이거나, 비구독자일 경우 총 조회수가 5회 미만인지 확인
+     */
+    public boolean canViewLog(boolean isSubscribed) {
+        if (isSubscribed) {
+            return true; // 구독자 경우 무제한
+        }
+        return this.totalLogViewCount < 5; // 5회 미만일 때만 true
+    }
+
+    /**
+     * [비즈니스 로직] 조회수 증가
+     */
+    public void incrementLogViewCount() {
+        this.totalLogViewCount++;
     }
 
 }

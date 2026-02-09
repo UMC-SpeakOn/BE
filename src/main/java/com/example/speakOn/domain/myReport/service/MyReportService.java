@@ -15,6 +15,7 @@ import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.domain.mySpeak.repository.ConversationMessageRepository;
 import com.example.speakOn.domain.mySpeak.repository.ConversationSessionRepository;
+import com.example.speakOn.domain.subscription.repository.SubscriptionRepository;
 import com.example.speakOn.domain.user.entity.User;
 import com.example.speakOn.domain.user.repository.UserRepository;
 import com.example.speakOn.global.ai.service.AiAnalysisService;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,6 +51,7 @@ public class MyReportService {
     private final ObjectMapper objectMapper;
     private final ConversationCorrectionRepository correctionRepository;
     private final MyRoleRepository myRoleRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     private User findUser(Long userId) {
         return userRepository.findById(userId)
@@ -70,6 +73,7 @@ public class MyReportService {
     /**
      * 리포트 상세 조회
      */
+    @Transactional
     public MyReportResponseDTO.ReportDetailDTO getReportDetail(Long reportId, Long userId) {
         User user = findUser(userId);
 
@@ -79,12 +83,33 @@ public class MyReportService {
 
         validateReportOwner(report, user);
 
-        ConversationSession session = report.getSession();
-        List<ConversationMessage> messages = (session != null)
-                ? messageRepository.findAllBySessionOrderByCreatedAtAsc(session)
-                : List.of();
+        // 1. 구독 여부 확인
+        boolean isSubscribed = subscriptionRepository
+                .findActiveSubscriptionByUserId(userId, LocalDateTime.now())
+                .isPresent();
 
-        return MyReportConverter.toReportDetailDTO(report, messages);
+        // 2. 로그 열람 가능 여부 체크
+        boolean canViewLog = user.canViewLog(isSubscribed);
+
+        List<ConversationMessage> messages = List.of();
+        boolean isLogLocked = true; // 기본값: 잠금
+
+        // 3. 열람 가능하면 -> 데이터 조회 및 카운트 증가
+        if (canViewLog) {
+            ConversationSession session = report.getSession();
+            if (session != null) {
+                messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
+            }
+
+            // 구독자가 아니면 조회수 증가
+            if (!isSubscribed) {
+                user.incrementLogViewCount();
+            }
+            isLogLocked = false; // 잠금 해제
+        }
+
+        // 4. 변환기에 isLogLocked 전달
+        return MyReportConverter.toReportDetailDTO(report, messages, isLogLocked);
     }
 
     /**
@@ -96,6 +121,20 @@ public class MyReportService {
                 .orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
 
         validateReportOwner(report, user);
+
+        boolean isSubscribed = subscriptionRepository
+                .findActiveSubscriptionByUserId(userId, LocalDateTime.now())
+                .isPresent();
+
+        // 5회 이상이면 예외 발생
+        if (!user.canViewLog(isSubscribed)) {
+            throw new MyReportException(MyReportErrorCode.REPORT_VIEW_LIMIT_EXCEEDED);
+        }
+
+        // (비구독자 경우) 조회 성공 시 카운트 증가
+        if (!isSubscribed) {
+            user.incrementLogViewCount();
+        }
 
         ConversationSession session = report.getSession();
         List<ConversationMessage> messages = (session != null)

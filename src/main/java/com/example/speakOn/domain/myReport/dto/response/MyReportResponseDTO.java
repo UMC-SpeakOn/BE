@@ -82,6 +82,9 @@ public class MyReportResponseDTO {
 
         @Schema(description = "대화 로그")
         private List<MessageLogDTO> conversationLog;
+
+        @Schema(description = "대화 로그 잠금 여부 (true: 횟수 소진으로 미제공, false: 정상 제공)", example = "false")
+        private Boolean isLogLocked;
     }
 
     @Builder

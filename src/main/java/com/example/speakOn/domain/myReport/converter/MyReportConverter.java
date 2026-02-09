@@ -61,7 +61,7 @@ public class MyReportConverter {
     }
 
     // 리포트 상세 조회
-    public static MyReportResponseDTO.ReportDetailDTO toReportDetailDTO(MyReport myReport, List<ConversationMessage> messages) {
+    public static MyReportResponseDTO.ReportDetailDTO toReportDetailDTO(MyReport myReport, List<ConversationMessage> messages, Boolean isLogLocked) {
         ConversationSession session = myReport.getSession();
         MyRole myRole = (session != null) ? session.getMyRole() : null;
         Avatar avatar = (myRole != null) ? myRole.getAvatar() : null;
@@ -93,6 +93,7 @@ public class MyReportConverter {
                         .build())
                 .userReflection(myReport.getUserReflection())
                 .conversationLog(toMessageLogDTOList(messages))
+                .isLogLocked(isLogLocked)
                 .build();
     }
 

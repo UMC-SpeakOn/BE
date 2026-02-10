@@ -1,5 +1,7 @@
 package com.example.speakOn.domain.user.entity;
 
+import com.example.speakOn.domain.myRole.entity.MyRole;
+import com.example.speakOn.domain.subscription.entity.Subscription;
 import com.example.speakOn.domain.user.enums.Role;
 import com.example.speakOn.domain.user.enums.SocialType;
 import com.example.speakOn.global.apiPayload.code.BaseEntity;
@@ -9,6 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
@@ -53,11 +58,13 @@ public class User extends BaseEntity {
     @Builder.Default
     private Integer totalLogViewCount = 0;
 
-    // TODO: 프로필 정보 업데이트
-    public void update(String nickname) {
-        this.nickname = nickname;
-        this.profileImgUrl = profileImgUrl;
-    }
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<MyRole> myRoles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Subscription> subscriptions = new ArrayList<>();
 
     /**
      * 닉네임 수정

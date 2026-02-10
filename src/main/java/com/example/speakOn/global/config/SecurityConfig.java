@@ -1,5 +1,6 @@
 package com.example.speakOn.global.config;
 
+import com.example.speakOn.domain.user.repository.UserRepository;
 import com.example.speakOn.global.jwt.JwtAuthenticationFilter;
 import com.example.speakOn.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -45,7 +47,7 @@ public class SecurityConfig {
                 // JWT 인증 필터 추가
                 // UsernamePasswordAuthenticationFilter(기본 로그인 필터) 앞에서 실행되도록 배치
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtTokenProvider),
+                        new JwtAuthenticationFilter(jwtTokenProvider, userRepository),
                         UsernamePasswordAuthenticationFilter.class
                 );
 

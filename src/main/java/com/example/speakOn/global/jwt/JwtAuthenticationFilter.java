@@ -1,5 +1,6 @@
 package com.example.speakOn.global.jwt;
 
+import com.example.speakOn.domain.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -33,14 +35,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 3. 토큰이 유효하면 토큰으로 부터 유저 정보를 받아옴
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
+            Long userId = Long.parseLong(authentication.getName());
 
-            // 4. SecurityContext에 Authentication 객체 저장
+            // 4. 탈퇴한 사용자 확인 (활성 사용자만 인증 허용)
+            var activeUser = userRepository.findActiveById(userId);
+            if (activeUser.isEmpty()) {
+                log.warn("탈퇴한 사용자의 접근 시도 - userId: {}", userId);
+                // 탈퇴한 사용자는 SecurityContext에 저장하지 않음
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // 5. SecurityContext에 Authentication 객체 저장
             // 이 시점 부터는 Spring Security가 인증된 사용자로 인식
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.info("Security Context에 '{}' 인증 정보를 저장했습니다", authentication.getName());
         }
 
-        // 5. 다음 필터로 요청 전달
+        // 6. 다음 필터로 요청 전달
         filterChain.doFilter(request, response);
     }
 

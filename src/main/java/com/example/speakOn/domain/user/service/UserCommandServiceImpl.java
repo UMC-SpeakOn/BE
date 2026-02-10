@@ -1,5 +1,6 @@
 package com.example.speakOn.domain.user.service;
 
+import com.example.speakOn.domain.subscription.repository.SubscriptionRepository;
 import com.example.speakOn.domain.user.converter.UserConverter;
 import com.example.speakOn.domain.user.dto.UserRequest;
 import com.example.speakOn.domain.user.dto.UserResponse;
@@ -21,6 +22,7 @@ public class UserCommandServiceImpl implements UserCommandService {
 
     private final UserRepository userRepository;
     private final S3Util s3Util;
+    private final SubscriptionRepository subscriptionRepository;
 
     @Override
     @Transactional
@@ -83,12 +85,16 @@ public class UserCommandServiceImpl implements UserCommandService {
             throw new ErrorHandler(ErrorStatus.USER_ALREADY_WITHDRAWN);
         }
 
-        // 3. 회원 탈퇴 (Soft Delete)
+        // 3. 사용자의 모든 구독 데이터 삭제
+        subscriptionRepository.deleteAllByUserId(userId);
+        log.info("구독 데이터 삭제 완료 - userId: {}", userId);
+
+        // 4. 회원 탈퇴 (Soft Delete)
         user.withdraw();
         userRepository.save(user);
         log.info("회원 탈퇴 완료 - userId: {}", userId);
 
-        // 4. 응답 DTO 반환
+        // 5. 응답 DTO 반환
         return UserConverter.toWithdrawResponseDTO(user);
     }
 }

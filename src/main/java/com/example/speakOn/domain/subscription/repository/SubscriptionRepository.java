@@ -2,7 +2,6 @@ package com.example.speakOn.domain.subscription.repository;
 
 import com.example.speakOn.domain.subscription.entity.Subscription;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -19,11 +18,4 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
      */
     @Query("SELECT s FROM Subscription s WHERE s.user.id = :userId AND s.expiredAt > :currentTime")
     Optional<Subscription> findActiveSubscriptionByUserId(@Param("userId") Long userId, @Param("currentTime") LocalDateTime currentTime);
-
-    /**
-     * 사용자의 모든 구독 벌크 삭제 (회원 탈퇴 시)
-     */
-    @Modifying(clearAutomatically = true)
-    @Query("DELETE FROM Subscription s WHERE s.user.id = :userId")
-    void deleteAllByUserId(@Param("userId") Long userId);
 }

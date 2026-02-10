@@ -13,4 +13,5 @@ public class CompleteSessionResponse {
     private Integer totalTime; // 총 시간
     private Integer sentenceCount; //문장 수
     private String closingTtsBase64; // tts 로 변환된 마무리 멘트
+    private String closingText;
 }

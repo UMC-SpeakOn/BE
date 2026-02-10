@@ -10,10 +10,12 @@ import com.example.speakOn.domain.myReport.exception.MyReportException;
 import com.example.speakOn.domain.myReport.repository.ConversationCorrectionRepository;
 import com.example.speakOn.domain.myReport.repository.MyReportRepository;
 import com.example.speakOn.domain.myRole.entity.MyRole;
+import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.domain.mySpeak.repository.ConversationMessageRepository;
 import com.example.speakOn.domain.mySpeak.repository.ConversationSessionRepository;
+import com.example.speakOn.domain.subscription.repository.SubscriptionRepository;
 import com.example.speakOn.domain.user.entity.User;
 import com.example.speakOn.domain.user.repository.UserRepository;
 import com.example.speakOn.global.ai.service.AiAnalysisService;
@@ -29,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,6 +50,8 @@ public class MyReportService {
     private final AiAnalysisService aiAnalysisService;
     private final ObjectMapper objectMapper;
     private final ConversationCorrectionRepository correctionRepository;
+    private final MyRoleRepository myRoleRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     private User findUser(Long userId) {
         return userRepository.findById(userId)
@@ -68,6 +73,7 @@ public class MyReportService {
     /**
      * 리포트 상세 조회
      */
+    @Transactional
     public MyReportResponseDTO.ReportDetailDTO getReportDetail(Long reportId, Long userId) {
         User user = findUser(userId);
 
@@ -77,12 +83,33 @@ public class MyReportService {
 
         validateReportOwner(report, user);
 
-        ConversationSession session = report.getSession();
-        List<ConversationMessage> messages = (session != null)
-                ? messageRepository.findAllBySessionOrderByCreatedAtAsc(session)
-                : List.of();
+        // 1. 구독 여부 확인
+        boolean isSubscribed = subscriptionRepository
+                .findActiveSubscriptionByUserId(userId, LocalDateTime.now())
+                .isPresent();
 
-        return MyReportConverter.toReportDetailDTO(report, messages);
+        // 2. 로그 열람 가능 여부 체크
+        boolean canViewLog = user.canViewLog(isSubscribed);
+
+        List<ConversationMessage> messages = List.of();
+        boolean isLogLocked = true; // 기본값: 잠금
+
+        // 3. 열람 가능하면 -> 데이터 조회 및 카운트 증가
+        if (canViewLog) {
+            ConversationSession session = report.getSession();
+            if (session != null) {
+                messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
+            }
+
+            // 구독자가 아니면 조회수 증가
+            if (!isSubscribed) {
+                user.incrementLogViewCount();
+            }
+            isLogLocked = false; // 잠금 해제
+        }
+
+        // 4. 변환기에 isLogLocked 전달
+        return MyReportConverter.toReportDetailDTO(report, messages, isLogLocked);
     }
 
     /**
@@ -94,6 +121,20 @@ public class MyReportService {
                 .orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
 
         validateReportOwner(report, user);
+
+        boolean isSubscribed = subscriptionRepository
+                .findActiveSubscriptionByUserId(userId, LocalDateTime.now())
+                .isPresent();
+
+        // 5회 이상이면 예외 발생
+        if (!user.canViewLog(isSubscribed)) {
+            throw new MyReportException(MyReportErrorCode.REPORT_VIEW_LIMIT_EXCEEDED);
+        }
+
+        // (비구독자 경우) 조회 성공 시 카운트 증가
+        if (!isSubscribed) {
+            user.incrementLogViewCount();
+        }
 
         ConversationSession session = report.getSession();
         List<ConversationMessage> messages = (session != null)
@@ -137,7 +178,7 @@ public class MyReportService {
      */
     @Transactional
     public MyReportResponseDTO.ReportDetailDTO generateReport(Long sessionId) {
-        // 1. 데이터 조회 (팀원의 Repository 방식 준수: null 체크 직접 수행)
+
         ConversationSession session = sessionRepository.findById(sessionId);
         if (session == null) {
             throw new GeneralException(ErrorStatus.SESSION_NOT_FOUND);
@@ -148,8 +189,11 @@ public class MyReportService {
             throw new GeneralException(ErrorStatus.CONVERSATION_NOT_FOUND);
         }
 
+        Long myRoleId = session.getMyRole().getId();
+        MyRole myRole = myRoleRepository.findByIdAndIsActiveTrue(myRoleId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.MY_ROLE_NOT_FOUND));
         // 2. AI 분석 수행
-        MyReportResponseDTO.AiInsightCardDTO aiInsightCard = getAiInsight(messages);
+        MyReportResponseDTO.AiInsightCardDTO aiInsightCard = getAiInsight(messages, myRole);
 
         // 3. AI 분석 결과 DB 저장 로직
         // session.getMyReport()가 없으면 새로 생성, 있으면 업데이트
@@ -189,19 +233,25 @@ public class MyReportService {
     /**
      * AI 분석 카드 생성 로직
      */
-    private MyReportResponseDTO.AiInsightCardDTO getAiInsight(List<ConversationMessage> messages) {
+    private MyReportResponseDTO.AiInsightCardDTO getAiInsight(List<ConversationMessage> messages, MyRole myRole) {
         String transcript = messages.stream()
                 .map(m -> String.format("[%s]: %s", m.getSenderRole(), m.getContent()))
                 .collect(Collectors.joining("\n"));
 
-        String aiJsonResponse = aiAnalysisService.getAnalysisResult(transcript);
+        String aiJsonResponse = aiAnalysisService.getAnalysisResult(transcript, myRole);
 
         try {
+            String cleaned = aiJsonResponse.replaceAll("(?s)```(?:json)?\\s*|```", "").trim();
+            int start = cleaned.indexOf("{");
+            int end = cleaned.lastIndexOf("}");
 
-            String cleanedJson = aiJsonResponse.replaceAll("(?s)```json\\s*|```", "").trim();
-            return objectMapper.readValue(cleanedJson, MyReportResponseDTO.AiInsightCardDTO.class);
+            if (start != -1 && end != -1) {
+                cleaned = cleaned.substring(start, end + 1);
+            }
+
+            return objectMapper.readValue(cleaned, MyReportResponseDTO.AiInsightCardDTO.class);
         } catch (JsonProcessingException e) {
-            log.error("AI JSON Parsing Error. Raw Response: {}", aiJsonResponse);
+            log.error("AI JSON Parsing Failed. Raw: {}", aiJsonResponse);
             throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
     }

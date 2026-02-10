@@ -1,6 +1,5 @@
 package com.example.speakOn.domain.mySpeak.service;
 
-import com.example.speakOn.domain.mySpeak.dto.request.SttRequestDto;
 import com.example.speakOn.domain.mySpeak.exception.MySpeakException;
 import com.example.speakOn.domain.mySpeak.exception.code.MySpeakErrorCode;
 import lombok.RequiredArgsConstructor;

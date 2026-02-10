@@ -7,6 +7,8 @@ import com.example.speakOn.global.apiPayload.code.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -46,6 +48,10 @@ public class ConversationSession extends BaseEntity {
 
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
+
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ConversationMessage> messages = new ArrayList<>();
 
     @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private MyReport myReport;

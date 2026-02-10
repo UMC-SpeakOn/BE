@@ -33,4 +33,14 @@ public class ConversationSessionRepository {
                 .findFirst();
     }
 
+    /**
+     * 사용자의 모든 대화 세션 벌크 삭제 (회원 탈퇴 시)
+     */
+    public void deleteAllByUserId(Long userId) {
+        em.createQuery(
+                "DELETE FROM ConversationSession cs WHERE cs.myRole.user.id = :userId"
+        ).setParameter("userId", userId)
+         .executeUpdate();
+    }
+
 }

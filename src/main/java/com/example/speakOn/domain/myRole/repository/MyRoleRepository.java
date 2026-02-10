@@ -6,9 +6,6 @@ import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.myRole.enums.JobType;
 import com.example.speakOn.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,9 +23,4 @@ public interface MyRoleRepository extends JpaRepository<MyRole, Long>, MyRoleRep
 
     // ID와 활성화 상태로 MyRole 조회 (soft delete 지원)
     Optional<MyRole> findByIdAndIsActiveTrue(Long id);
-
-    // 회원 탈퇴 시 롤 벌크삭제
-    @Modifying(clearAutomatically = true)
-    @Query("DELETE FROM MyRole mr WHERE mr.user.id = :userId")
-    void deleteAllByUserId(@Param("userId") Long userId);
 }

@@ -3,6 +3,7 @@ package com.example.speakOn.domain.mySpeak.entity;
 import com.example.speakOn.domain.myReport.entity.MyReport;
 import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.mySpeak.enums.SessionStatus;
+import com.example.speakOn.global.ai.entity.AiConversationContext;
 import com.example.speakOn.global.apiPayload.code.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -55,6 +56,9 @@ public class ConversationSession extends BaseEntity {
 
     @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private MyReport myReport;
+
+    @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private AiConversationContext aiConversationContext;
 
     // 메인 질문 카운트 증가
     public void incrementQuestionCount() {

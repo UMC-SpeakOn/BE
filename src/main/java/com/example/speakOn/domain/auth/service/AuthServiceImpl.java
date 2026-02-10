@@ -71,20 +71,48 @@ public class AuthServiceImpl implements AuthService {
     private User registerOrLogin(KakaoDTO.UserInfoResponse userInfo, SocialType socialType) {
         String socialId = String.valueOf(userInfo.id());
 
-        return userRepository.findBySocialTypeAndSocialId(socialType, socialId)
-                .orElseGet(() -> {
-                    User newUser = AuthConverter.toUser(userInfo, socialType);
-                    return userRepository.save(newUser);
-                });
+        // 1. 활성 사용자 조회
+        var activeUser = userRepository.findActiveBySocialTypeAndSocialId(socialType, socialId);
+        if (activeUser.isPresent()) {
+            return activeUser.get();
+        }
+
+        // 2. 탈퇴한 사용자 조회 및 복구
+        var deletedUser = userRepository.findDeletedBySocialTypeAndSocialId(socialType, socialId);
+        if (deletedUser.isPresent()) {
+            User user = deletedUser.get();
+            user.restore(); // 탈퇴 복구
+            log.info("탈퇴한 사용자 복구 - userId: {}, socialType: {}, socialId: {}", user.getId(), socialType, socialId);
+            return userRepository.save(user);
+        }
+
+        // 3. 새 사용자 생성
+        User newUser = AuthConverter.toUser(userInfo, socialType);
+        log.info("새 사용자 생성 - socialType: {}, socialId: {}", socialType, socialId);
+        return userRepository.save(newUser);
     }
 
     private User registerOrLogin(GoogleDTO.UserInfoResponse userInfo, SocialType socialType) {
         String socialId = userInfo.id();
 
-        return userRepository.findBySocialTypeAndSocialId(socialType, socialId)
-                .orElseGet(() -> {
-                    User newUser = AuthConverter.toUser(userInfo, socialType);
-                    return userRepository.save(newUser);
-                });
+        // 1. 활성 사용자 조회
+        var activeUser = userRepository.findActiveBySocialTypeAndSocialId(socialType, socialId);
+        if (activeUser.isPresent()) {
+            return activeUser.get();
+        }
+
+        // 2. 탈퇴한 사용자 조회 및 복구
+        var deletedUser = userRepository.findDeletedBySocialTypeAndSocialId(socialType, socialId);
+        if (deletedUser.isPresent()) {
+            User user = deletedUser.get();
+            user.restore(); // 탈퇴 복구
+            log.info("탈퇴한 사용자 복구 - userId: {}, socialType: {}, socialId: {}", user.getId(), socialType, socialId);
+            return userRepository.save(user);
+        }
+
+        // 3. 새 사용자 생성
+        User newUser = AuthConverter.toUser(userInfo, socialType);
+        log.info("새 사용자 생성 - socialType: {}, socialId: {}", socialType, socialId);
+        return userRepository.save(newUser);
     }
 }

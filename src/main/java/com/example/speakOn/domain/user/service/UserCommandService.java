@@ -14,4 +14,10 @@ public interface UserCommandService {
             Long userId,
             UserRequest.UpdateProfileRequestDto request
     );
+
+    /**
+     * 사용자 계정을 탈퇴 (Soft Delete)
+     */
+    UserResponse.WithdrawResponseDTO withdrawUser(Long userId);
+
 }

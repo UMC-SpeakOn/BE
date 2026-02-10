@@ -59,4 +59,15 @@ public class UserConverter {
                 .message(message)
                 .build();
     }
+
+    /**
+     * 회원 탈퇴 응답 DTO로 변환
+     */
+    public static UserResponse.WithdrawResponseDTO toWithdrawResponseDTO(User user) {
+
+        return UserResponse.WithdrawResponseDTO.builder()
+                .userId(user.getId())
+                .message("회원 탈퇴가 완료되었습니다.")
+                .build();
+    }
 }

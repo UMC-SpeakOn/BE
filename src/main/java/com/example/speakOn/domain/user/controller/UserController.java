@@ -99,4 +99,26 @@ public class UserController {
 
         return ApiResponse.onSuccess(response);
     }
+
+    // 회원 탈퇴
+    @Operation(
+            summary = "회원 탈퇴 API",
+            description = "사용자 계정을 탈퇴합니다."
+    )
+    @ApiSuccessCodeExample(resultClass = UserResponse.WithdrawResponseDTO.class)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "USER_NOT_FOUND"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_UNAUTHORIZED"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "_INTERNAL_SERVER_ERROR"),
+            @ApiErrorCodeExample(value = ErrorStatus.class, name = "USER_ALREADY_WITHDRAWN")
+    })
+    @PatchMapping("/withdraw")
+    public ApiResponse<UserResponse.WithdrawResponseDTO> withdrawUser() {
+
+        Long userId = authUtil.getCurrentUserId();
+
+        UserResponse.WithdrawResponseDTO response = userCommandService.withdrawUser(userId);
+
+        return ApiResponse.onSuccess(response);
+    }
 }

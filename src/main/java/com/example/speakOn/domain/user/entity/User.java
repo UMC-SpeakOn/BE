@@ -48,22 +48,23 @@ public class User extends BaseEntity {
     @Builder.Default
     private Boolean isOnboarded = false;
 
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
+
     // TODO: 프로필 정보 업데이트
     public void update(String nickname) {
         this.nickname = nickname;
         this.profileImgUrl = profileImgUrl;
     }
 
-    /**
-     * 닉네임 수정
-     */
+    // 닉네임 수정
     public void updateNickname(String nickname) {
         this.nickname = nickname;
     }
 
-    /**
-     * 프로필 이미지 URL 수정
-     */
+
+    // 프로필 이미지 URL 수정
     public void updateProfileImage(String profileImgUrl) {
         this.profileImgUrl = profileImgUrl;
     }
@@ -73,4 +74,13 @@ public class User extends BaseEntity {
         this.isOnboarded = true;
     }
 
+    // 회원 탈퇴 (Soft Delete)
+    public void withdraw() {
+        this.isDeleted = true;
+    }
+
+    // 회원 탈퇴 복구
+    public void restore() {
+        this.isDeleted = false;
+    }
 }

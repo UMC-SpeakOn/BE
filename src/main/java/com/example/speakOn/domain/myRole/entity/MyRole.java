@@ -3,10 +3,14 @@ package com.example.speakOn.domain.myRole.entity;
 import com.example.speakOn.domain.avatar.entity.Avatar;
 import com.example.speakOn.domain.avatar.enums.SituationType;
 import com.example.speakOn.domain.myRole.enums.JobType;
+import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
 import com.example.speakOn.domain.user.entity.User;
 import com.example.speakOn.global.apiPayload.code.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -43,6 +47,10 @@ public class MyRole extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private boolean isActive = true;
+
+    @OneToMany(mappedBy = "myRole", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ConversationSession> conversationSessions = new ArrayList<>();
 
     /**
      * 롤을 비활성화 (soft delete)

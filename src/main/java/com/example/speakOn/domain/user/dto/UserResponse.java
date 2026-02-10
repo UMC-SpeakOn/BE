@@ -69,4 +69,18 @@ public class UserResponse {
         @Schema(description = "수정 완료 메시지", example = "프로필이 성공적으로 수정되었습니다.")
         private String message;
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema(description = "회원 탈퇴 응답 DTO")
+    public static class WithdrawResponseDTO {
+
+        @Schema(description = "탈퇴된 유저 ID", example = "1")
+        private Long userId;
+
+        @Schema(description = "탈퇴 완료 메시지", example = "회원 탈퇴가 완료되었습니다.")
+        private String message;
+    }
 }

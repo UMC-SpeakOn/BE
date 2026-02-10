@@ -1,5 +1,9 @@
 package com.example.speakOn.domain.user.service;
 
+import com.example.speakOn.domain.myReport.repository.MyReportRepository;
+import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
+import com.example.speakOn.domain.mySpeak.repository.ConversationSessionRepository;
+import com.example.speakOn.domain.subscription.repository.SubscriptionRepository;
 import com.example.speakOn.domain.user.converter.UserConverter;
 import com.example.speakOn.domain.user.dto.UserRequest;
 import com.example.speakOn.domain.user.dto.UserResponse;
@@ -21,6 +25,10 @@ public class UserCommandServiceImpl implements UserCommandService {
 
     private final UserRepository userRepository;
     private final S3Util s3Util;
+    private final MyRoleRepository myRoleRepository;
+    private final SubscriptionRepository subscriptionRepository;
+    private final ConversationSessionRepository conversationSessionRepository;
+    private final MyReportRepository myReportRepository;
 
     @Override
     @Transactional
@@ -68,5 +76,32 @@ public class UserCommandServiceImpl implements UserCommandService {
                 updatedUser,
                 "프로필이 성공적으로 수정되었습니다."
         );
+    }
+
+    @Transactional
+    @Override
+    public UserResponse.WithdrawResponseDTO withdrawUser(Long userId) {
+
+        // 1. 사용자 존재 확인
+        if (!userRepository.existsById(userId)) {
+            throw new ErrorHandler(ErrorStatus.USER_NOT_FOUND);
+        }
+
+        // 2. 벌크 삭제
+        myReportRepository.deleteAllByUserId(userId);
+        conversationSessionRepository.deleteAllByUserId(userId);
+        myRoleRepository.deleteAllByUserId(userId);
+        subscriptionRepository.deleteAllByUserId(userId);
+
+        // 3. 사용자 삭제
+        userRepository.deleteById(userId);
+
+        log.info("회원 탈퇴 완료 - userId: {}", userId);
+
+        // 4. 응답 DTO 반환
+        return UserResponse.WithdrawResponseDTO.builder()
+                .userId(userId)
+                .message("회원 탈퇴가 완료되었습니다.")
+                .build();
     }
 }

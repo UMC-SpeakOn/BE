@@ -14,4 +14,9 @@ public interface UserCommandService {
             Long userId,
             UserRequest.UpdateProfileRequestDto request
     );
+
+    /**
+     * 회원 탈퇴 (Hard Delete)
+     */
+    UserResponse.WithdrawResponseDTO withdrawUser(Long userId);
 }

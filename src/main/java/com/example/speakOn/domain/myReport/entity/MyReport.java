@@ -23,12 +23,10 @@ public class MyReport extends BaseEntity {
     @JoinColumn(name = "session_id", nullable = false, unique = true)
     private ConversationSession session;
 
-    // 대화 톤 (1:1, 양방향)
-    @OneToOne(mappedBy = "report", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "report", fetch = FetchType.LAZY)
     private ConversationTone conversationTone;
 
-    // 대화 교정 (1:N, 양방향)
-    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "report", fetch = FetchType.LAZY)
     @Builder.Default
     private List<ConversationCorrection> corrections = new ArrayList<>();
 

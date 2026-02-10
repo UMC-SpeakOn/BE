@@ -48,7 +48,7 @@ public class MyRole extends BaseEntity {
     @Builder.Default
     private boolean isActive = true;
 
-    @OneToMany(mappedBy = "myRole", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "myRole", fetch = FetchType.LAZY)
     @Builder.Default
     private List<ConversationSession> conversationSessions = new ArrayList<>();
 

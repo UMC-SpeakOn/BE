@@ -47,7 +47,7 @@ public class ConversationSession extends BaseEntity {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
-    @OneToOne(mappedBy = "session", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private MyReport myReport;
 
     // 메인 질문 카운트 증가

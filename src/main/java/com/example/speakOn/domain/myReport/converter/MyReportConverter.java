@@ -61,7 +61,7 @@ public class MyReportConverter {
     }
 
     // 리포트 상세 조회
-    public static MyReportResponseDTO.ReportDetailDTO toReportDetailDTO(MyReport myReport, List<ConversationMessage> messages, Boolean isLogLocked) {
+    public static MyReportResponseDTO.ReportDetailDTO toReportDetailDTO(MyReport myReport, List<ConversationMessage> messages, Boolean isLogLocked, Integer usedLogViewCount) {
         ConversationSession session = myReport.getSession();
         MyRole myRole = (session != null) ? session.getMyRole() : null;
         Avatar avatar = (myRole != null) ? myRole.getAvatar() : null;
@@ -94,6 +94,8 @@ public class MyReportConverter {
                 .userReflection(myReport.getUserReflection())
                 .conversationLog(toMessageLogDTOList(messages))
                 .isLogLocked(isLogLocked)
+                .usedLogViewCount(usedLogViewCount)
+                .maxLogViewCount(5)
                 .build();
     }
 
@@ -136,7 +138,8 @@ public class MyReportConverter {
     }
 
     // 대화 로그 조회
-    public static MyReportResponseDTO.MessageLogListDTO toMessageLogListDTO(Long reportId, List<ConversationMessage> messages) {
+    public static MyReportResponseDTO.MessageLogListDTO toMessageLogListDTO(Long reportId, List<ConversationMessage> messages, Boolean isLogLocked,
+                                                                            Integer usedLogViewCount) {
         if (messages == null) {
             return MyReportResponseDTO.MessageLogListDTO.builder()
                     .reportId(reportId)
@@ -156,7 +159,10 @@ public class MyReportConverter {
         return MyReportResponseDTO.MessageLogListDTO.builder()
                 .reportId(reportId)
                 .messages(logList)
-                .totalMessageCount(logList.size())
+                .totalMessageCount(logList != null ? logList.size() : 0)
+                .isLogLocked(isLogLocked)
+                .usedLogViewCount(usedLogViewCount)
+                .maxLogViewCount(5)
                 .build();
     }
 

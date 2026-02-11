@@ -46,20 +46,34 @@ public interface MyReportControllerDocs {
             Pageable pageable);
 
     @Operation(summary = "리포트 상세 조회 API", description = "특정 리포트의 상세 데이터(AI 분석, 소감, 대화 로그)를 조회합니다.")
+    @Parameters({
+            @Parameter(name = "reportId", description = "리포트 ID", example = "1", required = true),
+            @Parameter(name = "viewUUID", description = "중복 차감 방지용 1회성 UUID (새로고침 시 유지, 재진입 시 갱신)", example = "550e8400-e29b-41d4-a716-446655440000", required = true)
+    })
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "성공입니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4041", description = "해당 ID의 리포트를 찾을 수 없습니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4031", description = "본인의 리포트만 조회할 수 있습니다.")
     })
-    ApiResponse<MyReportResponseDTO.ReportDetailDTO> getReportDetail(@PathVariable(name = "reportId") Long reportId);
+    ApiResponse<MyReportResponseDTO.ReportDetailDTO> getReportDetail(
+            @PathVariable(name = "reportId") Long reportId,
+            @RequestParam(name = "viewUUID") String viewUUID
+    );
 
     @Operation(summary = "리포트 대화 로그 상세 조회 API", description = "특정 리포트의 전체 대화 내용을 시간순으로 조회합니다.")
+    @Parameters({
+            @Parameter(name = "reportId", description = "리포트 ID", example = "1", required = true),
+            @Parameter(name = "viewUUID", description = "중복 차감 방지용 1회성 UUID (새로고침 시 유지, 재진입 시 갱신)", example = "550e8400-e29b-41d4-a716-446655440000", required = true)
+    })
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "성공입니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4041", description = "존재하지 않는 리포트입니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REPORT4031", description = "해당 리포트에 접근할 권한이 없습니다.")
     })
-    ApiResponse<MyReportResponseDTO.MessageLogListDTO> getConversationLogs(@PathVariable(name = "reportId") Long reportId);
+    ApiResponse<MyReportResponseDTO.MessageLogListDTO> getConversationLogs(
+            @PathVariable(name = "reportId") Long reportId,
+            @RequestParam(name = "viewUUID") String viewUUID
+    );
 
     @Operation(summary = "사용자 소감 작성 및 난이도 수정 API", description = "리포트 상세 조회 후, 사용자가 소감을 작성하고 난이도를 수정할 때 사용합니다.")
     @ApiResponses({

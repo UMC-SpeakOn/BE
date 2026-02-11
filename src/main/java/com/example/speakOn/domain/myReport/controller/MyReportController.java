@@ -45,16 +45,18 @@ public class MyReportController implements MyReportControllerDocs {
 
     @Override
     @GetMapping("/{reportId}")
-    public ApiResponse<MyReportResponseDTO.ReportDetailDTO> getReportDetail(@PathVariable(name = "reportId") Long reportId) {
+    public ApiResponse<MyReportResponseDTO.ReportDetailDTO> getReportDetail(@PathVariable(name = "reportId") Long reportId,
+                                                                            @RequestParam(name = "viewUUID") String viewUUID) {
         Long userId = authUtil.getCurrentUserId();
-        return ApiResponse.onSuccess(myReportService.getReportDetail(reportId, userId));
+        return ApiResponse.onSuccess(myReportService.getReportDetail(reportId, userId, viewUUID));
     }
 
     @Override
     @GetMapping("/{reportId}/logs")
-    public ApiResponse<MyReportResponseDTO.MessageLogListDTO> getConversationLogs(@PathVariable(name = "reportId") Long reportId) {
+    public ApiResponse<MyReportResponseDTO.MessageLogListDTO> getConversationLogs(@PathVariable(name = "reportId") Long reportId,
+                                                                                  @RequestParam(name = "viewUUID") String viewUUID) {
         Long userId = authUtil.getCurrentUserId();
-        return ApiResponse.onSuccess(myReportService.getConversationLogs(reportId, userId));
+        return ApiResponse.onSuccess(myReportService.getConversationLogs(reportId, userId, viewUUID));
     }
 
     @Override

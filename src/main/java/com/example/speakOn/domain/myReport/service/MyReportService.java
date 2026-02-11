@@ -1,5 +1,7 @@
 package com.example.speakOn.domain.myReport.service;
 
+import com.example.speakOn.domain.myReport.entity.ReportViewHistory;
+import com.example.speakOn.domain.myReport.repository.ReportViewHistoryRepository;
 import com.example.speakOn.domain.myReport.code.MyReportErrorCode;
 import com.example.speakOn.domain.myReport.converter.MyReportConverter;
 import com.example.speakOn.domain.myReport.dto.request.MyReportRequest;
@@ -52,6 +54,8 @@ public class MyReportService {
     private final ConversationCorrectionRepository correctionRepository;
     private final MyRoleRepository myRoleRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final ReportViewHistoryRepository reportViewHistoryRepository;
+    private final int MAX_FREE_VIEW_COUNT = 5;
 
     private User findUser(Long userId) {
         return userRepository.findById(userId)
@@ -66,56 +70,81 @@ public class MyReportService {
 
         Slice<MyReport> reports = myReportRepository.findAllByUserAndFilters(user, filter, pageable);
 
-        // Slice를 Response DTO로 변환하여 반환
         return MyReportConverter.toReportSummaryListDTOFromSlice(reports);
     }
 
     /**
      * 리포트 상세 조회
+     *
+     * @param reportId 조회할 리포트의 ID
+     * @param userId 현재 로그인한 유저의 ID
+     * @param viewUUID 중복 차감 방지용 식별자 (새로고침 시 유지, 재진입 시 갱신)
+     * @return 리포트 상세 정보 DTO
      */
     @Transactional
-    public MyReportResponseDTO.ReportDetailDTO getReportDetail(Long reportId, Long userId) {
+    public MyReportResponseDTO.ReportDetailDTO getReportDetail(Long reportId, Long userId, String viewUUID) {
         User user = findUser(userId);
 
         MyReport report = myReportRepository.findReportWithAllDetails(reportId)
                 .orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
 
-
         validateReportOwner(report, user);
 
-        // 1. 구독 여부 확인
+        // 구독 여부 확인
         boolean isSubscribed = subscriptionRepository
                 .findActiveSubscriptionByUserId(userId, LocalDateTime.now())
                 .isPresent();
 
-        // 2. 로그 열람 가능 여부 체크
-        boolean canViewLog = user.canViewLog(isSubscribed);
+        boolean isLogLocked = true;
 
+        // 이미 이 viewUUID로 차감된 기록이 있는지 확인 (새로고침인지 체크)
+        boolean isRefreshedRequest = reportViewHistoryRepository
+                .existsByReportAndUserAndViewUUID(report, user, viewUUID);
+
+        // 잠금 해제 기준
+        if (isSubscribed) {
+            // Case A: 구독자 -> 무조건 해제
+            isLogLocked = false;
+        } else if (isRefreshedRequest) {
+            // Case B: 새로고침 -> 이미 차감했으므로 해제
+            isLogLocked = false;
+        } else if (user.getTotalLogViewCount() < MAX_FREE_VIEW_COUNT) {
+            // Case C: 비구독자 & 새 요청 & 횟수 남음 -> 차감 후 해제
+            user.incrementLogViewCount(); // DB update
+
+            ReportViewHistory history = ReportViewHistory.builder()
+                    .report(report)
+                    .user(user)
+                    .viewUUID(viewUUID)
+                    .build();
+            reportViewHistoryRepository.save(history);
+
+            isLogLocked = false;
+        }
+        // Case D: 비구독자 & 새 요청 & 횟수 없음 -> isLogLocked = true 유지
+
+        // (잠금 해제된 경우) 로그 데이터 조회
         List<ConversationMessage> messages = List.of();
-        boolean isLogLocked = true; // 기본값: 잠금
-
-        // 3. 열람 가능하면 -> 데이터 조회 및 카운트 증가
-        if (canViewLog) {
+        if (!isLogLocked) {
             ConversationSession session = report.getSession();
             if (session != null) {
                 messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
             }
-
-            // 구독자가 아니면 조회수 증가
-            if (!isSubscribed) {
-                user.incrementLogViewCount();
-            }
-            isLogLocked = false; // 잠금 해제
         }
 
-        // 4. 변환기에 isLogLocked 전달
-        return MyReportConverter.toReportDetailDTO(report, messages, isLogLocked);
+        return MyReportConverter.toReportDetailDTO(
+                report,
+                messages,
+                isLogLocked,
+                user.getTotalLogViewCount()
+        );
     }
 
     /**
      * 대화 로그 상세 조회
      */
-    public MyReportResponseDTO.MessageLogListDTO getConversationLogs(Long reportId, Long userId) {
+    @Transactional
+    public MyReportResponseDTO.MessageLogListDTO getConversationLogs(Long reportId, Long userId, String viewUUID) {
         User user = findUser(userId);
         MyReport report = myReportRepository.findById(reportId)
                 .orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
@@ -126,22 +155,41 @@ public class MyReportService {
                 .findActiveSubscriptionByUserId(userId, LocalDateTime.now())
                 .isPresent();
 
-        // 5회 이상이면 예외 발생
-        if (!user.canViewLog(isSubscribed)) {
-            throw new MyReportException(MyReportErrorCode.REPORT_VIEW_LIMIT_EXCEEDED);
-        }
+        boolean isLogLocked = true;
 
-        // (비구독자 경우) 조회 성공 시 카운트 증가
-        if (!isSubscribed) {
+        // 새로고침 체크
+        boolean isRefreshedRequest = reportViewHistoryRepository
+                .existsByReportAndUserAndViewUUID(report, user, viewUUID);
+
+        if (isSubscribed || isRefreshedRequest) {
+            isLogLocked = false;
+        } else if (user.getTotalLogViewCount() < MAX_FREE_VIEW_COUNT) {
             user.incrementLogViewCount();
+
+            ReportViewHistory history = ReportViewHistory.builder()
+                    .report(report)
+                    .user(user)
+                    .viewUUID(viewUUID)
+                    .build();
+            reportViewHistoryRepository.save(history);
+
+            isLogLocked = false;
         }
 
-        ConversationSession session = report.getSession();
-        List<ConversationMessage> messages = (session != null)
-                ? messageRepository.findAllBySessionOrderByCreatedAtAsc(session)
-                : List.of();
+        List<ConversationMessage> messages = List.of();
+        if (!isLogLocked) {
+            ConversationSession session = report.getSession();
+            messages = (session != null)
+                    ? messageRepository.findAllBySessionOrderByCreatedAtAsc(session)
+                    : List.of();
+        }
 
-        return MyReportConverter.toMessageLogListDTO(reportId, messages);
+        return MyReportConverter.toMessageLogListDTO(
+                reportId,
+                messages,
+                isLogLocked,
+                user.getTotalLogViewCount()
+        );
     }
 
     /**

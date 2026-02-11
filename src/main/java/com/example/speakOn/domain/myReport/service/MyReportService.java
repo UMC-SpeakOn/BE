@@ -16,6 +16,8 @@ import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.myRole.repository.MyRoleRepository;
 import com.example.speakOn.domain.mySpeak.entity.ConversationMessage;
 import com.example.speakOn.domain.mySpeak.entity.ConversationSession;
+import com.example.speakOn.domain.mySpeak.enums.MessageType;
+import com.example.speakOn.domain.mySpeak.enums.SenderRole;
 import com.example.speakOn.domain.mySpeak.repository.ConversationMessageRepository;
 import com.example.speakOn.domain.mySpeak.repository.ConversationSessionRepository;
 import com.example.speakOn.domain.subscription.repository.SubscriptionRepository;
@@ -124,13 +126,19 @@ public class MyReportService {
             }
         }
 
-        // (잠금 해제된 경우) 로그 데이터 조회
-        List<ConversationMessage> messages = List.of();
+        List<ConversationMessage> messages;
+
         if (!isLogLocked) {
+            // 잠금 해제됨: 실제 대화 로그 조회
             ConversationSession session = report.getSession();
             if (session != null) {
                 messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
+            } else {
+                messages = List.of();
             }
+        } else {
+            // 잠금 상태: 블러 처리용 더미 데이터 생성
+            messages = generateDummyMessages(report);
         }
 
         return MyReportConverter.toReportDetailDTO(
@@ -158,7 +166,6 @@ public class MyReportService {
 
         boolean isLogLocked = true;
 
-        // 새로고침 체크
         boolean isRefreshedRequest = reportViewHistoryRepository
                 .existsByReportAndUserAndViewUUID(report, user, viewUUID);
 
@@ -181,12 +188,16 @@ public class MyReportService {
             }
         }
 
-        List<ConversationMessage> messages = List.of();
+        List<ConversationMessage> messages;
+
         if (!isLogLocked) {
             ConversationSession session = report.getSession();
             messages = (session != null)
                     ? messageRepository.findAllBySessionOrderByCreatedAtAsc(session)
                     : List.of();
+        } else {
+            // 잠금 상태일 경우 -> 더미 데이터
+            messages = generateDummyMessages(report);
         }
 
         return MyReportConverter.toMessageLogListDTO(
@@ -248,7 +259,6 @@ public class MyReportService {
 
         MyReportResponseDTO.AiInsightCardDTO aiInsightCard = getAiInsight(messages, myRole);
 
-        // session.getMyReport()가 없으면 새로 생성, 있으면 업데이트
         MyReport myReport = session.getMyReport();
         if (myReport == null) {
             myReport = MyReport.builder()
@@ -272,9 +282,8 @@ public class MyReportService {
 
         correctionRepository.saveAll(corrections);
 
-        // 4. 최종 DTO 조립
         return MyReportResponseDTO.ReportDetailDTO.builder()
-                .reportId(myReport.getId()) // 저장된 리포트 ID 사용
+                .reportId(myReport.getId()) 
                 .sessionSummary(buildSessionSummary(session, messages))
                 .aiInsightCard(aiInsightCard)
                 .userReflection(myReport.getUserReflection())
@@ -371,5 +380,62 @@ public class MyReportService {
         myReportRepository.delete(report);
 
         return MyReportConverter.toDeleteReportResultDTO(reportId);
+    }
+
+    /**
+     * 더미데이터
+     */
+    private List<ConversationMessage> generateDummyMessages(MyReport report) {
+        ConversationSession session = report.getSession();
+
+        LocalDateTime now = LocalDateTime.now();
+
+        return List.of(
+                ConversationMessage.builder()
+                        .session(session)
+                        .senderRole(SenderRole.AI)
+                        .content("Hello. Could you briefly introduce yourself and tell me about your background?")
+                        .messageType(MessageType.MAIN)
+                        .build(),
+                ConversationMessage.builder()
+                        .session(session)
+                        .senderRole(SenderRole.USER)
+                        .content("Sure. I have over 5 years of experience in digital marketing. " +
+                                "I started my career at a startup where I managed social media campaigns and " +
+                                "increased our follower count by 200% in the first year.")
+                        .senderRole(SenderRole.USER)
+                        .messageType(MessageType.MAIN)
+                        .build(),
+                ConversationMessage.builder()
+                        .session(session)
+                        .senderRole(SenderRole.AI)
+                        .content("That sounds impressive. Can you describe a specific challenge you faced while managing those campaigns and how you overcame it?")
+                        .messageType(MessageType.FOLLOW)
+                        .build(),
+                ConversationMessage.builder()
+                        .session(session)
+                        .senderRole(SenderRole.USER)
+                        .content("One major challenge was a sudden drop in engagement due to algorithm changes. " +
+                                "To fix this, I analyzed our content performance data and pivoted our strategy to focus more on short-form video content, " +
+                                "which recovered our engagement rates within two months.")
+                        .senderRole(SenderRole.USER)
+                        .messageType(MessageType.FOLLOW)
+                        .build(),
+                ConversationMessage.builder()
+                        .session(session)
+                        .senderRole(SenderRole.AI)
+                        .content("I see. Data analysis seems to be a strong suit of yours. " +
+                                "How do you usually prioritize tasks when you have multiple deadlines approaching?")
+                        .messageType(MessageType.MAIN)
+                        .build(),
+                ConversationMessage.builder()
+                        .session(session)
+                        .senderRole(SenderRole.USER)
+                        .content("I use a priority matrix to categorize tasks by urgency and importance. " +
+                                "I also make sure to communicate with stakeholders early if I foresee any potential delays.")
+                        .senderRole(SenderRole.USER)
+                        .messageType(MessageType.MAIN)
+                        .build()
+        );
     }
 }

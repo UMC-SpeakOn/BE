@@ -83,8 +83,14 @@ public class MyReportResponseDTO {
         @Schema(description = "대화 로그")
         private List<MessageLogDTO> conversationLog;
 
-        @Schema(description = "대화 로그 잠금 여부 (true: 횟수 소진으로 미제공, false: 정상 제공)", example = "false")
+        @Schema(description = "대화 로그 잠금 여부 (true: 블러 처리 필요, false: 정상 노출)", example = "false")
         private Boolean isLogLocked;
+
+        @Schema(description = "현재 사용한 무료 조회 횟수", example = "3")
+        private Integer usedLogViewCount;
+
+        @Schema(description = "최대 무료 조회 횟수", example = "5")
+        private Integer maxLogViewCount;
     }
 
     @Builder
@@ -155,6 +161,15 @@ public class MyReportResponseDTO {
 
         @Schema(description = "대화 로그 목록")
         private List<MessageLogDTO> messages;
+
+        @Schema(description = "대화 로그 잠금 여부", example = "true")
+        private Boolean isLogLocked;
+
+        @Schema(description = "현재 사용한 무료 조회 횟수", example = "5")
+        private Integer usedLogViewCount;
+
+        @Schema(description = "최대 무료 조회 횟수", example = "5")
+        private Integer maxLogViewCount;
     }
 
     @Builder

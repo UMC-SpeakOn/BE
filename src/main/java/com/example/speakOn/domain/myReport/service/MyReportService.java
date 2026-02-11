@@ -28,6 +28,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
@@ -97,31 +98,29 @@ public class MyReportService {
 
         boolean isLogLocked = true;
 
-        // 이미 이 viewUUID로 차감된 기록이 있는지 확인 (새로고침인지 체크)
-        boolean isRefreshedRequest = reportViewHistoryRepository
+        boolean alreadyPaid = reportViewHistoryRepository
                 .existsByReportAndUserAndViewUUID(report, user, viewUUID);
 
-        // 잠금 해제 기준
-        if (isSubscribed) {
-            // Case A: 구독자 -> 무조건 해제
-            isLogLocked = false;
-        } else if (isRefreshedRequest) {
-            // Case B: 새로고침 -> 이미 차감했으므로 해제
+        if (isSubscribed || alreadyPaid) {
             isLogLocked = false;
         } else if (user.getTotalLogViewCount() < MAX_FREE_VIEW_COUNT) {
-            // Case C: 비구독자 & 새 요청 & 횟수 남음 -> 차감 후 해제
-            user.incrementLogViewCount(); // DB update
+            try {
+                ReportViewHistory history = ReportViewHistory.builder()
+                        .report(report)
+                        .user(user)
+                        .viewUUID(viewUUID)
+                        .build();
 
-            ReportViewHistory history = ReportViewHistory.builder()
-                    .report(report)
-                    .user(user)
-                    .viewUUID(viewUUID)
-                    .build();
-            reportViewHistoryRepository.save(history);
+                reportViewHistoryRepository.saveAndFlush(history);
 
-            isLogLocked = false;
+                user.incrementLogViewCount();
+                isLogLocked = false;
+
+            } catch (DataIntegrityViolationException e) {
+                log.warn("Concurrent report view detected for UUID: {}", viewUUID);
+                isLogLocked = false;
+            }
         }
-        // Case D: 비구독자 & 새 요청 & 횟수 없음 -> isLogLocked = true 유지
 
         // (잠금 해제된 경우) 로그 데이터 조회
         List<ConversationMessage> messages = List.of();

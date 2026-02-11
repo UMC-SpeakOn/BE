@@ -106,11 +106,10 @@ public class MySpeakService {
 
             // 저장
             conversationSessionRepository.save(session);
-            ConversationSession saved = conversationSessionRepository.findById(session.getId());
 
-            log.info("대화 세션 생성 완료 - sessionId: {}, myRole: {}", saved.getId(), myRole.getJob());
+            log.info("대화 세션 생성 완료 - sessionId: {}, myRole: {}", session.getId(), myRole.getJob());
 
-            return saved.getId();
+            return session.getId();
 
         }catch (MySpeakException e) {
             log.error("MySpeakException 발생 - myRoleId: {}", request.getMyRoleId(), e);
@@ -239,10 +238,8 @@ public class MySpeakService {
     @Transactional
     public void saveUserDifficulty(Long sessionId, UserDifficultyRequest request) {
         // 세션 조회
-        ConversationSession session = conversationSessionRepository.findById(sessionId);
-        if (session == null) {
-            throw new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND);
-        }
+        ConversationSession session = conversationSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new MySpeakException(MySpeakErrorCode.SESSION_NOT_FOUND));
 
         session.saveUserDifficulty(request.getUserDifficulty());
     }

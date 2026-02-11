@@ -357,6 +357,7 @@ public class MySpeakService {
         );
 
         return new ConversationTurnResponse(
+                userText,
                 aiResponse.getAiMessage(),
                 Base64.getEncoder().encodeToString(audioBytes),
                 aiResponse.getMessageType()

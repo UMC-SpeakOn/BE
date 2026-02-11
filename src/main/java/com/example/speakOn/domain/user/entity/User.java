@@ -1,5 +1,6 @@
 package com.example.speakOn.domain.user.entity;
 
+import com.example.speakOn.domain.myReport.entity.ReportViewHistory;
 import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.subscription.entity.Subscription;
 import com.example.speakOn.domain.user.enums.Role;
@@ -65,6 +66,10 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<Subscription> subscriptions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ReportViewHistory> reportViewHistories = new ArrayList<>();
 
     /**
      * 닉네임 수정

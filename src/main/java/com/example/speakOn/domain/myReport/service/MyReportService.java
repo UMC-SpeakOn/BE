@@ -172,7 +172,7 @@ public class MyReportService {
                         .viewUUID(viewUUID)
                         .build();
                 reportViewHistoryService.trySaveHistory(history);
-                
+
                 user.incrementLogViewCount();
                 isLogLocked = false;
             } catch (DataIntegrityViolationException e) {

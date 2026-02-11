@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class ConversationTurnResponse {
+    private String answerText;
     private String questionText;
     private String base64Audio;  // base64 인코딩된 mp3
     private MessageType messageType;

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class CreateSessionRequest {
 
     @NotNull(message = "myRoleId는 필수입니다")

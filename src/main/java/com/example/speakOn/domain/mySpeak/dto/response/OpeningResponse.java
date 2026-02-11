@@ -3,9 +3,11 @@ package com.example.speakOn.domain.mySpeak.dto.response;
 import com.example.speakOn.domain.mySpeak.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class OpeningResponse {
     private String questionText;
     private String base64Audio;  // base64 인코딩된 mp3

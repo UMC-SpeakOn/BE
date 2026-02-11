@@ -38,6 +38,7 @@ import org.springframework.data.domain.Slice;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -232,24 +233,27 @@ public class MyReportService {
      */
     @Transactional
     public MyReportResponseDTO.ReportDetailDTO generateReport(Long sessionId) {
-
         ConversationSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.SESSION_NOT_FOUND));
 
-        List<ConversationMessage> allmessages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
-        boolean hasUserMessage = allmessages.stream()
+        List<ConversationMessage> messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
+        boolean hasUserMessage = messages.stream()
                 .anyMatch(m -> SenderRole.USER.equals(m.getSenderRole()));
 
-        if (!hasUserMessage) {
-            log.warn("사용자 답변이 없는 세션에 대한 분석 시도 차단 - sessionId: {}", sessionId);
-            throw new GeneralException(ErrorStatus.CONVERSATION_NOT_FOUND);
-        }
 
         MyReport myReport = myReportRepository.findBySession(session)
                 .orElseGet(() -> {
+                    MyReportResponseDTO.AiInsightCardDTO aiInsight;
 
-                    MyRole myRole = session.getMyRole();
-                    MyReportResponseDTO.AiInsightCardDTO aiInsight = getAiInsight(allmessages, myRole);
+                    if (hasUserMessage) {
+                        aiInsight = getAiInsight(messages, session.getMyRole());
+                    } else {
+                        aiInsight = MyReportResponseDTO.AiInsightCardDTO.builder()
+                                .aiSummary("진행된 대화가 없어 AI 분석이 수행되지 않았습니다.")
+                                .aiReason(List.of("사용자 답변이 감지되지 않았습니다. 아바타와 대화를 나눠보세요!"))
+                                .corrections(Collections.emptyList())
+                                .build();
+                    }
 
                     MyReport newReport = MyReport.builder()
                             .session(session)
@@ -260,31 +264,26 @@ public class MyReportService {
 
                     MyReport savedReport = myReportRepository.save(newReport);
 
-                    List<ConversationCorrection> corrections = aiInsight.getCorrections().stream()
-                            .map(dto -> ConversationCorrection.builder()
-                                    .report(savedReport)
-                                    .originalContent(dto.getOriginal())
-                                    .correctedContent(dto.getCorrected())
-                                    .correctionReason(dto.getReason())
-                                    .build())
-                            .collect(Collectors.toList());
-                    correctionRepository.saveAll(corrections);
+                    if (hasUserMessage && aiInsight.getCorrections() != null) {
+                        saveCorrections(savedReport, aiInsight.getCorrections());
+                    }
 
                     return savedReport;
                 });
 
-        // 3. 최종 DTO 조립 시 필요한 메시지 재조회
-        List<ConversationMessage> messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
-
-        return MyReportResponseDTO.ReportDetailDTO.builder()
-                .reportId(myReport.getId())
-                .sessionSummary(buildSessionSummary(session, myReport))
-                .aiInsightCard(getAiInsightDTO(myReport))
-                .userReflection(myReport.getUserReflection())
-                .conversationLog(buildMessageLogs(messages))
-                .build();
+        return buildReportDetailDTO(myReport, session, messages);
     }
-
+    private void saveCorrections(MyReport report, List<MyReportResponseDTO.CorrectionDTO> correctionDTOs) {
+        List<ConversationCorrection> corrections = correctionDTOs.stream()
+                .map(dto -> ConversationCorrection.builder()
+                        .report(report)
+                        .originalContent(dto.getOriginal())
+                        .correctedContent(dto.getCorrected())
+                        .correctionReason(dto.getReason())
+                        .build())
+                .collect(Collectors.toList());
+        correctionRepository.saveAll(corrections);
+    }
     /**
      * AI 분석 카드 생성 로직
      */
@@ -385,6 +384,21 @@ public class MyReportService {
                         .createdAt(m.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    private MyReportResponseDTO.ReportDetailDTO buildReportDetailDTO(MyReport myReport, ConversationSession session, List<ConversationMessage> messages) {
+        User user = session.getMyRole().getUser();
+
+        return MyReportResponseDTO.ReportDetailDTO.builder()
+                .reportId(myReport.getId())
+                .sessionSummary(buildSessionSummary(session, myReport))
+                .aiInsightCard(getAiInsightDTO(myReport))
+                .userReflection(myReport.getUserReflection())
+                .conversationLog(buildMessageLogs(messages))
+                .isLogLocked(false)
+                .usedLogViewCount(user.getTotalLogViewCount())
+                .maxLogViewCount(MAX_FREE_VIEW_COUNT)
+                .build();
     }
 
     /**

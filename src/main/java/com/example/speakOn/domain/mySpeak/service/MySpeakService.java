@@ -198,8 +198,7 @@ public class MySpeakService {
                 request.getMessageType()
         );
 
-        // 대화 흐름 공통 처리 (카운트 증가 + AI 호출)
-        return processConversationFlow(session, userText, request.getMessageType());
+        return processAiTurn(session, userText);
     }
 
     @Transactional
@@ -218,8 +217,7 @@ public class MySpeakService {
 
         conversationMessageRepository.save(userMessage);
 
-        // 대화 흐름 공통 처리 (카운트 증가 + AI 호출)
-        ConversationTurnResponse result = processConversationFlow(session, request.getAnswerText(), request.getMessageType());
+        ConversationTurnResponse result = processAiTurn(session, request.getAnswerText());
 
         return new ConversationTurnTextResponse(
                 result.getQuestionText(),
@@ -313,19 +311,6 @@ public class MySpeakService {
         return session;
     }
 
-    /**
-     * 대화 흐름 제어 공통 로직
-     * 메인 질문 시 카운트 증가 후 AI 대화 생성 위임
-     */
-    private ConversationTurnResponse processConversationFlow(ConversationSession session, String userText, MessageType messageType) {
-        // 메인 질문이면 카운트 증가
-        if (messageType == MessageType.MAIN) {
-            session.incrementQuestionCount();
-        }
-
-        // AI 대화 생성 및 TTS 처리
-        return processAiTurn(session, userText);
-    }
 
     /**
      * AI 대화 공통 처리 로직

@@ -110,7 +110,7 @@ public class MyReportConverter {
                         .senderRole(msg.getSenderRole())
                         .content(msg.getContent())
                         .audioUrl(msg.getAudioUrl())
-                        .createdAt(msg.getCreatedAt())
+                        .createdAt(msg.getCreatedAt() != null ? msg.getCreatedAt() : LocalDateTime.now())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -152,7 +152,7 @@ public class MyReportConverter {
                         .messageId(msg.getId())
                         .senderRole(msg.getSenderRole())
                         .content(msg.getContent())
-                        .createdAt(msg.getCreatedAt())
+                        .createdAt(msg.getCreatedAt() != null ? msg.getCreatedAt() : LocalDateTime.now())
                         .build())
                 .collect(Collectors.toList());
 

@@ -243,49 +243,53 @@ public class MyReportService {
     @Transactional
     public MyReportResponseDTO.ReportDetailDTO generateReport(Long sessionId) {
 
-        ConversationSession session = sessionRepository.findById(sessionId);
-        if (session == null) {
-            throw new GeneralException(ErrorStatus.SESSION_NOT_FOUND);
-        }
+        ConversationSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.SESSION_NOT_FOUND));
 
-        List<ConversationMessage> messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
-        if (messages.isEmpty()) {
+        List<ConversationMessage> allmessages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
+        boolean hasUserMessage = allmessages.stream()
+                .anyMatch(m -> SenderRole.USER.equals(m.getSenderRole()));
+
+        if (!hasUserMessage) {
+            log.warn("사용자 답변이 없는 세션에 대한 분석 시도 차단 - sessionId: {}", sessionId);
             throw new GeneralException(ErrorStatus.CONVERSATION_NOT_FOUND);
         }
 
-        Long myRoleId = session.getMyRole().getId();
-        MyRole myRole = myRoleRepository.findByIdAndIsActiveTrue(myRoleId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.MY_ROLE_NOT_FOUND));
+        MyReport myReport = myReportRepository.findBySession(session)
+                .orElseGet(() -> {
 
-        MyReportResponseDTO.AiInsightCardDTO aiInsightCard = getAiInsight(messages, myRole);
+                    MyRole myRole = session.getMyRole();
+                    MyReportResponseDTO.AiInsightCardDTO aiInsight = getAiInsight(allmessages, myRole);
+                    
+                    MyReport newReport = MyReport.builder()
+                            .session(session)
+                            .aiSummary(aiInsight.getAiSummary())
+                            .aiReason(aiInsight.getAiReason())
+                            .difficulty(session.getUserDifficulty())
+                            .build();
 
-        MyReport myReport = session.getMyReport();
-        if (myReport == null) {
-            myReport = MyReport.builder()
-                    .session(session)
-                    .aiSummary(aiInsightCard.getAiSummary())
-                    .aiReason(aiInsightCard.getAiReason())
-                    .difficulty(session.getUserDifficulty())
-                    .build();
-            myReportRepository.save(myReport);
-        }
+                    MyReport savedReport = myReportRepository.save(newReport);
 
-        MyReport finalReport = myReport;
-        List<ConversationCorrection> corrections = aiInsightCard.getCorrections().stream()
-                .map(dto -> ConversationCorrection.builder()
-                        .report(finalReport)
-                        .originalContent(dto.getOriginal())
-                        .correctedContent(dto.getCorrected())
-                        .correctionReason(dto.getReason())
-                        .build())
-                .collect(Collectors.toList());
+                    List<ConversationCorrection> corrections = aiInsight.getCorrections().stream()
+                            .map(dto -> ConversationCorrection.builder()
+                                    .report(savedReport)
+                                    .originalContent(dto.getOriginal())
+                                    .correctedContent(dto.getCorrected())
+                                    .correctionReason(dto.getReason())
+                                    .build())
+                            .collect(Collectors.toList());
+                    correctionRepository.saveAll(corrections);
 
-        correctionRepository.saveAll(corrections);
+                    return savedReport;
+                });
+
+        // 3. 최종 DTO 조립 시 필요한 메시지 재조회
+        List<ConversationMessage> messages = messageRepository.findAllBySessionOrderByCreatedAtAsc(session);
 
         return MyReportResponseDTO.ReportDetailDTO.builder()
-                .reportId(myReport.getId()) 
-                .sessionSummary(buildSessionSummary(session, messages))
-                .aiInsightCard(aiInsightCard)
+                .reportId(myReport.getId())
+                .sessionSummary(buildSessionSummary(session, myReport))
+                .aiInsightCard(getAiInsightDTO(myReport))
                 .userReflection(myReport.getUserReflection())
                 .conversationLog(buildMessageLogs(messages))
                 .build();
@@ -302,42 +306,69 @@ public class MyReportService {
         String aiJsonResponse = aiAnalysisService.getAnalysisResult(transcript, myRole);
 
         try {
-            String cleaned = aiJsonResponse.replaceAll("(?s)```(?:json)?\\s*|```", "").trim();
-            int start = cleaned.indexOf("{");
-            int end = cleaned.lastIndexOf("}");
-
-            if (start != -1 && end != -1) {
-                cleaned = cleaned.substring(start, end + 1);
-            }
-
+            String cleaned = extractJson(aiJsonResponse);
             MyReportResponseDTO.AiInsightCardDTO result = objectMapper.readValue(cleaned, MyReportResponseDTO.AiInsightCardDTO.class);
 
             if (result.getCorrections() != null) {
-                result.getCorrections().removeIf(c ->
-                        messages.stream().anyMatch(m ->
-                                "AI".equals(m.getSenderRole().toString()) &&
-                                        m.getContent().trim().equals(c.getOriginal().trim())
-                        )
+                List<String> userContents = messages.stream()
+                        .filter(m -> "USER".equals(m.getSenderRole().name()))
+                        .map(m -> m.getContent().trim())
+                        .collect(Collectors.toList());
+
+                // 교정 제안 중 원문이 사용자 대화 목록에 없는 경우 삭제
+                result.getCorrections().removeIf(c -> {
+                            String originalTrimmed = c.getOriginal().trim();
+                            return userContents.stream().noneMatch(content -> content.equals(originalTrimmed));
+                        }
                 );
             }
-
             return result;
         } catch (JsonProcessingException e) {
             log.error("AI JSON Parsing Failed. Raw: {}", aiJsonResponse);
             throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
+        }
+
+    private String extractJson(String raw) {
+        int start = raw.indexOf("{");
+        int end = raw.lastIndexOf("}");
+        if (start == -1 || end == -1) {
+            throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+        }
+        return raw.substring(start, end + 1);
     }
+
+    /**
+     * DB에 저장된 리포트 엔티티를 바탕으로 AI 인사이트 DTO를 생성합니다.
+     */
+    private MyReportResponseDTO.AiInsightCardDTO getAiInsightDTO(MyReport myReport) {
+        // 1. 리포트에 저장된 교정 리스트를 DTO 리스트로 변환
+        List<MyReportResponseDTO.CorrectionDTO> correctionDTOs = myReport.getCorrections().stream()
+                .map(c -> MyReportResponseDTO.CorrectionDTO.builder()
+                        .original(c.getOriginalContent())
+                        .corrected(c.getCorrectedContent())
+                        .reason(c.getCorrectionReason())
+                        .build())
+                .collect(Collectors.toList());
+
+        // 2. 최종 카드 DTO 조립
+        return MyReportResponseDTO.AiInsightCardDTO.builder()
+                .aiSummary(myReport.getAiSummary())
+                .aiReason(myReport.getAiReason())
+                .corrections(correctionDTOs)
+                .build();
+    }
+
 
     /**
      * 세션 요약 정보 조립 (중복 빌더 제거 및 MyRole 참조 최적화)
      */
-    private MyReportResponseDTO.SessionSummaryDTO buildSessionSummary(ConversationSession session, List<ConversationMessage> messages) {
+    private MyReportResponseDTO.SessionSummaryDTO buildSessionSummary(ConversationSession session, MyReport myReport) {
         LocalTime totalTime = (session.getTotalTime() != null)
                 ? LocalTime.ofSecondOfDay(session.getTotalTime())
                 : LocalTime.MIDNIGHT;
 
         MyRole myRole = session.getMyRole();
-        MyReport myReport = session.getMyReport();
 
         return MyReportResponseDTO.SessionSummaryDTO.builder()
                 .avatarName(myRole.getAvatar().getName())

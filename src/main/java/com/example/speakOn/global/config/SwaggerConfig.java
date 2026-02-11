@@ -162,6 +162,10 @@ public class SwaggerConfig {
     }
 
     private Object generateDtoFromSchemaExample(Class<?> dtoClass) throws Exception {
+        if (dtoClass == null) return null;
+        if (dtoClass == Void.class || dtoClass == void.class) return null;
+        if (isSimpleValueType(dtoClass)) return createSimpleValue(dtoClass);
+
         Object instance;
         try {
             // 1. 기본 생성자 시도 (권장)
@@ -241,6 +245,38 @@ public class SwaggerConfig {
         }
 
         return instance;
+    }
+
+    private boolean isSimpleValueType(Class<?> type) {
+        return type.isPrimitive()
+                || type == String.class
+                || type == Integer.class || type == Long.class
+                || type == Boolean.class
+                || type == Double.class || type == Float.class
+                || type == Short.class || type == Byte.class
+                || type == Character.class
+                || type == LocalDateTime.class
+                || type.isEnum();
+    }
+
+    private Object createSimpleValue(Class<?> type) {
+        if (type == String.class) return "";
+        if (type == Integer.class || type == int.class) return 0;
+        if (type == Long.class || type == long.class) return 0L;
+        if (type == Boolean.class || type == boolean.class) return false;
+        if (type == Double.class || type == double.class) return 0.0d;
+        if (type == Float.class || type == float.class) return 0.0f;
+        if (type == Short.class || type == short.class) return (short) 0;
+        if (type == Byte.class || type == byte.class) return (byte) 0;
+        if (type == Character.class || type == char.class) return '\0';
+        if (type == LocalDateTime.class) return LocalDateTime.now();
+
+        if (type.isEnum()) {
+            Object[] constants = type.getEnumConstants();
+            return (constants != null && constants.length > 0) ? constants[0] : null;
+        }
+
+        return null;
     }
 
 }

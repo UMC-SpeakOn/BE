@@ -17,8 +17,15 @@ public class ConversationSessionRepository {
         em.persist(session);
     }
 
-    public ConversationSession findById(Long sessionId) {
-        return em.find(ConversationSession.class, sessionId);
+    public Optional<ConversationSession> findById(Long sessionId) {
+        return em.createQuery(
+                        "select s from ConversationSession s " +
+                                "join fetch s.myRole r " +        // 세션과 연결된 역할 가져오기
+                                "join fetch r.avatar a " +      // 역할과 연결된 아바타까지 한 번에!
+                                "where s.id = :sessionId", ConversationSession.class)
+                .setParameter("sessionId", sessionId)
+                .getResultStream()
+                .findFirst();
     }
 
     public Optional<ConversationSession> findByIdWithAll(Long sessionId) {

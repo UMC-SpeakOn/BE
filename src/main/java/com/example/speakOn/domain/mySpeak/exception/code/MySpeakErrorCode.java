@@ -4,6 +4,7 @@ import com.example.speakOn.global.apiPayload.code.BaseCode;
 import com.example.speakOn.global.apiPayload.code.ReasonDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 @Getter

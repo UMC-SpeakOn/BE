@@ -54,8 +54,8 @@ public class ConversationSession extends BaseEntity {
     @Builder.Default
     private List<ConversationMessage> messages = new ArrayList<>();
 
-//    @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-//    private MyReport myReport;
+    @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private MyReport myReport;
 
     @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private AiConversationContext aiConversationContext;

@@ -166,7 +166,7 @@ public class MyReportService {
         User reportOwner = (session != null && session.getMyRole() != null)
                 ? session.getMyRole().getUser()
                 : null;
-      
+
         if (reportOwner == null || !reportOwner.getId().equals(user.getId())) {
             log.warn("권한 없는 리포트 접근 시도 - reportId: {}, userId: {}", report.getId(), user.getId());
             throw new MyReportException(MyReportErrorCode.REPORT_ACCESS_DENIED);
@@ -192,10 +192,9 @@ public class MyReportService {
         Long myRoleId = session.getMyRole().getId();
         MyRole myRole = myRoleRepository.findByIdAndIsActiveTrue(myRoleId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MY_ROLE_NOT_FOUND));
-        // 2. AI 분석 수행
+
         MyReportResponseDTO.AiInsightCardDTO aiInsightCard = getAiInsight(messages, myRole);
 
-        // 3. AI 분석 결과 DB 저장 로직
         // session.getMyReport()가 없으면 새로 생성, 있으면 업데이트
         MyReport myReport = session.getMyReport();
         if (myReport == null) {
@@ -249,7 +248,18 @@ public class MyReportService {
                 cleaned = cleaned.substring(start, end + 1);
             }
 
-            return objectMapper.readValue(cleaned, MyReportResponseDTO.AiInsightCardDTO.class);
+            MyReportResponseDTO.AiInsightCardDTO result = objectMapper.readValue(cleaned, MyReportResponseDTO.AiInsightCardDTO.class);
+
+            if (result.getCorrections() != null) {
+                result.getCorrections().removeIf(c ->
+                        messages.stream().anyMatch(m ->
+                                "AI".equals(m.getSenderRole().toString()) &&
+                                        m.getContent().trim().equals(c.getOriginal().trim())
+                        )
+                );
+            }
+
+            return result;
         } catch (JsonProcessingException e) {
             log.error("AI JSON Parsing Failed. Raw: {}", aiJsonResponse);
             throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);

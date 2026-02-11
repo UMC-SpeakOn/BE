@@ -30,6 +30,10 @@ public class MyReport extends BaseEntity {
     @Builder.Default
     private List<ConversationCorrection> corrections = new ArrayList<>();
 
+    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ReportViewHistory> viewHistories = new ArrayList<>();
+
     // 사용자 소감
     @Column(name = "user_reflection", length = 120)
     private String userReflection;

@@ -69,4 +69,24 @@ public class UserCommandServiceImpl implements UserCommandService {
                 "프로필이 성공적으로 수정되었습니다."
         );
     }
+
+    @Transactional
+    @Override
+    public UserResponse.WithdrawResponseDTO withdrawUser(Long userId) {
+
+        // 1. 사용자 존재 확인
+        if (!userRepository.existsById(userId)) {
+            throw new ErrorHandler(ErrorStatus.USER_NOT_FOUND);
+        }
+
+        // 2. 사용자 삭제
+        userRepository.deleteById(userId);
+        log.info("회원 탈퇴 완료 - userId: {}", userId);
+
+        // 3. 응답 DTO 반환
+        return UserResponse.WithdrawResponseDTO.builder()
+                .userId(userId)
+                .message("회원 탈퇴가 완료되었습니다.")
+                .build();
+    }
 }

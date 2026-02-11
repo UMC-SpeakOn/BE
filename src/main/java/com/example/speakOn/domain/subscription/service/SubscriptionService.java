@@ -7,4 +7,9 @@ public interface SubscriptionService {
 
     SubscriptionResponse.SubscriptionResponseDto successSubscription(Long userId, SubscriptionRequest.SubscriptionRequestDto request);
 
+    /**
+     * 구독 해지
+     */
+    SubscriptionResponse.CancelSubscriptionResponseDto cancelSubscription(Long userId);
+
 }

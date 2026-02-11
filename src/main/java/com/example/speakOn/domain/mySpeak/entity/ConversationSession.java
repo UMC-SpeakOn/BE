@@ -3,10 +3,13 @@ package com.example.speakOn.domain.mySpeak.entity;
 import com.example.speakOn.domain.myReport.entity.MyReport;
 import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.mySpeak.enums.SessionStatus;
+import com.example.speakOn.global.ai.entity.AiConversationContext;
 import com.example.speakOn.global.apiPayload.code.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -47,11 +50,20 @@ public class ConversationSession extends BaseEntity {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ConversationMessage> messages = new ArrayList<>();
+
+    @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private MyReport myReport;
+
+    @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private AiConversationContext aiConversationContext;
+
     // 메인 질문 카운트 증가
     public void incrementQuestionCount() {
         this.currentQuestionCount++;
     }
-
 
     // 대화 종료 시 결과 데이터 업데이트
     public void completeSession(Integer totalTime, Integer sentenceCount, LocalDateTime endedAt) {
@@ -59,15 +71,10 @@ public class ConversationSession extends BaseEntity {
         this.totalTime = totalTime;
         this.sentenceCount = sentenceCount;
         this.endedAt = endedAt;
-
     }
 
     // 사용자 난이도 저장
     public void saveUserDifficulty(Integer userDifficulty) {
         this.userDifficulty = userDifficulty;
     }
-
-    // 리포트와의 1:1 양방향 매핑 추가
-    @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private MyReport myReport;
 }

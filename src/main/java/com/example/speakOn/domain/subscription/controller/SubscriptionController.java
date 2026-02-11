@@ -40,6 +40,22 @@ public class SubscriptionController {
 
         return ApiResponse.onSuccess(response);
     }
+
+    /**
+     * 구독 해지
+     * 현재 활성 구독을 해지합니다.
+     */
+    @PatchMapping("/cancel")
+    @Operation(summary = "구독 해지", description = "현재 활성 구독을 해지합니다.")
+    public ApiResponse<SubscriptionResponse.CancelSubscriptionResponseDto> cancelSubscription() {
+
+        Long userId = authUtil.getCurrentUserId();
+        log.info("구독 해지 요청 - userId: {}", userId);
+
+        SubscriptionResponse.CancelSubscriptionResponseDto response = subscriptionService.cancelSubscription(userId);
+
+        return ApiResponse.onSuccess(response);
+    }
 }
 
 

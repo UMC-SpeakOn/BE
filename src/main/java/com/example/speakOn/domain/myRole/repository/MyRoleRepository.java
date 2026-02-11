@@ -23,5 +23,4 @@ public interface MyRoleRepository extends JpaRepository<MyRole, Long>, MyRoleRep
 
     // ID와 활성화 상태로 MyRole 조회 (soft delete 지원)
     Optional<MyRole> findByIdAndIsActiveTrue(Long id);
-
 }

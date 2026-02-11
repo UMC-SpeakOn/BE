@@ -1,6 +1,7 @@
 package com.example.speakOn.domain.myReport.service;
 
 import com.example.speakOn.domain.myReport.entity.ReportViewHistory;
+import com.example.speakOn.domain.myReport.service.ReportViewHistoryService;
 import com.example.speakOn.domain.myReport.repository.ReportViewHistoryRepository;
 import com.example.speakOn.domain.myReport.code.MyReportErrorCode;
 import com.example.speakOn.domain.myReport.converter.MyReportConverter;
@@ -55,6 +56,7 @@ public class MyReportService {
     private final ConversationCorrectionRepository correctionRepository;
     private final MyRoleRepository myRoleRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final ReportViewHistoryService reportViewHistoryService;
     private final ReportViewHistoryRepository reportViewHistoryRepository;
     private final int MAX_FREE_VIEW_COUNT = 5;
 
@@ -111,7 +113,7 @@ public class MyReportService {
                         .viewUUID(viewUUID)
                         .build();
 
-                reportViewHistoryRepository.saveAndFlush(history);
+                reportViewHistoryService.trySaveHistory(history);
 
                 user.incrementLogViewCount();
                 isLogLocked = false;
@@ -163,16 +165,20 @@ public class MyReportService {
         if (isSubscribed || isRefreshedRequest) {
             isLogLocked = false;
         } else if (user.getTotalLogViewCount() < MAX_FREE_VIEW_COUNT) {
-            user.incrementLogViewCount();
-
-            ReportViewHistory history = ReportViewHistory.builder()
-                    .report(report)
-                    .user(user)
-                    .viewUUID(viewUUID)
-                    .build();
-            reportViewHistoryRepository.save(history);
-
-            isLogLocked = false;
+            try {
+                ReportViewHistory history = ReportViewHistory.builder()
+                        .report(report)
+                        .user(user)
+                        .viewUUID(viewUUID)
+                        .build();
+                reportViewHistoryService.trySaveHistory(history);
+                
+                user.incrementLogViewCount();
+                isLogLocked = false;
+            } catch (DataIntegrityViolationException e) {
+                log.warn("Concurrent conversation log view detected for UUID: {}", viewUUID);
+                isLogLocked = false;
+            }
         }
 
         List<ConversationMessage> messages = List.of();

@@ -11,7 +11,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Table(name = "report_view_history", indexes = {
-        @Index(name = "idx_view_history_deduplication", columnList = "report_id, user_id, view_uuid, unique = true")
+        @Index(name = "idx_view_history_deduplication", columnList = "report_id, user_id, view_uuid", unique = true)
 })
 public class ReportViewHistory extends BaseEntity {
 

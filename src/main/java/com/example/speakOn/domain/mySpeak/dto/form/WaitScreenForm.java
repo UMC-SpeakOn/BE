@@ -8,6 +8,7 @@ import com.example.speakOn.domain.myRole.enums.JobType;
 import lombok.*;
 
 @Getter
+@NoArgsConstructor
 public class WaitScreenForm {
     private List<MyRoleDto> availablsRoles;
 
@@ -17,6 +18,7 @@ public class WaitScreenForm {
 
     @Getter
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class MyRoleDto {
         private Long id;
         private JobType job;

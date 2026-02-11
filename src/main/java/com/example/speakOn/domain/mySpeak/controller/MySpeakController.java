@@ -97,7 +97,4 @@ public class MySpeakController implements MySpeakControllerDocs {
         ConversationTurnTextResponse response = mySpeakService.handleTurnText(sessionId, request);
         return ApiResponse.onSuccess(response);
     }
-
-
-
 }

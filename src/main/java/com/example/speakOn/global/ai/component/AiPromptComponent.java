@@ -26,33 +26,43 @@ public class AiPromptComponent {
 
     public Prompt createPrompt(MyRole myRole, Avatar avatar, Style style, String userMessage, String previousAiMessage, ConversationState nextState) {
         try {
+            // 1. 변수 매핑 준비 (YAML의 {{key}}를 채울 값들)
             PromptVariables vars = PromptVariables.builder()
-                    .name(avatar.getName()).job(myRole.getJob().name()).situation(myRole.getSituation().name())
-                    .nationality(avatar.getNationality()).locale(avatar.getLocale())
-                    .gender(avatar.getGender().name()).speechStyle(style.getSpeechType().name())
+                    .name(avatar.getName())
+                    .job(myRole.getJob().name())
+                    .situation(myRole.getSituation().name())
+                    .nationality(avatar.getNationality())
+                    .locale(avatar.getLocale())
+                    .gender(avatar.getGender().name())
+                    .speechStyle(style.getSpeechType().name())
                     .build();
 
-            String commandBlock = String.format(
-                    "\n\n### CRITICAL RULE (MUST OBEY) ###\n" +
-                            "1. EXIT SENSITIVITY: If the user says anything about being BUSY, HAVING A MEETING, WANTING TO STOP, or having NO TIME (e.g., 'I'm busy', 'Gotta go', 'No more time'), you MUST respond ONLY with '[EXIT]'. Do not ask any more questions. This is your #1 priority.\n" +
-                            "\n" +
-                            "### CURRENT TASK (IF NOT EXITING) ###\n" +
+            // 2. 시스템 프롬프트 로드 (YAML 파일 읽기)
+            String baseSystemPrompt = promptMapper.mapPrompt(vars);
+
+            // 3. 동적 지시사항 추가 (Dynamic Instruction)
+            String dynamicInstruction = String.format(
+                    "\n\n### CURRENT INSTRUCTION ###\n" +
                             "- MODE: %s\n" +
-                            "- NEXT QUESTION TO FETCH: %s\n" +
-                            "- RULE: Use the exact words of the question provided above. Do not invent new ones.",
-                    nextState.getMessageType(), nextState.getInstruction()
+                            "- NEXT QUESTION: %s\n" +
+                            "- RULE: Ask the question exactly as provided. Do not invent new topics.",
+                    nextState.getMessageType(),
+                    nextState.getInstruction()
             );
 
-            String systemText = promptMapper.mapPrompt(vars) + commandBlock;
+            // 4. 최종 프롬프트 조합 (Role/Rules + Current Task)
+            String fullSystemMessage = baseSystemPrompt + dynamicInstruction;
 
             List<Message> messages = new ArrayList<>();
-            messages.add(new SystemMessage(systemText));
+            messages.add(new SystemMessage(fullSystemMessage));
+
             if (previousAiMessage != null && !previousAiMessage.isBlank()) {
                 messages.add(new AssistantMessage(previousAiMessage));
             }
             messages.add(new UserMessage(userMessage));
 
             return new Prompt(messages);
+
         } catch (Exception e) {
             log.error("[Prompt Creation Failed] roleId: {}", myRole.getId(), e);
             throw new GeneralException(AiErrorCode.AI_PARSE_ERROR);

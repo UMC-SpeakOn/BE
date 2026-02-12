@@ -5,10 +5,12 @@ import com.example.speakOn.domain.myReport.converter.MyReportConverter;
 import com.example.speakOn.domain.myReport.dto.request.MyReportRequest;
 import com.example.speakOn.domain.myReport.dto.response.MyReportResponseDTO;
 import com.example.speakOn.domain.myReport.entity.ConversationCorrection;
+import com.example.speakOn.domain.myReport.entity.ConversationTone;
 import com.example.speakOn.domain.myReport.entity.MyReport;
 import com.example.speakOn.domain.myReport.entity.ReportViewHistory;
 import com.example.speakOn.domain.myReport.exception.MyReportException;
 import com.example.speakOn.domain.myReport.repository.ConversationCorrectionRepository;
+import com.example.speakOn.domain.myReport.repository.ConversationToneRepository;
 import com.example.speakOn.domain.myReport.repository.MyReportRepository;
 import com.example.speakOn.domain.myReport.repository.ReportViewHistoryRepository;
 import com.example.speakOn.domain.myRole.entity.MyRole;
@@ -50,6 +52,7 @@ public class MyReportService {
     private final ConversationMessageRepository messageRepository;
     private final UserRepository userRepository;
     private final ConversationSessionRepository sessionRepository;
+    private final ConversationToneRepository toneRepository;
     private final AiAnalysisService aiAnalysisService;
     private final ObjectMapper objectMapper;
     private final ConversationCorrectionRepository correctionRepository;
@@ -63,18 +66,12 @@ public class MyReportService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
     }
 
-    /**
-     * 리포트 목록 조회
-     */
     public MyReportResponseDTO.ReportSummaryListDTO getReportList(Long userId, MyReportRequest.ReportFilterDTO filter, Pageable pageable) {
         User user = findUser(userId);
         Slice<MyReport> reports = myReportRepository.findAllByUserAndFilters(user, filter, pageable);
         return MyReportConverter.toReportSummaryListDTOFromSlice(reports);
     }
 
-    /**
-     * 리포트 상세 조회
-     */
     @Transactional
     public MyReportResponseDTO.ReportDetailDTO getReportDetail(Long reportId, Long userId, String viewUUID) {
         User user = findUser(userId);
@@ -106,9 +103,6 @@ public class MyReportService {
         return MyReportConverter.toReportDetailDTO(report, messages, isLogLocked, user.getTotalLogViewCount());
     }
 
-    /**
-     * 대화 로그 상세 조회
-     */
     @Transactional
     public MyReportResponseDTO.MessageLogListDTO getConversationLogs(Long reportId, Long userId, String viewUUID) {
         User user = findUser(userId);
@@ -140,9 +134,6 @@ public class MyReportService {
         return MyReportConverter.toMessageLogListDTO(reportId, messages, isLogLocked, user.getTotalLogViewCount());
     }
 
-    /**
-     * 사용자 소감 작성 및 난이도 수정
-     */
     @Transactional
     public MyReportResponseDTO.WriteReflectionResultDTO writeReflection(Long reportId, MyReportRequest.WriteReflectionDTO request, Long userId) {
         User user = findUser(userId);
@@ -154,9 +145,6 @@ public class MyReportService {
         return MyReportConverter.toWriteReflectionResultDTO(report);
     }
 
-    /**
-     * 리포트 생성
-     */
     @Transactional
     public MyReportResponseDTO.ReportDetailDTO generateReport(Long sessionId) {
         ConversationSession session = sessionRepository.findById(sessionId)
@@ -182,8 +170,14 @@ public class MyReportService {
                             .aiReason(aiInsight.getAiReason()).difficulty(session.getUserDifficulty()).build();
 
                     MyReport savedReport = myReportRepository.save(newReport);
-                    if (hasUserMessage && aiInsight.getCorrections() != null) {
-                        saveCorrections(savedReport, aiInsight.getCorrections());
+
+                    if (hasUserMessage) {
+                        if (aiInsight.getCorrections() != null) {
+                            saveCorrections(savedReport, aiInsight.getCorrections());
+                        }
+                        if (aiInsight.getToneAnalysis() != null) {
+                            saveConversationTone(savedReport, aiInsight.getToneAnalysis());
+                        }
                     }
                     return savedReport;
                 });
@@ -191,12 +185,23 @@ public class MyReportService {
         return buildReportDetailDTO(myReport, session, messages);
     }
 
+    private void saveConversationTone(MyReport report, MyReportResponseDTO.ToneAnalysisDTO toneDTO) {
+        if (toneDTO == null) return;
+        ConversationTone tone = ConversationTone.builder()
+                .report(report).userTone(toneDTO.getUserTone()).expectedTone(toneDTO.getExpectedTone()).build();
+        toneRepository.save(tone);
+        report.addConversationTone(tone); // 메모리 동기화
+    }
+
     private void saveCorrections(MyReport report, List<MyReportResponseDTO.CorrectionDTO> correctionDTOs) {
         List<ConversationCorrection> corrections = correctionDTOs.stream()
-                .map(dto -> ConversationCorrection.builder()
-                        .report(report).originalContent(dto.getOriginal())
-                        .correctedContent(dto.getCorrected()).correctionReason(dto.getReason()).build())
-                .collect(Collectors.toList());
+                .map(dto -> {
+                    ConversationCorrection correction = ConversationCorrection.builder()
+                            .report(report).originalContent(dto.getOriginal())
+                            .correctedContent(dto.getCorrected()).correctionReason(dto.getReason()).build();
+                    report.getCorrections().add(correction); // 메모리 동기화
+                    return correction;
+                }).collect(Collectors.toList());
         correctionRepository.saveAll(corrections);
     }
 
@@ -229,8 +234,17 @@ public class MyReportService {
                 .map(c -> MyReportResponseDTO.CorrectionDTO.builder().original(c.getOriginalContent())
                         .corrected(c.getCorrectedContent()).reason(c.getCorrectionReason()).build())
                 .collect(Collectors.toList());
+
+        MyReportResponseDTO.ToneAnalysisDTO toneDTO = null;
+        if (myReport.getConversationTone() != null) {
+            toneDTO = MyReportResponseDTO.ToneAnalysisDTO.builder()
+                    .userTone(myReport.getConversationTone().getUserTone())
+                    .expectedTone(myReport.getConversationTone().getExpectedTone()).build();
+        }
+
         return MyReportResponseDTO.AiInsightCardDTO.builder()
-                .aiSummary(myReport.getAiSummary()).aiReason(myReport.getAiReason()).corrections(correctionDTOs).build();
+                .aiSummary(myReport.getAiSummary()).aiReason(myReport.getAiReason())
+                .toneAnalysis(toneDTO).corrections(correctionDTOs).build();
     }
 
     private MyReportResponseDTO.SessionSummaryDTO buildSessionSummary(ConversationSession session, MyReport myReport) {
@@ -270,69 +284,34 @@ public class MyReportService {
         User user = findUser(userId);
         MyReport report = myReportRepository.findById(reportId).orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
         validateReportOwner(report, user);
-
-        if (report.getSession() != null) {
-            report.getSession().unlinkReport();
-        }
-
+        if (report.getSession() != null) report.getSession().unlinkReport();
         myReportRepository.delete(report);
         return MyReportConverter.toDeleteReportResultDTO(reportId);
     }
 
-    /**
-     * 더미데이터
-     */
     private List<ConversationMessage> generateDummyMessages(MyReport report) {
         ConversationSession session = report.getSession();
-
-        LocalDateTime now = LocalDateTime.now();
-
         return List.of(
-                ConversationMessage.builder()
-                        .session(session)
-                        .senderRole(SenderRole.AI)
+                ConversationMessage.builder().session(session).senderRole(SenderRole.AI)
                         .content("Hello. Could you briefly introduce yourself and tell me about your background?")
-                        .messageType(MessageType.MAIN)
-                        .build(),
-                ConversationMessage.builder()
-                        .session(session)
-                        .senderRole(SenderRole.USER)
+                        .messageType(MessageType.MAIN).build(),
+                ConversationMessage.builder().session(session).senderRole(SenderRole.USER)
                         .content("Sure. I have over 5 years of experience in digital marketing. " +
-                                "I started my career at a startup where I managed social media campaigns and " +
-                                "increased our follower count by 200% in the first year.")
-                        .senderRole(SenderRole.USER)
-                        .messageType(MessageType.MAIN)
-                        .build(),
-                ConversationMessage.builder()
-                        .session(session)
-                        .senderRole(SenderRole.AI)
-                        .content("That sounds impressive. Can you describe a specific challenge you faced while managing those campaigns and how you overcame it?")
-                        .messageType(MessageType.FOLLOW)
-                        .build(),
-                ConversationMessage.builder()
-                        .session(session)
-                        .senderRole(SenderRole.USER)
+                                "I started my career at a startup where I managed social media campaigns.")
+                        .messageType(MessageType.MAIN).build(),
+                ConversationMessage.builder().session(session).senderRole(SenderRole.AI)
+                        .content("That sounds impressive. Can you describe a specific challenge you faced?")
+                        .messageType(MessageType.FOLLOW).build(),
+                ConversationMessage.builder().session(session).senderRole(SenderRole.USER)
                         .content("One major challenge was a sudden drop in engagement due to algorithm changes. " +
-                                "To fix this, I analyzed our content performance data and pivoted our strategy to focus more on short-form video content, " +
-                                "which recovered our engagement rates within two months.")
-                        .senderRole(SenderRole.USER)
-                        .messageType(MessageType.FOLLOW)
-                        .build(),
-                ConversationMessage.builder()
-                        .session(session)
-                        .senderRole(SenderRole.AI)
-                        .content("I see. Data analysis seems to be a strong suit of yours. " +
-                                "How do you usually prioritize tasks when you have multiple deadlines approaching?")
-                        .messageType(MessageType.MAIN)
-                        .build(),
-                ConversationMessage.builder()
-                        .session(session)
-                        .senderRole(SenderRole.USER)
-                        .content("I use a priority matrix to categorize tasks by urgency and importance. " +
-                                "I also make sure to communicate with stakeholders early if I foresee any potential delays.")
-                        .senderRole(SenderRole.USER)
-                        .messageType(MessageType.MAIN)
-                        .build()
+                                "I pivoted our strategy to focus more on short-form video content.")
+                        .messageType(MessageType.FOLLOW).build(),
+                ConversationMessage.builder().session(session).senderRole(SenderRole.AI)
+                        .content("I see. How do you usually prioritize tasks when you have multiple deadlines?")
+                        .messageType(MessageType.MAIN).build(),
+                ConversationMessage.builder().session(session).senderRole(SenderRole.USER)
+                        .content("I use a priority matrix to categorize tasks by urgency and importance.")
+                        .messageType(MessageType.MAIN).build()
         );
     }
 }

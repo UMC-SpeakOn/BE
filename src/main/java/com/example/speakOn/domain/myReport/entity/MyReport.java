@@ -57,4 +57,8 @@ public class MyReport extends BaseEntity {
         this.userReflection = userReflection;
         this.difficulty = difficulty;
     }
+
+    public void addConversationTone(ConversationTone tone) {
+        this.conversationTone = tone;
+    }
 }

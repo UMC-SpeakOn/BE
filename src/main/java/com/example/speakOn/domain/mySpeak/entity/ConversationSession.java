@@ -73,6 +73,10 @@ public class ConversationSession extends BaseEntity {
         this.endedAt = endedAt;
     }
 
+    public void unlinkReport() {
+        this.myReport = null;
+    }
+
     // 사용자 난이도 저장
     public void saveUserDifficulty(Integer userDifficulty) {
         this.userDifficulty = userDifficulty;

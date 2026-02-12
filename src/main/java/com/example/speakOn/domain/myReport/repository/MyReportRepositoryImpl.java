@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Repository;
+import com.example.speakOn.domain.avatar.entity.QAvatar;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -35,11 +36,13 @@ public class MyReportRepositoryImpl implements MyReportRepositoryCustom {
         QMyReport report = QMyReport.myReport;
         QConversationSession session = QConversationSession.conversationSession;
         QMyRole myRole = QMyRole.myRole;
+        QAvatar avatar = QAvatar.avatar;
 
         List<MyReport> content = queryFactory
                 .selectFrom(report)
                 .join(report.session, session).fetchJoin()
                 .join(session.myRole, myRole).fetchJoin()
+                .join(myRole.avatar, avatar).fetchJoin()
                 .where(
                         myRole.user.eq(user),
                         dateBetween(filter.getStartDate(), filter.getEndDate()),

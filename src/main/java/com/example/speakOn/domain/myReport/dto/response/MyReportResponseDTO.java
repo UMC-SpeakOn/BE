@@ -46,6 +46,9 @@ public class MyReportResponseDTO {
         @Schema(description = "리포트 ID", example = "1")
         private Long reportId;
 
+        @Schema(description = "아바타 이미지 URL", example = "https://example.com/emily.png")
+        private String avatarImgUrl;
+
         @Schema(description = "직무", example = "마케팅")
         private String job;
 

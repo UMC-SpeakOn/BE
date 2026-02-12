@@ -270,6 +270,11 @@ public class MyReportService {
         User user = findUser(userId);
         MyReport report = myReportRepository.findById(reportId).orElseThrow(() -> new MyReportException(MyReportErrorCode.REPORT_NOT_FOUND));
         validateReportOwner(report, user);
+
+        if (report.getSession() != null) {
+            report.getSession().unlinkReport();
+        }
+
         myReportRepository.delete(report);
         return MyReportConverter.toDeleteReportResultDTO(reportId);
     }

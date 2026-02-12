@@ -32,11 +32,16 @@ public class MyReportConverter {
         ConversationSession session = myReport.getSession();
         MyRole myRole = (session != null) ? session.getMyRole() : null;
 
+        String avatarUrl = (myRole != null && myRole.getAvatar() != null)
+                ? myRole.getAvatar().getImgUrl()
+                : "";
+
         String jobName = (myRole != null && myRole.getJob() != null) ? myRole.getJob().getDescription() : "UNKNOWN";
         String situationName = (myRole != null && myRole.getSituation() != null) ? myRole.getSituation().getDescription() : "UNKNOWN";
 
         return MyReportResponseDTO.ReportSummaryDTO.builder()
                 .reportId(myReport.getId())
+                .avatarImgUrl(avatarUrl)
                 .createdAt(myReport.getCreatedAt() != null ? myReport.getCreatedAt().toLocalDate() : null)
                 .situation(situationName)
                 .job(jobName)

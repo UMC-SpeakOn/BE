@@ -6,10 +6,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+@Builder
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TtsRequestDto {
+public class TtsRequest {
     @NotBlank
     private String text; //AI가 생성한 질문
 

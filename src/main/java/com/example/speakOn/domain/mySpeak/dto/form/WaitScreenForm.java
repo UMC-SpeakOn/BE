@@ -7,15 +7,14 @@ import com.example.speakOn.domain.myRole.entity.MyRole;
 import com.example.speakOn.domain.myRole.enums.JobType;
 import lombok.*;
 
+@Builder
 @Getter
+@AllArgsConstructor
 @NoArgsConstructor
 public class WaitScreenForm {
     private List<MyRoleDto> availablsRoles;
 
-    public WaitScreenForm(List<MyRoleDto> availableRoles) {
-        this.availablsRoles = availableRoles;
-    }
-
+    @Builder
     @Getter
     @AllArgsConstructor
     @NoArgsConstructor

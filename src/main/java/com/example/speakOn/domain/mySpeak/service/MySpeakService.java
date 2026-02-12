@@ -128,7 +128,7 @@ public class MySpeakService {
      * @throws MySpeakException 세션 없음, TTS 실패 시
      */
     @Transactional
-    public byte[] generateSpeech(TtsRequestDto request) {
+    public byte[] generateSpeech(TtsRequest request) {
         log.info("MySpeak: TTS 요청 처리 - sessionId={}", request.getSession().getId());
 
         return conversationTurnService.ttsAndSaveAiMessage(
@@ -167,7 +167,7 @@ public class MySpeakService {
         // 마무리 멘트 TTS 생성 + DB 저장
         String closingText = "Thanks for sharing your perspective. I appreciate your time.";
         byte[] closingAudioBytes = generateSpeech(
-                new TtsRequestDto(
+                new TtsRequest(
                         closingText,
                         avatar.getTtsVoiceId(),
                         avatar.getCadenceType().getSpeedRate(),

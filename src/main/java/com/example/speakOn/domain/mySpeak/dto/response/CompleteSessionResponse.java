@@ -1,12 +1,14 @@
 package com.example.speakOn.domain.mySpeak.dto.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class CompleteSessionResponse {
 
     private Long sessionId;

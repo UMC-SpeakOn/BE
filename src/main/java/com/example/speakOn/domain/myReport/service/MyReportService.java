@@ -186,11 +186,17 @@ public class MyReportService {
     }
 
     private void saveConversationTone(MyReport report, MyReportResponseDTO.ToneAnalysisDTO toneDTO) {
-        if (toneDTO == null) return;
+        log.info("### [DEBUG] Entering saveConversationTone with DTO: {}", toneDTO);
+        if (toneDTO == null) {
+            log.warn("### [DEBUG] saveConversationTone skipped: toneDTO is null");
+            return;
+        }
         ConversationTone tone = ConversationTone.builder()
                 .report(report).userTone(toneDTO.getUserTone()).expectedTone(toneDTO.getExpectedTone()).build();
+
+        log.info("### [DEBUG] Calling toneRepository.save(). UserTone: {}, ExpectedTone: {}", tone.getUserTone(), tone.getExpectedTone());
         toneRepository.save(tone);
-        report.addConversationTone(tone); // 메모리 동기화
+        report.addConversationTone(tone);
     }
 
     private void saveCorrections(MyReport report, List<MyReportResponseDTO.CorrectionDTO> correctionDTOs) {
@@ -199,7 +205,7 @@ public class MyReportService {
                     ConversationCorrection correction = ConversationCorrection.builder()
                             .report(report).originalContent(dto.getOriginal())
                             .correctedContent(dto.getCorrected()).correctionReason(dto.getReason()).build();
-                    report.getCorrections().add(correction); // 메모리 동기화
+                    report.getCorrections().add(correction);
                     return correction;
                 }).collect(Collectors.toList());
         correctionRepository.saveAll(corrections);
@@ -210,8 +216,19 @@ public class MyReportService {
                 .map(m -> String.format("[%s]: %s", m.getSenderRole(), m.getContent()))
                 .collect(Collectors.joining("\n"));
         String aiJsonResponse = aiAnalysisService.getAnalysisResult(transcript, myRole);
+        log.info("### [DEBUG] AI RAW RESPONSE: \n{}", aiJsonResponse);
         try {
+            String jsonOnly = extractJson(aiJsonResponse);
+            log.info("### [DEBUG] EXTRACTED JSON: \n{}", jsonOnly);
+
             MyReportResponseDTO.AiInsightCardDTO result = objectMapper.readValue(extractJson(aiJsonResponse), MyReportResponseDTO.AiInsightCardDTO.class);
+
+            if (result.getToneAnalysis() == null) {
+                log.warn("### [DEBUG] toneAnalysis object is NULL after parsing. Check JSON key naming!");
+            } else {
+                log.info("### [DEBUG] toneAnalysis successfully mapped: {}", result.getToneAnalysis());
+            }
+
             if (result.getCorrections() != null) {
                 List<String> userContents = messages.stream().filter(m -> SenderRole.USER.equals(m.getSenderRole()))
                         .map(m -> m.getContent().trim()).collect(Collectors.toList());
@@ -219,6 +236,7 @@ public class MyReportService {
             }
             return result;
         } catch (JsonProcessingException e) {
+            log.error("### [DEBUG] JSON Parsing Failed. Reason: {}", e.getMessage());
             throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
     }
